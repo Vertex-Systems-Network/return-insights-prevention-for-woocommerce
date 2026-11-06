@@ -1,6 +1,6 @@
 # P6 Technical Contracts — REST and Security/Privacy
 
-**Status:** Approved contract; I-03 implements catalog, order lookup, and manual-event routes. Remaining routes and runtime schema verification are pending.  
+**Status:** Approved contract; I-03 implements catalog, order lookup, and manual-event routes; I-04 adds the native refund observer. Remaining routes and runtime schema verification are pending.  
 **Reviewed:** 2026-11-06  
 **P6 status:** Approved on 2026-11-06; runtime implementation remains pending.
 
@@ -97,6 +97,10 @@ These are field inventories for review, not JSON Schema or frozen payloads.
 - [WordPress personal-data eraser](https://developer.wordpress.org/plugins/privacy/adding-personal-data-eraser-to-your-plugin/).
 - [WooCommerce HPOS recipe book](https://developer.woocommerce.com/docs/features/orders/high-performance-order-storage/recipe-book/).
 - [WordPress JavaScript without a build process](https://developer.wordpress.org/block-editor/getting-started/fundamentals/javascript-in-the-block-editor/) — access packages through the `wp` global when opting out of a build process.
+
+## I-04 refund observer boundary
+
+The observer uses `woocommerce_refund_created` after WooCommerce persists a refund, loads refund/order objects via `wc_get_order()`, and writes one `refund_only` event at `refund` attribution scope with a unique source key based on site and refund ID. The schema stores `refund_id`; item/product/variation IDs use zero sentinels so the refund reason is not assigned to line items. An exact active catalog label can map to a stable reason ID in memory; unmatched text becomes `unknown`, and raw phrase text is not stored. `woocommerce_refund_deleted` soft-deletes linked events. The observer does not infer physical returns. Runtime hook, HPOS/legacy, concurrency, and deletion checks remain pending.
 
 ## I-03 implementation boundary
 
