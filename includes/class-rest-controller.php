@@ -36,7 +36,7 @@ final class Rest_Controller {
 	}
 	public static function can_view(): bool { return current_user_can( Capabilities::VIEW ); }
 	public static function can_manage(): bool { return current_user_can( Capabilities::MANAGE ); }
-	public static function get_reasons( \\WP_REST_Request $request ): \\WP_REST_Response {
+	public static function get_reasons( \WP_REST_Request $request ): \WP_REST_Response {
 		$include_inactive = rest_sanitize_boolean( $request->get_param( 'include_inactive' ) ) && self::can_manage();
 		return rest_ensure_response( Reason_Catalog::all( $include_inactive ) );
 	}
