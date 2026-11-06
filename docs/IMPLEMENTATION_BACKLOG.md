@@ -1,6 +1,6 @@
 # Implementation Backlog — Approved, Ordered Work
 
-**Status:** I-00/I-01 design packages and I-02 plugin foundation implemented; capture/report features have not started.  
+**Status:** I-00/I-01 design packages, I-02 foundation, and I-03 reason/manual-capture API and storage implemented; React admin UI/reporting not implemented.  
 **Start condition:** P6 approval recorded in `P6_READINESS_GATE.md` on 2026-11-06.  
 **Repository constraint:** Do not add CLI/build tooling to this repository until the plugin is final. React uses WordPress-bundled globals without JSX or a build step; this preserves the repository constraint.
 
@@ -13,7 +13,7 @@ Each runtime item must be scoped with named files, acceptance evidence, dependen
 | I-00 | Lock detailed technical decisions | Final event taxonomy, rate cohort/maturity rules, thresholds, retention/export fields, package model, REST schemas/permissions | P6 approval | Complete: approved decisions recorded consistently across P6, product, data, UX, privacy, compatibility specs |
 | I-01 | Security and privacy design | Threat model, capabilities/roles, REST permission matrix, nonce/auth assumptions, validation, minimization, export/erase, retention/uninstall | I-00 | Complete: threat/privacy controls in `P6_TECHNICAL_CONTRACTS.md`; verification remains for implementation |
 | I-02 | Plugin foundation | Naming/slug/constants, activation/deactivation behavior, PHP/WP/WC dependency checks, role capabilities, translation domain, WooCommerce admin entry point, safe uninstall capability cleanup | I-00, I-01 | Foundation files added and statically inspected. Runtime activation/dependency/role checks remain for I-11. No feature tables are created on activation. |
-| I-03 | Reason catalog and manual capture | Stable reason keys, translated labels, first versioned event-table migration, per-item merchant capture, validation/audit/provenance | I-02 | Manual event saved and edited with capability checks; canonical ID stable across locales; forward-only migration recorded |
+| I-03 | Reason catalog and manual capture | Stable reason keys, translated labels, first versioned event-table migration, per-item merchant capture, validation/audit/provenance | I-02 | Implemented: versioned event table/dbDelta migration, canonical reason IDs and editable label translations, per-item Woo order lookup through CRUD API, manual confirmed-return/exchange POST with idempotency, protected event listing/get/edit/soft-delete, and server-derived product/variation IDs. Static source inspection only; runtime permission/migration/quantity edge validation remains for I-06/I-11. |
 | I-04 | Native refund observation | Supported WooCommerce refund hooks/objects, idempotent ingestion, refund-scope attribution, HPOS + legacy behavior | I-02, I-03 | Refund evidence stored once with source/line mapping and no physical-return inference |
 | I-05 | Basic reporting (Free) | Counts, date filters, coverage, source breakdown, empty/low-data states | I-03, I-04, I-06 | UI numbers reconcile to event definitions; no unsupported rate shown |
 | I-06 | REST contract and React admin | Permission-protected endpoints, pagination/errors, Overview/Insights/catalog/source screens, accessibility and RTL | I-00, I-01, WordPress-bundled script handles | Screen/API acceptance criteria met, equivalent chart data available; no JSX or CLI/build pipeline |
@@ -32,7 +32,7 @@ Each runtime item must be scoped with named files, acceptance evidence, dependen
 - [WordPress submenu API](https://developer.wordpress.org/reference/functions/add_submenu_page/)
 - [WooCommerce HPOS recipe book](https://developer.woocommerce.com/docs/features/orders/high-performance-order-storage/recipe-book/)
 
-Activation currently grants role capabilities only. The first database migration is intentionally paired with I-03 when the initial event schema is introduced; plugin activation must not create a premature/empty schema.
+Activation runs the first forward-only event schema migration in I-03 after dependency checks, then grants capabilities. Deactivation preserves records. No historic backfill runs.
 
 ## Execution rules for AI coding tools
 
