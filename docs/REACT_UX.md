@@ -92,4 +92,4 @@ The companion `docs/UX_FLOWS.md` defines journeys and acceptance criteria. Befor
 - WooCommerce extension best practices: https://developer.woocommerce.com/docs/extensions/ux-guidelines-extensions/best-practices
 - WooCommerce colors and contrast: https://developer.woocommerce.com/docs/extensions/ux-guidelines-extensions/colors
 
-Reviewed 2026-11-06. Package direction is provisional until P6 compatibility review.
+Reviewed 2026-11-06. WordPress-provided React globals and the no-build constraint were approved at P6.
