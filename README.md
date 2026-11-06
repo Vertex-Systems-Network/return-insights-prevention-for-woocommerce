@@ -20,13 +20,13 @@ Planning estimates in UTC; reviewed 2026-11-06. Progress describes planning arti
 | P0 Repository foundation | Product brief, scope guardrails, AI entry points | Complete | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | P1 Market/settings and platform research | Competitor workflows, config options, platform evidence | Complete | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | P2 Product scope and options bank | Capture model and deduplicated capability/system inventory | Plan complete; approval pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
-| P3 Data-flow and engineering blueprint | Source attribution, metrics, privacy, storage boundaries | Draft ready for review | █████████░ 90% | 2026-11-06 | 2026-11-07 |
+| P3 Data-flow and engineering blueprint | Data model, attribution, metrics, privacy, performance | Blueprint complete; review/implementation validation pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | P4 React admin UX specification | Screen map, interaction and accessibility | In progress | ██████░░░░ 60% | 2026-11-06 | 2026-11-09 |
 | P5 Compatibility/release baseline | PHP, WP, WC, WPML, Polylang requirements | Baseline chosen; Marketplace range alignment pending | █████████░ 90% | 2026-11-06 | 2026-11-07 |
 | P6 Pre-development readiness gate | Resolve decisions and approve implementation scope | Not started | ░░░░░░░░░░ 0% | 2026-11-09 | 2026-11-10 |
 | P7 Distribution and submission plan | WordPress.org Free + WooCommerce.com Paid tracks | Planning complete; actual submission blocked by release | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 
-**Overall planning readiness: 80%**, equally weighted across phases. Dates are estimates, not delivery promises. Keep planning progress separate from implementation progress. Update this table and change log whenever the plan changes.
+**Overall planning readiness: 81%**, equally weighted across phases. Dates are estimates, not delivery promises. Keep planning progress separate from implementation progress. Update this table and change log whenever the plan changes.
 
 ## Distribution plan
 
@@ -40,7 +40,7 @@ Details and official source links: docs/DISTRIBUTION.md. No submission has been 
 
 ## Current gate
 
-Before implementation, review and approve the recommended capture model, metric definitions, Options Bank, and Compatibility. Do not add plugin code, CLI tooling, Composer/npm manifests, or build scripts before P6 approval.
+Before implementation, review and approve the recommended capture model, metric definitions, data model, Options Bank, and Compatibility. Do not add plugin code, CLI tooling, Composer/npm manifests, or build scripts before P6 approval.
 
 ## Plan files
 
@@ -48,6 +48,7 @@ Before implementation, review and approve the recommended capture model, metric 
 - docs/MARKET_RESEARCH.md — competitor evidence, settings, and positioning.
 - docs/OPTIONS_BANK.md — unique capabilities, systems, competitor-option disposition.
 - docs/ARCHITECTURE_DATA_FLOW.md — data lifecycle and boundaries.
+- docs/DATA_MODEL.md — logical schema, idempotency, migrations, privacy, query plan.
 - docs/COMPATIBILITY.md — platform baselines and WPML/Polylang.
 - docs/REACT_UX.md — React admin navigation and design bar.
 - docs/DISTRIBUTION.md — WordPress.org and Woo Marketplace submission tracks.
@@ -70,9 +71,12 @@ Before implementation, review and approve the recommended capture model, metric 
 
 Selected V1 planning baseline: WordPress 6.9+, WooCommerce 10.8+, PHP 8.3+, MySQL 8.0+ or MariaDB 10.6+, HTTPS. Woo Marketplace's current two-major-version support rule can change this target at submission; see docs/COMPATIBILITY.md. WPML and Polylang are optional integrations.
 
-Recommended MVP capture model: observe native WooCommerce refund records and allow per-item admin insight entry for non-refund returns. A refund is not proof that an item physically returned, and an order-level reason must not be guessed onto every line item. See docs/PRODUCT_SPEC.md and docs/ARCHITECTURE_DATA_FLOW.md.
+Recommended MVP capture model: observe native WooCommerce refund records and allow per-item admin insight entry for non-refund returns. A refund is not proof that an item physically returned, and an order-level reason must not be guessed onto every line item.
+
+P3 architecture now specifies indexed custom event storage, source-level idempotency, bounded background aggregation, separate return/refund metrics, and privacy export/erasure. See docs/ARCHITECTURE_DATA_FLOW.md and docs/DATA_MODEL.md.
 
 ## Change log
 
-- 2026-11-06: Completed product scope/options plan and proposed WooCommerce refund observation plus per-item admin capture. Refined data attribution and measurement boundaries.
-- 2026-11-06: Added separate WordPress.org Free and WooCommerce.com Paid submission plan, with current freemium review and compatibility requirements. No plugin implementation or CLI tooling added.
+- 2026-11-06: Completed product scope/options plan and proposed WooCommerce refund observation plus per-item admin capture.
+- 2026-11-06: Added separate WordPress.org Free and WooCommerce.com Paid submission plan.
+- 2026-11-06: Completed P3 logical data model, HPOS-safe ingestion, metric boundaries, privacy lifecycle, and performance plan. No plugin implementation or CLI tooling added.
