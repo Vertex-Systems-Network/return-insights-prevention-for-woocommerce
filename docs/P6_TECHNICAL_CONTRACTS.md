@@ -1,18 +1,18 @@
 # P6 Technical Contracts — REST and Security/Privacy
 
-**Status:** Proposed contract for owner review; no endpoints or code implemented.  
+**Status:** Approved design contract; no endpoints or code implemented.  
 **Reviewed:** 2026-11-06  
-**Depends on:** Explicit P6 approval and final privacy, metric, and package decisions.
+**Depends on:** P6 approval recorded 2026-11-06; runtime implementation remains pending.
 
-This document makes the engineering boundary concrete enough to estimate and review implementation. Values marked “proposed” remain subject to approval.
+This document defines the approved engineering boundary. Concrete JSON schemas and code are delivered in the corresponding implementation tasks.
 
 ## REST namespace and shared rules
 
-**Proposed namespace:** `wpessential/return-insights/v1`. Reserve this namespace for this plugin; version it only for incompatible API changes.
+**Approved namespace:** `wpessential/return-insights/v1`. Reserve this namespace for this plugin; version it only for incompatible API changes.
 
 - Admin requests use the WordPress REST cookie-auth flow with a REST nonce. A nonce helps prevent CSRF; it is not a substitute for capability checks.
 - Every route defines a `permission_callback`. Read and write capabilities are checked server-side on every request.
-- Proposed plugin capabilities: `view_return_insights` and `manage_return_insights`. Map them deliberately to WooCommerce roles during implementation; do not use UI visibility as authorization.
+- Plugin capabilities: `view_return_insights` and `manage_return_insights`; map read to WooCommerce `view_woocommerce_reports` and write to `manage_woocommerce` for Administrator/Shop Manager, with explicit grant controls. Do not use UI visibility as authorization.
 - Every request field has a schema, strict validation, and sanitization only where transformation is appropriate. Reject invalid IDs, enums, date ranges, quantities, and unknown fields.
 - Use WooCommerce public CRUD APIs to verify order/refund/order-item/product references and the actor’s permitted access. Never trust client-supplied product, variation, or order relationships.
 - Return only fields needed by the current screen. Never expose customer name, email, billing/shipping address, payment details, authentication data, or full order objects through the insights API.
@@ -37,7 +37,7 @@ This document makes the engineering boundary concrete enough to estimate and rev
 | `/actions/(?P<id>[a-zA-Z0-9_-]+)` | GET, PATCH | Pro entitlement; GET view, PATCH manage | Read/update action fields. Status transitions create history; before/after result carries metric version, coverage, sample sizes, and non-causal wording. |
 | `/settings` | GET, PATCH | GET: view; PATCH: manage | Read/update allowlisted settings only. Never expose secrets. Validate retention, source toggles, locale and alert settings against an explicit schema. |
 
-**Contract details still requiring decisions:** exact route permission mapping, event deletion behavior, allowed status transitions, REST pagination headers, metric date/cohort fields, retention fields, and the Free/Pro package handshake.
+**Approved defaults for implementation:** view vs manage capabilities as above; manual event delete is soft-delete with audit reason; action status sequence proposed → in progress → monitoring → completed/paused; collection responses use `X-WP-Total` and `X-WP-TotalPages`; metric cohort maturity defaults to 90 days; retention is in `DATA_MODEL.md`; Free core plus Pro add-on handshake requires matching major schema version. Refine field-level JSON schemas in I-06 without changing these boundaries.
 
 ## Core entity response shapes (conceptual)
 
@@ -80,11 +80,11 @@ These are field inventories for review, not JSON Schema or frozen payloads.
 
 - Default analytics storage contains no customer identity and no full order payload.
 - Keep order/refund/item IDs only as needed to support provenance, corrections, and privacy lookup. Treat these linked IDs as personal-data-adjacent references.
-- Raw free-text refund reasons are optional, length-bounded, and governed by an approved retention window. Prefer canonical reason IDs after normalization.
+- Raw free-text refund reasons are off by default; if merchant enables storage, length limit is 500 characters and purge after 90 days. Prefer canonical reason IDs after normalization.
 - Privacy export includes only the affected person’s linked insight records and merchant-provided content legally needed for export; do not expose unrelated aggregate data.
 - Erasure removes or anonymizes linked identifiers and raw phrases where required. Retain aggregate-only metrics only when they cannot reasonably re-identify a person and applicable policy permits.
 - Logs and error references contain event IDs and technical codes, not order/customer payloads.
-- Deactivation preserves records. Uninstall behavior is disclosed and requires an explicit retain/delete choice; delete is irreversible and confirmed.
+- Deactivation preserves records. Uninstall defaults to retaining records; provide an explicit, confirmed delete-data option and clearly explain its irreversible effect.
 - Backups and server logs are outside direct plugin control; document their independent retention limitations.
 
 ## Official references reviewed 2026-11-06
@@ -96,6 +96,7 @@ These are field inventories for review, not JSON Schema or frozen payloads.
 - [WordPress input security](https://developer.wordpress.org/apis/security/sanitizing/) — validation preferred over broad sanitization.
 - [WordPress personal-data eraser](https://developer.wordpress.org/plugins/privacy/adding-personal-data-eraser-to-your-plugin/).
 - [WooCommerce HPOS recipe book](https://developer.woocommerce.com/docs/features/orders/high-performance-order-storage/recipe-book/).
+- [WordPress JavaScript without a build process](https://developer.wordpress.org/block-editor/getting-started/fundamentals/javascript-in-the-block-editor/) — access packages through the `wp` global when opting out of a build process.
 
 ## Acceptance evidence to collect during implementation
 
