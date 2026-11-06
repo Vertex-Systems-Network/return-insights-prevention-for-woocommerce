@@ -168,6 +168,10 @@ final class Rest_Controller {
 			ARRAY_A
 		);
 
+		if ( ! empty( $wpdb->last_error ) ) {
+			return new \\WP_Error( 'report_query_failed', __( 'The report could not be loaded. Please try again later.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+		}
+
 		$locale = get_user_locale();
 		foreach ( $by_reason as &$reason_row ) {
 			$reason = Reason_Catalog::find( (string) $reason_row['reason_id'], true );
