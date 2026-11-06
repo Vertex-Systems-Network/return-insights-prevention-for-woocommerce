@@ -10,19 +10,19 @@ Provider entry points point to one canonical rules file:
 - Gemini CLI: GEMINI.md.
 - GitHub Copilot: .github/copilot-instructions.md.
 
-This improves discovery but cannot guarantee every version of every provider auto-loads the file. Include “Read README.md and AGENTS.md, then the relevant plan” in each task. Keep canonical rules in AGENTS.md; provider files are short pointers to prevent drift.
+This improves discovery but cannot guarantee every version auto-loads the file. Include “Read README.md and AGENTS.md, then the relevant plan” in each task. Keep canonical rules in AGENTS.md; provider files remain short pointers to prevent drift.
 
 ## Backlog
 
 | ID | Work package | Status | Acceptance evidence |
 |---|---|---|---|
 | AI-01 | Maintain README roadmap after changes | Active rule | Same update changes status, progress, dates, change log. |
-| AI-02 | Audit competitor APIs, live UI, and plan limits | In progress | Zorem/Recoup settings reviewed at source level; remaining API/changelog/full plan audit recorded with evidence. |
-| AI-03 | Finalize event/capture model | Open | D1/D2 decisions recorded in product spec. |
-| AI-04 | Deduplicate feature/system options | Draft ready | One canonical ID/owner per distinct outcome. |
-| AI-05 | Finalize schema, rate math, privacy | Planned | Event schema, denominator, retention, HPOS reviewed. |
+| AI-02 | Audit competitor APIs, live UI, and plan limits | In progress | Zorem/Recoup options reviewed from official sources; remaining API/changelog/full plan audit recorded with evidence. |
+| AI-03 | Finalize capture/event definitions | Draft ready; approval pending | Refund evidence vs confirmed return, manual per-item capture, event scope documented. |
+| AI-04 | Deduplicate feature/system options | Plan complete; approval pending | Canonical IDs map competitor options without duplicating RMA workflows. |
+| AI-05 | Finalize schema, rate math, privacy | In progress | Event schema, source confidence, denominator, retention, HPOS reviewed. |
 | AI-06 | Finalize React flows and REST contract | In progress | Screens/states/accessibility/capabilities approved. |
-| AI-07 | Set runtime compatibility baseline | Planning complete; release tests pending | V1 minimums are documented in COMPATIBILITY.md; release claims await test evidence. |
+| AI-07 | Set runtime compatibility baseline | Planning complete; release tests pending | V1 minimums documented; release claims await test evidence. |
 | AI-08 | Threat model capture and AI clustering | Planned | Abuse controls, opt-in, data sent, explainability approved. |
 | AI-09 | Cross-model contradiction review | Not started | ChatGPT, Cursor, Claude, Gemini reviews reconciled into decisions. |
 | AI-10 | Break approved spec into implementation work | Blocked by P6 | Small dependency-ordered tasks; no premature CLI. |
