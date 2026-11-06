@@ -43,6 +43,15 @@ final class Rest_Controller {
 			),
 		) );
 		register_rest_route( self::NS, '/orders/(?P<id>\d+)', array( 'methods' => 'GET', 'callback' => array( self::class, 'get_order_items' ), 'permission_callback' => array( self::class, 'can_manage' ) ) );
+		register_rest_route( self::NS, '/patterns', array(
+			'methods' => 'GET',
+			'callback' => array( self::class, 'get_patterns' ),
+			'permission_callback' => array( self::class, 'can_view_patterns' ),
+			'args' => array(
+				'maturity_days' => array( 'type' => 'integer', 'default' => 90, 'enum' => array( 30, 60, 90, 120, 180 ) ),
+				'cohort_days' => array( 'type' => 'integer', 'default' => 90, 'enum' => array( 30, 60, 90, 120, 180 ) ),
+			),
+		) );
 		register_rest_route( self::NS, '/summary', array(
 			'methods' => 'GET',
 			'callback' => array( self::class, 'get_summary' ),
@@ -102,6 +111,10 @@ final class Rest_Controller {
 	}
 	public static function can_view(): bool { return current_user_can( Capabilities::VIEW ); }
 	public static function can_manage(): bool { return current_user_can( Capabilities::MANAGE ); }
+	public static function can_view_patterns() {
+		if ( ! self::can_view() ) { return false; }
+		return Pattern_Service::is_entitled() ? true : new \WP_Error( 'pro_required', __( 'Product and variation insights require the Pro add-on.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 403 ) );
+	}
 	public static function get_reasons( \WP_REST_Request $request ): \WP_REST_Response {
 		$include_inactive = rest_sanitize_boolean( $request->get_param( 'include_inactive' ) ) && self::can_manage();
 		return rest_ensure_response( Reason_Catalog::all( $include_inactive ) );
@@ -132,6 +145,11 @@ final class Rest_Controller {
 			$items[] = array( 'order_item_id' => $item->get_id(), 'product_id' => $p->get_parent_id() ?: $p->get_id(), 'variation_id' => $p->get_parent_id() ? $p->get_id() : 0, 'name' => $item->get_name(), 'ordered_quantity' => (float) $item->get_quantity() );
 		}
 		return rest_ensure_response( array( 'order_id' => $order->get_id(), 'order_number' => $order->get_order_number(), 'items' => $items ) );
+	}
+
+	public static function get_patterns( \WP_REST_Request $r ) {
+		if ( self::has_unknown_fields( $r->get_query_params(), array( 'maturity_days', 'cohort_days' ) ) ) { return self::unknown_fields_error(); }
+		return Pattern_Service::report( absint( $r->get_param( 'maturity_days' ) ?: 90 ), absint( $r->get_param( 'cohort_days' ) ?: 90 ) );
 	}
 
 	public static function get_summary( \WP_REST_Request $r ) {
