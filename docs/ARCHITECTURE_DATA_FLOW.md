@@ -1,7 +1,7 @@
 
 # Architecture and Data Flow — Engineering Blueprint
 
-**Status:** Blueprint and P6 decisions approved; I-02 foundation, I-03 manual capture/catalog, and I-04 refund observer implemented; runtime validation remains.  
+**Status:** Blueprint and P6 decisions approved; I-02 foundation, I-03 capture/catalog, I-04 refund observer, I-06 admin UI, and I-05 Free counts implemented; runtime validation remains.  
 **Reviewed:** 2026-11-06. 
 
 ## Source model
@@ -31,12 +31,13 @@ Use a stable external key for refund observation and a generated unique key for 
 5. Aggregate indexed event data and bounded WooCommerce sales data.
 6. Pattern service generates explainable candidates without changing source events.
 7. Alert service applies sample thresholds and deduplication.
-8. React admin displays evidence, confidence, and corrective actions.
+8. React admin displays captured evidence and I-05 count reports. Product/variation insight patterns and corrective actions remain later Pro work.
 9. Privacy lifecycle exports or erases/anonymizes linked data as required.
 
 ## Metric contract
 
-- **Reason-event count:** captured records by reason/event time; Free report.
+- **Reason-event count:** captured records and summed quantities by reason/event time; Free report. I-05 adds date filters, source/event-kind groups, item-scoped product/category counts, and mapping coverage.
+- Free report date bounds use the store timezone and are converted to UTC before querying plugin event rows. Category totals may overlap because products can belong to multiple categories.
 - **Confirmed item return rate:** confirmed returned quantity divided by eligible sold quantity in the same purchase cohort; only show with adequate mapping and denominator.
 - **Refund item ratio:** refunded quantity divided by eligible sold quantity; label as refund proxy, never as a physical-return rate.
 - Exclude ambiguous refund-level reasons from variation-level attribution. Show sample size, data coverage, and metric definition/version.
