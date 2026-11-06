@@ -45,7 +45,7 @@ Pricing and exact limits are not approved.
 
 Use a reason-only event, not an RMA request. Candidate sources are merchant-entered events, a first-party reason-only customer form, and adapters to selected return plugins. Each event keeps source/provenance; refunds are not automatically classified as physical returns. The plugin never controls approval, money movement, exchange, or shipping.
 
-**D1:** Choose the MVP combination of capture sources. Evaluate low friction, reason completeness, privacy, and development cost. Do not promise universal RMA-plugin compatibility.
+**D1:** Choose MVP capture sources. Evaluate low friction, reason completeness, privacy, and development cost. Do not promise universal RMA-plugin compatibility.
 
 ## Intelligence behavior
 
@@ -70,5 +70,4 @@ Reason completeness and item mapping; time to review a strong pattern; actions s
 - D6 deterministic/local clustering vs optional external AI, opt-in and data sent.
 - D7 Free/Pro boundaries, exports, retention, $79/year price.
 - D8 integration priority based on APIs and demand.
-- D9 runtime support floor and tested matrix.
-- D10 storage choice after volume/query estimates.
+- D9 storage choice after volume/query estimates.
