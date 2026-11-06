@@ -32,6 +32,7 @@ require_once WPE_RI_PATH . 'includes/class-capabilities.php';
 require_once WPE_RI_PATH . 'includes/class-admin.php';
 require_once WPE_RI_PATH . 'includes/class-installer.php';
 require_once WPE_RI_PATH . 'includes/class-reason-catalog.php';
+require_once WPE_RI_PATH . 'includes/class-pattern-service.php';
 require_once WPE_RI_PATH . 'includes/class-rest-controller.php';
 require_once WPE_RI_PATH . 'includes/class-refund-observer.php';
 require_once WPE_RI_PATH . 'includes/class-plugin.php';
