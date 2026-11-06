@@ -1,7 +1,7 @@
 
 # Architecture and Data Flow — Engineering Blueprint
 
-**Status:** Blueprint and P6 decisions approved; I-02 foundation, I-03 capture/catalog, I-04 refund observer, I-06 admin UI, and I-05 Free counts implemented; runtime validation remains.  
+**Status:** Blueprint and P6 decisions approved; I-02 foundation, I-03 capture/catalog, I-04 refund observer, I-05 Free counts, I-06 admin UI, and I-07 Pro cohort patterns implemented; runtime validation remains.  
 **Reviewed:** 2026-11-06. 
 
 ## Source model
@@ -29,9 +29,9 @@ Use a stable external key for refund observation and a generated unique key for 
 3. Normalize to stable reason IDs; preserve raw source only under the approved retention/privacy rules.
 4. Write one small event transaction and enqueue any heavy aggregation.
 5. Aggregate indexed event data and bounded WooCommerce sales data.
-6. Pattern service generates explainable candidates without changing source events.
-7. Alert service applies sample thresholds and deduplication.
-8. React admin displays captured evidence and I-05 count reports. Product/variation insight patterns and corrective actions remain later Pro work.
+6. I-07 pattern service generates explainable product/variation candidates without changing source events.
+7. A future alert service applies approved sample thresholds and deduplication.
+8. React admin displays captured evidence, I-05 count reports, and the entitlement-gated I-07 patterns screen. Clustering, alerts, and corrective actions remain later Pro work.
 9. Privacy lifecycle exports or erases/anonymizes linked data as required.
 
 ## Metric contract
@@ -70,6 +70,10 @@ External AI remains off by default. Any future provider processing needs explici
 ## I-04 implementation boundary
 
 `Refund_Observer` listens to WooCommerce's documented post-save `woocommerce_refund_created` hook and deletion hook. It reads the refund and parent order through `wc_get_order()` and stores one event at `refund` scope, with no item/product attribution, so a refund-level phrase is not multiplied into product/variation evidence. Exact active reason-catalog labels map in memory; unmatched text becomes `unknown`, and source free text is not stored. Schema v2 adds refund ID linkage. Runtime behavior on HPOS/legacy stores, duplicate hook delivery, and deletion lifecycle has not been verified.
+
+## I-07 implemented cohort boundary
+
+The current service compares adjacent mature cohorts, defaults to 90-day maturity and 90-day cohort windows, and accepts 30/60/90/120/180 day selections. It reads orders through `wc_get_orders()` in pages of 50 and stops at 500 per cohort. Completed/refunded orders with completion timestamps contribute native line-item quantity as an MVP denominator proxy; partial fulfillment is not modeled. Only exact item-mapped confirmed-return events enter the numerator. Refund-only and exchange records are excluded. Incomplete mapping, scan overflow, denominators below 20 units, missing sold quantity, and returns above sales make the rate unavailable. Runtime and performance behavior remain for I-11 verification.
 
 ## P6 decisions and remaining implementation validation
 
