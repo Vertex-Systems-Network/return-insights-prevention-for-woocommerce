@@ -30,7 +30,7 @@ final class Alert_Service {
 			return new \WP_Error( 'pro_required', __( 'Alerts require the Pro add-on.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 403 ) );
 		}
 
-		$report = Pattern_Service::report( 90, 90 );
+		$report = Pattern_Service::report( 90, 90, true );
 		if ( is_wp_error( $report ) ) {
 			return $report;
 		}
