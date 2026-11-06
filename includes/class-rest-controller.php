@@ -52,6 +52,13 @@ final class Rest_Controller {
 				'cohort_days' => array( 'type' => 'integer', 'default' => 90, 'enum' => array( 30, 60, 90, 120, 180 ) ),
 			),
 		) );
+		register_rest_route( self::NS, '/alerts', array( 'methods' => 'GET', 'callback' => array( self::class, 'get_alerts' ), 'permission_callback' => array( self::class, 'can_view_patterns' ) ) );
+		register_rest_route( self::NS, '/alerts/(?P<id>[a-f0-9]{64})', array(
+			'methods' => 'PATCH',
+			'callback' => array( self::class, 'update_alert' ),
+			'permission_callback' => array( self::class, 'can_manage_alerts' ),
+			'args' => array( 'status' => array( 'type' => 'string', 'required' => true, 'enum' => array( 'active', 'dismissed' ) ), 'note' => array( 'type' => 'string', 'maxLength' => 200 ) ),
+		) );
 		register_rest_route( self::NS, '/clusters', array(
 			'methods' => 'GET',
 			'callback' => array( self::class, 'get_clusters' ),
@@ -123,6 +130,10 @@ final class Rest_Controller {
 	}
 	public static function can_view(): bool { return current_user_can( Capabilities::VIEW ); }
 	public static function can_manage(): bool { return current_user_can( Capabilities::MANAGE ); }
+	public static function can_manage_alerts() {
+		if ( ! self::can_manage() ) { return false; }
+		return Pattern_Service::is_entitled() ? true : new \\WP_Error( 'pro_required', __( 'Alerts require the Pro add-on.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 403 ) );
+	}
 	public static function can_manage_clusters() {
 		if ( ! self::can_manage() ) { return false; }
 		return Pattern_Service::is_entitled() ? true : new \\WP_Error( 'pro_required', __( 'Reason clustering requires the Pro add-on.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 403 ) );
@@ -161,6 +172,14 @@ final class Rest_Controller {
 			$items[] = array( 'order_item_id' => $item->get_id(), 'product_id' => $p->get_parent_id() ?: $p->get_id(), 'variation_id' => $p->get_parent_id() ? $p->get_id() : 0, 'name' => $item->get_name(), 'ordered_quantity' => (float) $item->get_quantity() );
 		}
 		return rest_ensure_response( array( 'order_id' => $order->get_id(), 'order_number' => $order->get_order_number(), 'items' => $items ) );
+	}
+
+	public static function get_alerts() { return rest_ensure_response( array( 'alerts' => Alert_Service::all() ) ); }
+
+	public static function update_alert( \WP_REST_Request $r ) {
+		if ( self::has_unknown_fields( $r->get_json_params(), array( 'status', 'note' ) ) ) { return self::unknown_fields_error(); }
+		$result = Alert_Service::set_status( sanitize_text_field( (string) $r['id'] ), sanitize_key( (string) $r->get_param( 'status' ) ), sanitize_text_field( (string) $r->get_param( 'note' ) ) );
+		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
 	}
 
 	public static function get_clusters( \WP_REST_Request $r ) {
