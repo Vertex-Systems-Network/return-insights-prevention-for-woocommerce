@@ -1,6 +1,6 @@
 # Implementation Backlog — Approved, Ordered Work
 
-**Status:** I-00/I-01 design packages and I-02 foundation, I-03 catalog/manual-capture API, I-04 refund observation, and I-06 REST/React admin surfaces implemented. I-05 reports and I-11 verification remain.  
+**Status:** I-00/I-01 design packages and I-02 foundation, I-03 catalog/manual-capture API, I-04 refund observation, and I-06 REST/React admin surfaces implemented. I-05 Free reports are implemented; I-11 verification remains.  
 **Start condition:** P6 approval recorded in `P6_READINESS_GATE.md` on 2026-11-06.  
 **Repository constraint:** Do not add CLI/build tooling to this repository until the plugin is final. React uses WordPress-bundled globals without JSX or a build step; this preserves the repository constraint.
 
@@ -16,13 +16,21 @@ Each runtime item must be scoped with named files, acceptance evidence, dependen
 | I-03 | Reason catalog and manual capture | Stable reason keys, translated labels, first versioned event-table migration, per-item merchant capture, validation/audit/provenance | I-02 | Implemented: versioned event table/dbDelta migration, canonical reason IDs and editable label translations, per-item Woo order lookup through CRUD API, manual confirmed-return/exchange POST with idempotency, protected event listing/get/edit/soft-delete, and server-derived product/variation IDs. Static source inspection only; runtime permission, migration, and quantity-edge verification remains for I-11. |
 | I-04 | Native refund observation | Supported WooCommerce refund hooks/objects, idempotent ingestion, refund-scope attribution, HPOS + legacy behavior | I-02, I-03 | Implemented: post-save `woocommerce_refund_created` observer reads WooCommerce refund/order objects through CRUD APIs, stores one refund-scope `refund_only` event per refund with a unique source key, maps only exact active catalog labels without persisting raw phrase text, and soft-deletes the linked event when the refund is deleted. Source code inspected; HPOS/legacy and lifecycle runtime checks remain for I-11. |
 | I-06 | REST contract and React admin | Permission-protected endpoints, pagination/errors, overview/history/capture/catalog/source screens | I-00, I-01, WordPress-bundled script handles | Implemented: REST schemas/unknown-field rejection; permission-aware no-build React screen; source counts/latest dates; paginated/filterable history; per-item capture/edit/audited soft-delete; reason catalog. Static source review only; runtime and visual/accessibility verification is I-11. |
-| I-05 | Basic reporting (Free) | Counts, date filters, coverage, source breakdown, empty/low-data states | I-03, I-04, I-06 | UI numbers reconcile to event definitions; no unsupported rate shown |
+| I-05 | Basic reporting (Free) | Counts, date filters, reason/source breakdown, item-scoped product/category counts, coverage, empty/low-data states | I-03, I-04, I-06 | Implemented: `GET /summary` provides store-timezone date filtering, event and quantity totals, reason/event-kind/source counts, mapped/unmapped coverage, top 10 item-scoped products/categories, and period metadata. React overview renders date filters, tables, loading/empty/error states. No return rates or causality claims. Static source review only; I-11 runtime, visual, accessibility, and performance checks remain. |
 | I-07 | Pro product/variation insights | Aggregation, eligible denominators, comparable cohorts, sample-aware pattern output | I-04, I-05 | Counts/rates show definitions and coverage; weak/incomplete cohorts suppress rates |
 | I-08 | Pro clustering and alerts | Local explainable grouping; thresholds, deduplication, dismissal and audit | I-07 | Membership is reviewable/reversible; alert evidence and suppression reasons visible |
 | I-09 | Corrective-action tracking | Hypothesis, owner, statuses, dates, measurement windows, before/after view | I-07, I-08 | Status history and comparable pre/post evidence; no causality claims |
 | I-10 | Optional multilingual/integration compatibility | WPML/Polylang integration and any approved RMA source adapters | I-03 to I-06, demand/API review | Tested optional integrations; core works when absent/disabled |
 | I-11 | Release hardening | Current compatibility matrix, security/accessibility/performance/privacy checks, migration/rollback, docs, package boundaries | I-02 to I-10 | Evidence recorded for claimed versions and release criteria |
 | I-12 | Submission preparation | WordPress.org Free and WooCommerce.com Paid artifacts/listings, QIT and reviewer responses | I-11 | Separate packages validated and submission checklists complete |
+
+## I-05 implementation references
+
+- `includes/class-rest-controller.php` registers `GET /summary`, validates calendar dates, converts store-local inclusive dates into UTC query bounds, and aggregates only active plugin event records.
+- The summary separates event counts from summed recorded quantities and groups reasons, event kinds, sources, item-scoped products, and assigned product categories. Category memberships can overlap; category totals are not additive across categories.
+- Mapping coverage reports mapped/unmapped event counts and a percentage with its denominator. It is not a return rate.
+- `assets/js/admin.js` adds a date range filter, overview cards, and accessible table equivalents. `includes/class-admin.php` supplies localized labels and the default last-30-days period.
+- Sales denominators, mature purchase cohorts, rates, confidence, and Pro pattern outputs remain outside I-05.
 
 ## I-06 implementation references
 
