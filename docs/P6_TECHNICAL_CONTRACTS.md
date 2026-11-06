@@ -2,7 +2,7 @@
 
 **Status:** Approved design contract; no endpoints or code implemented.  
 **Reviewed:** 2026-11-06  
-**Depends on:** P6 approval recorded 2026-11-06; runtime implementation remains pending.
+**P6 status:** Approved on 2026-11-06; runtime implementation remains pending.
 
 This document defines the approved engineering boundary. Concrete JSON schemas and code are delivered in the corresponding implementation tasks.
 
@@ -16,13 +16,13 @@ This document defines the approved engineering boundary. Concrete JSON schemas a
 - Every request field has a schema, strict validation, and sanitization only where transformation is appropriate. Reject invalid IDs, enums, date ranges, quantities, and unknown fields.
 - Use WooCommerce public CRUD APIs to verify order/refund/order-item/product references and the actor’s permitted access. Never trust client-supplied product, variation, or order relationships.
 - Return only fields needed by the current screen. Never expose customer name, email, billing/shipping address, payment details, authentication data, or full order objects through the insights API.
-- Use server-side pagination with deterministic ordering; cap page size (proposed maximum 100). No unbounded event collection.
+- Use server-side pagination with deterministic ordering; cap page size (maximum 100). No unbounded event collection.
 - Store timestamps in UTC and return ISO-8601 UTC values plus the site timezone identifier for display. Date-filter semantics use the store’s calendar timezone and convert explicitly at query boundaries.
 - Use consistent errors: stable machine-readable `code`, translated human `message`, HTTP status, and field errors when relevant. Do not return SQL, stack traces, filesystem paths, or raw exception messages.
 - Mutation endpoints require idempotency for retryable event writes and use optimistic conflict handling for concurrent edits.
 - License gating is enforced server-side for Pro data/actions; expiry cannot delete or hide merchant-owned event data.
 
-## Proposed route contract
+## Approved route contract
 
 | Route | Methods | Capability | Purpose / schema summary |
 |---|---|---|---|
@@ -71,7 +71,7 @@ These are field inventories for review, not JSON Schema or frozen payloads.
 | Duplicate/replayed events | Refund hooks or retries create inflated counts | Unique source identity, idempotent upsert, tested repeated-delivery behavior |
 | Background job abuse/failure | Repeated admin action floods Action Scheduler or jobs run forever | Capability checks at enqueue boundary, bounded batches, locks/idempotency, retry cap/backoff, observable failed/lagging state, cancellable backfill |
 | Privacy leakage | Raw reason text contains a name or sensitive complaint; order ref is linkable | Minimize fields, mark raw phrase optional and bounded, retention policy, privacy exporter/eraser, no PII in logs or analytics responses |
-| Cross-store leakage | Multisite query omits blog/site prefix or tenant scope | Decide multisite support explicitly; scope every query and scheduled job to current site; test isolation before claiming support |
+| Cross-site leakage | Multisite query omits site scope | V1 supports per-site activation only; scope every query and scheduled job to the current site; no network-wide activation; test site isolation |
 | License downgrade | Expired Pro hides/deletes stored data or blocks Free ingestion | Preserve shared event data; disable Pro actions/analytics gracefully; never erase on expiry |
 | External provider exposure | Store event text or IDs sent to AI/telemetry | No external AI or analytics transmission in V1; any future provider needs separate opt-in and privacy/security approval |
 | Supply-chain / release | Bundled dependency or build output contains vulnerable/unlicensed code | Inventory licenses/dependencies; reproducible documented release process; scan and review artifacts before submission |
