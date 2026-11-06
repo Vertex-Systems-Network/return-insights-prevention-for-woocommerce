@@ -37,6 +37,11 @@ register_activation_hook(
 	array( '\\WPEssential\\ReturnInsights\\Plugin', 'activate' )
 );
 
+register_deactivation_hook(
+	__FILE__,
+	array( '\\WPEssential\\ReturnInsights\\Plugin', 'deactivate' )
+);
+
 add_action(
 	'plugins_loaded',
 	array( '\\WPEssential\\ReturnInsights\\Plugin', 'boot' ),
