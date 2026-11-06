@@ -1,7 +1,7 @@
 
 # Architecture and Data Flow — Engineering Blueprint
 
-**Planning status:** Blueprint complete; product review and implementation validation remain.  
+**Planning status:** Blueprint approved at P6; implementation validation remains.  
 **Reviewed:** 2026-11-06. No runtime code exists.
 
 ## Source model
@@ -40,8 +40,8 @@ Use a stable external key for refund observation and a generated unique key for 
 - **Confirmed item return rate:** confirmed returned quantity divided by eligible sold quantity in the same purchase cohort; only show with adequate mapping and denominator.
 - **Refund item ratio:** refunded quantity divided by eligible sold quantity; label as refund proxy, never as a physical-return rate.
 - Exclude ambiguous refund-level reasons from variation-level attribution. Show sample size, data coverage, and metric definition/version.
-- Use a cohort maturity rule based on the store's return window/data latency; do not hardcode a universal 30/60-day period.
-- D4 in the product spec remains open for final numerator/denominator edge cases and cohort maturity.
+- Use a 90-day default cohort maturity window, adjustable to 30/60/90/120/180 days in settings. This is an analytics heuristic, not a return policy. Exclude immature cohorts.
+- P6 D4 approved: numerator is unique confirmed returned quantity; denominator is eligible sold quantity for the same product/variation purchase cohort. Exclude canceled/unfulfilled quantities; deduplicate events. Refund ratios are separate.
 
 ## WooCommerce and HPOS boundary
 
@@ -66,6 +66,6 @@ Minimize data and treat free-text refund reasons as potentially identifying. App
 
 External AI remains off by default. Any future provider processing needs explicit opt-in, field minimization, disclosure, retention/cost policy and a security/privacy review.
 
-## Decisions carried to P6
+## P6 decisions and remaining implementation validation
 
-Storage schema approval after benchmark design; raw-reason retention default; rate numerator/denominator edge cases; timezone/cohort maturity; multisite scope; alert thresholds; data volume/performance targets.
+P6 approved indexed plugin-owned event/action tables, 24-month canonical event retention, optional 90-day raw-phrase retention, 90-day default cohort maturity, configurable heuristic alert thresholds, site-local data scoping, and V1 no network-wide multisite activation. Physical schema/indexes, benchmark targets, and test evidence remain implementation tasks.
