@@ -2,7 +2,7 @@
 
 **Status:** Approved; P6 readiness gate passed.  
 **Reviewed:** 2026-11-06  
-**Implementation status:** P6 authorizes scoped runtime implementation. No plugin runtime code or CLI was added in this approval update; the separate no-CLI-until-final constraint remains active.
+**Implementation status:** P6 authorizes scoped runtime implementation. The original no-CLI-until-final constraint remains active. On 2026-11-06, the owner additionally authorized `composer.json` solely for PSR-4 mapping; no external dependencies or Composer commands are approved before final package preparation.
 
 The product owner explicitly delegated approval and final choices in ChatGPT on 2026-11-06 (“Aproval ha jo krna ha tumne karna ha”). The following defaults are recorded as approved. Reopen a decision only through a documented change request.
 
@@ -38,7 +38,7 @@ P6 passed on 2026-11-06 after owner delegation and recording approved decisions 
 - Free and Paid editions have distinct responsibilities and a documented update/dependency model before release packaging.
 - React uses WordPress-bundled globals and no build tool or CLI is added to the repository until the plugin is final.
 - Every agent task follows `AGENTS.md`, names files and acceptance evidence, and updates README progress in the same update.
-- P6 explicitly authorizes scoped runtime tasks. Do not add CLI/build tooling, Composer/npm manifests, package managers, or build scripts to this repository until the plugin is final.
+- P6 explicitly authorizes scoped runtime tasks. The original no-CLI/no-build constraint remains; the owner later authorized a single `composer.json` PSR-4 mapping with no third-party dependencies. Composer commands remain reserved for final packaging.
 
 ## Gate review checklist
 
@@ -62,4 +62,4 @@ P6 passed on 2026-11-06 after owner delegation and recording approved decisions 
 - **Date:** 2026-11-06.
 - **Scope/version approved:** V1 pre-development scope and I-00–I-12 implementation backlog.
 
-P6 is complete. Runtime work may proceed in dependency order. CLI/build tooling remains prohibited in this repository until the plugin is final.
+P6 is complete. Runtime work may proceed in dependency order. CLI/build tooling remains prohibited in this repository until the plugin is final, except that `composer.json` may declare the authorized PSR-4 mapping.

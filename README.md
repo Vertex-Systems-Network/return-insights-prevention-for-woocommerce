@@ -1,6 +1,6 @@
 # WPEssential Return Insights & Prevention for WooCommerce
 
-> Early implementation repository. P6 is complete. I-02 through I-08 implementation work is present, including native PSR-4 PHP autoloading. Runtime/release verification remains in I-11; later product work remains in I-09, I-10, and I-12.
+> Early implementation repository. P6 is complete. I-02 through I-08 implementation work is present, including Composer PSR-4 PHP autoloading. Runtime/release verification remains in I-11; later product work remains in I-09, I-10, and I-12.
 
 ## Product direction
 
@@ -29,7 +29,7 @@ Planning estimates in UTC; reviewed 2026-11-06. P0–P7 track planning artifacts
 
 ## Implementation status
 
-P6 approval is recorded. I-02 foundation, I-03 catalog/manual-capture API, I-04 refund observation, I-05 Free reports, I-06 REST/React admin, I-07 Pro product/variation cohort insights, and I-08 Pro clustering/alerts implementation are present (7/11, **64%**). PHP classes use the native PSR-4 mapping `WPEssential\ReturnInsights\` to `src/`, without Composer. Free reports provide date-filtered event/reason/quantity/source counts and item-scoped product/category totals. Pro patterns compare mature purchase cohorts, use exact item-level confirmed-return attribution, and suppress rates for incomplete mapping, fewer than 20 sold units, missing denominators, and returns above sold quantity. Runtime, visual, accessibility, compatibility, and commercial entitlement verification remain for I-11. React uses WordPress bundled packages without JSX/build tooling; no CLI is to be added until the plugin is final.
+P6 approval is recorded. I-02 foundation, I-03 catalog/manual-capture API, I-04 refund observation, I-05 Free reports, I-06 REST/React admin, I-07 Pro product/variation cohort insights, and I-08 Pro clustering/alerts implementation are present (7/11, **64%**). PHP classes use Composer PSR-4 mapping `WPEssential\ReturnInsights\` to `src/`. A native fallback keeps source checkouts usable until Composer packaging is run for release. Free reports provide date-filtered event/reason/quantity/source counts and item-scoped product/category totals. Pro patterns compare mature purchase cohorts, use exact item-level confirmed-return attribution, and suppress rates for incomplete mapping, fewer than 20 sold units, missing denominators, and returns above sold quantity. Runtime, visual, accessibility, compatibility, and commercial entitlement verification remain for I-11. React uses WordPress bundled packages without JSX/build tooling; no CLI is to be added until the plugin is final.
 
 ## Distribution plan
 
@@ -57,7 +57,7 @@ Package progress means implementation scope is present; it does not mean runtime
 
 ## Current gate
 
-P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS_GATE.md. I-02 through I-08 implementation packages are present (7/11, 64%); I-08 is complete at implementation scope. It includes deterministic clusters, reversible assignments, weekly Pro evaluation, a full candidate scan capped at 2,000 rows with fail-closed overflow, ≥80% mapping threshold, per-candidate sample/rate gates, stable deduplication, bounded 2,000-alert storage and 50-entry action history, persisted scan status, and React cluster/alert review UI. The Alerts screen surfaces coverage blocks and withheld-candidate reasons. Runtime, visual, accessibility, compatibility, and entitlement-provider verification remain tracked in I-11. Test-site installation was blocked by browser security policy, so no live-site result is claimed. Keep CLI/build tooling, Composer/npm manifests, and package managers out of this repository until the plugin is final.
+P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS_GATE.md. I-02 through I-08 implementation packages are present (7/11, 64%); I-08 is complete at implementation scope. It includes deterministic clusters, reversible assignments, weekly Pro evaluation, a full candidate scan capped at 2,000 rows with fail-closed overflow, ≥80% mapping threshold, per-candidate sample/rate gates, stable deduplication, bounded 2,000-alert storage and 50-entry action history, persisted scan status, and React cluster/alert review UI. The Alerts screen surfaces coverage blocks and withheld-candidate reasons. Runtime, visual, accessibility, compatibility, and entitlement-provider verification remain tracked in I-11. Test-site installation was blocked by browser security policy, so no live-site result is claimed. Composer manifest is now authorized only for PSR-4 mapping; Composer generation is reserved for final package preparation. No third-party dependency or other CLI/build tooling has been added.
 
 ## Plan files
 
@@ -87,7 +87,7 @@ P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS
 6. WPML and Polylang behavior specified and tested; neither is a hard dependency.
 7. P6 is passed; implementation follows the approved backlog. No CLI/build tooling in this repo until the plugin is final.
 8. AI agents read this README and AGENTS.md, make scoped changes, and update the dashboard in the same update.
-9. PHP classes follow PSR-4: `WPEssential\ReturnInsights\` maps to `/src/`; the plugin's small native autoloader is loaded from `includes/autoload.php`. Do not add Composer before finalization.
+9. PHP classes follow Composer PSR-4: `WPEssential\ReturnInsights\` maps to `/src/` in `composer.json`; `includes/autoload.php` prefers the generated Composer loader and keeps a fallback for source checkouts. Do not add third-party dependencies or run Composer commands before final packaging.
 
 ## Research snapshot
 
@@ -99,7 +99,7 @@ P3 architecture specifies indexed custom event storage, source-level idempotency
 
 ## Change log
 
-- 2026-11-06: Applied native PSR-4 class loading: moved namespaced classes to case-matched `src/` files, normalized class names, replaced the manual include list with `includes/autoload.php`, and updated uninstall loading and architecture references. No Composer or CLI tooling added. Runtime package totals remain 7/11 (64%); class-load runtime verification remains in I-11.
+- 2026-11-06: Added Composer PSR-4 mapping `WPEssential\ReturnInsights\` → `src/`, using the generated vendor loader when present and retaining a source-checkout fallback. Existing PSR-4 class/file renames and bootstrap/uninstall wiring remain in place. No third-party dependencies added; Composer commands are reserved for final packaging. Runtime package totals remain 7/11 (64%); Composer-generated loading remains to be verified during I-11/release packaging.
 - 2026-11-06: Completed I-08 implementation: weekly scan status and suppression reasons are returned through REST and displayed in Alerts; below-80% mapping blocks evaluation and candidate-level sample/coverage gates are counted. Bounded storage is documented and I-08 is 100% at implementation scope; live runtime verification is assigned to I-11. Runtime work packages: 7/11 (64%).
 - 2026-11-06: Completed product scope/options plan and proposed WooCommerce refund observation plus per-item admin capture.
 - 2026-11-06: Added separate WordPress.org Free and WooCommerce.com Paid submission plan.

@@ -6,6 +6,13 @@
  */
 defined( 'ABSPATH' ) || exit;
 
+$composer_autoload = dirname( __DIR__ ) . '/vendor/autoload.php';
+if ( is_readable( $composer_autoload ) ) {
+	require_once $composer_autoload;
+	return;
+}
+
+// Keep source checkouts and unbuilt WordPress installs usable before packaging.
 spl_autoload_register(
 	static function ( string $class ): void {
 		$prefix = 'WPEssential\\ReturnInsights\\';
