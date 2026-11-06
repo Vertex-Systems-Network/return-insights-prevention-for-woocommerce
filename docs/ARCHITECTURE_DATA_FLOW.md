@@ -1,58 +1,71 @@
 
-# Architecture and Data Flow — Proposal
+# Architecture and Data Flow — Engineering Blueprint
 
-Conceptual only; no implementation decisions are final.
+**Planning status:** Blueprint complete; product review and implementation validation remain.  
+**Reviewed:** 2026-11-06. No runtime code exists.
 
-## Recommended source model
+## Source model
 
-1. **Native refund observer:** observe WooCommerce refund creation and read the refund through WooCommerce data objects. The official API exposes refund reason plus line-item references, product/variation IDs, and quantities. The WooCommerce code reference documents the woocommerce_refund_created action after a refund is saved.
-2. **Manual per-item event:** authorized store staff records a confirmed return/exchange reason against an order item, even if no refund exists. This is an insight record only; it does not change order, refund, exchange, or return status.
-3. **Future adapters:** only add selected RMA integrations after their APIs and demand are confirmed. No universal adapter promise.
+1. **Native refund observer:** observe WooCommerce refund creation and read the refund through WooCommerce data objects. The official API exposes refund reason and line-item/product/variation/quantity references. Use the documented post-save refund hook for observation.
+2. **Manual per-item insight event:** permitted store staff records a confirmed return/exchange reason against an order item, even if no refund exists. This records insight only; it does not change return/order/refund status.
+3. **Future adapters:** selected RMA integrations only after APIs and demand are confirmed. No universal adapter promise.
 
-Sources: [WooCommerce order refund API](https://developer.woocommerce.com/docs/apis/rest-api/v1/order-refunds/) · [WooCommerce code reference for refund actions](https://woocommerce.github.io/code-reference/files/woocommerce-includes-wc-order-functions.html)
+## Canonical event
 
-## Canonical event candidates
+See docs/DATA_MODEL.md. Core facts: event kind, source/provenance, unique source reference, order/refund/item/product/variation IDs when available, quantity, stable reason ID, optional raw reason, event time, attribution scope, confidence, and minimal audit metadata.
 
-Internal event ID and idempotency key; event kind; source type/reference; refund/order/order-item IDs when available; product/variation IDs and quantity when available; canonical reason ID and optional source phrase; event timestamp and store timezone; capture locale; attribution scope (refund-level or per-item); source confidence; minimal audit metadata.
+Do not copy customer name, email, address, payment information, or full order payload into analytics records.
 
-Do not copy customer name, email, address, payment information, or full order payload into analytics records without an approved use case.
+## Attribution and idempotency
 
-## Attribution rule
+A refund may contain one free-text reason and multiple line items. Preserve the reason at refund scope unless it was explicitly assigned to each line. Never multiply an order-level reason into per-variation evidence. Manual per-item capture is the precise item-level source.
 
-A native refund can contain one free-text reason and multiple line items. Preserve the refund-level reason and the referenced line items. If the reason is not explicitly assigned to each item, do not multiply it into per-variation evidence. The admin per-item event is the source for precise item-level reason attribution. Distinguish refund evidence from confirmed physical return.
+Use a stable external key for refund observation and a generated unique key for manual events. Repeated hook delivery or import retries must upsert/ignore the same source event, not create duplicates. Track source changes/deletions and provide an auditable correction path.
 
-## Proposed flow
+## Data flow
 
-1. Capture adapter observes a refund or receives manual staff entry.
-2. Validation checks capability/nonce, valid WooCommerce references, event kind, reason, quantity, and input bounds.
-3. Normalization maps source reasons to stable internal IDs while preserving raw text/provenance.
-4. Idempotency prevents duplicate refund processing/import retries.
-5. Repository stores canonical events behind a storage abstraction. Compare custom tables vs custom post type/meta after estimating volume and query needs.
-6. Aggregation computes counts/rates from explicit, versioned definitions.
-7. Pattern service groups evidence without rewriting source events.
-8. Alert service evaluates thresholds; React admin presents evidence and corrective actions.
-9. Privacy lifecycle supports export, erasure, retention, and uninstall choices.
+1. Hook observes refund creation or admin sends manual entry.
+2. Validate capability, nonce, references, event kind, reason and quantity.
+3. Normalize to stable reason IDs; preserve raw source only under the approved retention/privacy rules.
+4. Write one small event transaction and enqueue any heavy aggregation.
+5. Aggregate indexed event data and bounded WooCommerce sales data.
+6. Pattern service generates explainable candidates without changing source events.
+7. Alert service applies sample thresholds and deduplication.
+8. React admin displays evidence, confidence, and corrective actions.
+9. Privacy lifecycle exports or erases/anonymizes linked data as required.
 
-## WooCommerce boundary
+## Metric contract
 
-Use public WooCommerce CRUD APIs and supported hooks. Support HPOS and legacy storage. A refund is evidence of money returned, not proof that goods physically returned. Never rely on direct queries against legacy order tables.
+- **Reason-event count:** captured records by reason/event time; Free report.
+- **Confirmed item return rate:** confirmed returned quantity divided by eligible sold quantity in the same purchase cohort; only show with adequate mapping and denominator.
+- **Refund item ratio:** refunded quantity divided by eligible sold quantity; label as refund proxy, never as a physical-return rate.
+- Exclude ambiguous refund-level reasons from variation-level attribution. Show sample size, data coverage, and metric definition/version.
+- Use a cohort maturity rule based on the store's return window/data latency; do not hardcode a universal 30/60-day period.
+- D4 in the product spec remains open for final numerator/denominator edge cases and cohort maturity.
 
-## Metric definitions to decide
+## WooCommerce and HPOS boundary
 
-- Reason event count: captured events matching filters.
-- Confirmed item return rate: confirmed returned quantity / sold quantity for the same product/variation cohort, if complete denominator data exists.
-- Refund item ratio: refunded quantity / sold quantity, clearly labeled as a refund proxy.
+Use WooCommerce CRUD APIs and supported hooks for order/refund access. Support HPOS and legacy order storage. Do not query or write WooCommerce order tables directly. Keep product analytics SQL confined to the plugin's own indexed tables; obtain order/sales facts through WooCommerce-supported APIs or a bounded snapshot strategy.
 
-Choose the primary rate and document cohort, maturity/window, partial quantity, incomplete periods, zero denominator, and metric-definition version. Never mix counts and rates.
+## Performance plan
 
-## React admin proposal
+- Refund hook performs validation and a small idempotent write only; no dashboard-wide aggregation in the refund request.
+- Use WooCommerce's Action Scheduler when available for incremental aggregation, explicit historical backfill, and retryable tasks.
+- Do not backfill all historic refunds automatically at activation. Offer an explicit, resumable, cancellable date-range backfill.
+- Use indexed date/reason/product/variation/source keys and pagination; avoid loading every event into React.
+- Add cached/day-level rollups only after representative benchmarks show they are needed. Define data-volume and p95 targets before implementation.
+- Instrument queue lag, failed jobs, query duration and event mapping coverage without collecting customer PII.
 
-React app inside a dedicated WooCommerce admin page. Use WordPress component/data conventions after implementation approval. Serve data from permission-protected REST endpoints with pagination and aggregates. Server capability checks are authoritative. Include loading, empty, error, denied, low-sample, and stale-data states; charts need equivalent tables/summaries.
+## React and REST
 
-## Privacy/security
+React admin application under a dedicated WooCommerce page. REST endpoints require server-side capability checks, validation, sanitization, pagination and explicit schemas. Hiding a control in React is not authorization. Include loading, empty, error, denied, low-sample, stale-data and integration-unavailable states; every chart has a table/summary equivalent.
 
-Validate/sanitize input and escape output; use capability checks and REST permission callbacks; verify staff permissions; rate-limit any later public capture; integrate WordPress privacy exporter/eraser where applicable. Deactivation must not silently erase data. External AI is off by default; any future opt-in requires data minimization, provider/cost/retention disclosure, and privacy review.
+## Security/privacy
 
-## Engineering decisions for P3
+Minimize data and treat free-text refund reasons as potentially identifying. Apply a length limit and merchant-controlled retention. Resolve privacy export/erasure through the linked Woo order without storing customer email. On erasure, remove personal linkage while retaining only non-identifying aggregates where permitted. Deactivation never silently deletes data; provide a clear uninstall retention choice.
 
-Storage/migrations; per-item reason field UX; source contracts/idempotency; taxonomy and translation identity; metric cohort and maturity policy; clustering explainability; REST shape/pagination; performance and database growth budgets.
+External AI remains off by default. Any future provider processing needs explicit opt-in, field minimization, disclosure, retention/cost policy and a security/privacy review.
+
+## Decisions carried to P6
+
+Storage schema approval after benchmark design; raw-reason retention default; rate numerator/denominator edge cases; timezone/cohort maturity; multisite scope; alert thresholds; data volume/performance targets.
