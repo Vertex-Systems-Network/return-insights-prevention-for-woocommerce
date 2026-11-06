@@ -1,6 +1,6 @@
 # Logical Data Model and Lifecycle — P3 Blueprint
 
-**Status:** Approved logical model; I-03 event table and I-04 schema v2 refund linkage implemented.  
+**Status:** Approved logical model; I-03 event table, I-04 schema v2 refund linkage, and I-05 Free count reports implemented.  
 **Reviewed:** 2026-11-06.
 
 ## Storage decision
@@ -61,7 +61,7 @@ I-03 implements the event table using the site prefix and dbDelta; I-04 advances
 
 ## Metric data boundaries
 
-Free count reports use event time and stable reason ID. Product/variation rates require a denominator and adequate mapping:
+Free count reports use event time and stable reason ID; I-05 filters by inclusive store-local dates and shows count/quantity groupings, mapping coverage, and item-scoped product/category summaries. Product/variation rates require a denominator and adequate mapping:
 - Confirmed return rate uses confirmed returned quantity against eligible sold quantity in the same purchase cohort.
 - Refund item ratio uses refund quantities and is labeled as a refund proxy.
 - Do not assign a refund-level reason to every line item without explicit attribution.
