@@ -163,7 +163,7 @@ final class Rest_Controller {
 		if ( self::has_unknown_fields( $r->get_query_params(), array( 'maturity_days', 'cohort_days' ) ) ) { return self::unknown_fields_error(); }
 		$report = Pattern_Service::report( absint( $r->get_param( 'maturity_days' ) ?: 90 ), absint( $r->get_param( 'cohort_days' ) ?: 90 ) );
 		if ( is_wp_error( $report ) ) { return $report; }
-		$report['clusters'] = Cluster_Service::build( $report['patterns'] ?? array() );
+		$report['clusters'] = Cluster_Service::build( $report['patterns'] ?? array(), $report['coverage'] ?? array() );
 		return rest_ensure_response( $report );
 	}
 
