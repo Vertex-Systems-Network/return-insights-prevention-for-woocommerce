@@ -132,14 +132,44 @@
 
 		function renderClusters() {
 			const rows = clusterData || [];
-			return h( 'section', { className: 'wpe-ri-panel', 'aria-labelledby': 'wpe-ri-clusters-heading' },
-				h( 'div', { className: 'wpe-ri-panel-heading' }, h( 'div', null, h( 'h2', { id: 'wpe-ri-clusters-heading' }, config.strings.clustersTitle ), h( 'p', { className: 'wpe-ri-muted' }, config.strings.clustersIntro ) ) ),
-				rows.length ? h( 'div', { className: 'wpe-ri-table-wrap' }, h( 'table', { className: 'wpe-ri-table' },
+			const tableRows = rows.map( function ( row ) {
+				const controls = ( row.reason_ids || [] ).map( function ( id ) {
+					const options = [ h( 'option', { key: 'default', value: '' }, config.strings.resetCluster ) ].concat(
+						[ 'fit_size', 'product_condition', 'product_description', 'fulfillment', 'order_intent' ].map( function ( value ) {
+							return h( 'option', { key: value, value: value }, value );
+						} )
+					);
+					return h( 'label', { className: 'wpe-ri-cluster-control', key: id }, [
+						id,
+						h( 'select', {
+							'aria-label': config.strings.assignCluster + ' ' + id,
+						defaultValue: row.cluster_id,
+						onChange: function ( event ) {
+							apiFetch( { path: namespace + '/clusters/' + id, method: 'PATCH', data: { cluster_id: event.target.value } } )
+								.then( function () { loadPatterns( patternMaturity, cohortDays ); } )
+								.catch( function () { showError( null, config.strings.clusterUpdateError ); } );
+						}
+					}, options )
+					] );
+				} );
+				return h( 'tr', { key: row.product_id + ':' + row.variation_id + ':' + row.cluster_id }, [
+					h( 'td', null, '#' + row.product_id + ( row.variation_id ? ' / #' + row.variation_id : '' ) ),
+					h( 'td', null, row.cluster_label ),
+					h( 'td', null, ( row.reason_ids || [] ).join( ', ' ) ),
+					h( 'td', null, null === row.current.rate_percent ? config.strings.rateUnavailable : row.current.rate_percent + '%' ),
+					h( 'td', null, controls )
+				] );
+			} );
+			return h( 'section', { className: 'wpe-ri-panel', 'aria-labelledby': 'wpe-ri-clusters-heading' }, [
+				h( 'div', { className: 'wpe-ri-panel-heading' }, h( 'div', null, [
+					h( 'h2', { id: 'wpe-ri-clusters-heading' }, config.strings.clustersTitle ),
+					h( 'p', { className: 'wpe-ri-muted' }, config.strings.clustersIntro )
+				] ) ),
+				rows.length ? h( 'div', { className: 'wpe-ri-table-wrap' }, h( 'table', { className: 'wpe-ri-table' }, [
 					h( 'thead', null, h( 'tr', null, [ config.strings.product, config.strings.cluster, config.strings.clusterMembers, config.strings.currentRate, config.strings.clusterActions ].map( function ( label ) { return h( 'th', { key: label }, label ); } ) ) ),
-					h( 'tbody', null, rows.map( function ( row ) { return h( 'tr', { key: row.product_id + ':' + row.variation_id + ':' + row.cluster_id },
-						h( 'td', null, '#' + row.product_id + ( row.variation_id ? ' / #' + row.variation_id : '' ) ), h( 'td', null, row.cluster_label ), h( 'td', null, ( row.reason_ids || [] ).join( ', ' ) ), h( 'td', null, null === row.current.rate_percent ? config.strings.rateUnavailable : row.current.rate_percent + '%' ),
-						h( 'td', null, ( row.reason_ids || [] ).map( function ( id ) { return h( 'label', { className: 'wpe-ri-cluster-control', key: id }, id, h( 'select', { 'aria-label': config.strings.assignCluster + ' ' + id, defaultValue: row.cluster_id, onChange: function ( event ) { apiFetch( { path: namespace + '/clusters/' + id, method: 'PATCH', data: { cluster_id: event.target.value } } ).then( function () { loadPatterns( patternMaturity, cohortDays ); } ).catch( function () { showError( null, config.strings.clusterUpdateError ); } ); } }, [ h( 'option', { key: 'default', value: '' }, config.strings.resetCluster ) ].concat( [ 'fit_size', 'product_condition', 'product_description', 'fulfillment', 'order_intent' ].map( function ( value ) { return h( 'option', { key: value, value: value }, value ); } ) ) ) ); } ) ) ); } ) ) ) : h( 'p', { className: 'wpe-ri-muted' }, config.strings.noClusters )
-			);
+					h( 'tbody', null, tableRows )
+				] ) ) : h( 'p', { className: 'wpe-ri-muted' }, config.strings.noClusters )
+			] );
 		}
 
 		function renderAlerts() {
