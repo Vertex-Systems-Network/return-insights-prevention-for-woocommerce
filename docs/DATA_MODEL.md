@@ -1,6 +1,6 @@
 # Logical Data Model and Lifecycle — P3 Blueprint
 
-**Status:** Approved logical model; I-03 physical event table and migration implemented.  
+**Status:** Approved logical model; I-03 event table and I-04 schema v2 refund linkage implemented.  
 **Reviewed:** 2026-11-06.
 
 ## Storage decision
@@ -19,8 +19,8 @@ One record for an observed refund or a manually entered per-item return insight.
 |---|---|
 | Identity | Internal event ID; unique idempotency key; source type and source record ID |
 | Classification | Event kind: confirmed return, refund-only, exchange, warranty/repair, cancellation, unknown |
-| WooCommerce references | Order ID, refund ID, order-item ID, product ID, variation ID where available |
-| Reason | Stable reason ID; optional source phrase; attribution scope: item, refund, or order |
+| WooCommerce references | Order ID, refund ID, order-item ID, product ID, variation ID where available; refund-scope observations use zero sentinels for item/product IDs |
+| Reason | Stable reason ID; raw source phrase is not persisted in V1; attribution scope: item, refund, or order |
 | Quantity | Decimal quantity and unit context where source supports it |
 | Time | Occurrence timestamp stored in UTC; display using site timezone; source timestamp retained |
 | Evidence | Source confidence, mapping state, import/manual origin |
@@ -48,11 +48,12 @@ Plan for:
 - Unique dedupe key for alert state.
 - Foreign-key-like application references from actions/clusters to event/reason/product IDs; do not assume WooCommerce tables share the plugin's lifecycle or storage engine.
 
-I-03 implements the event table using the site prefix and dbDelta, with unique event UUID/source key and indexes on item-kind-deletion, order-time, reason-time, and product-variation-time. Runtime migration/benchmark verification remains in I-11. WooCommerce order/item data is read through public CRUD APIs; no direct WooCommerce order-table SQL.
+I-03 implements the event table using the site prefix and dbDelta; I-04 advances it to schema version 2 with a refund ID column/index. The table has unique event UUID/source key and indexes on item-kind-deletion, order-time, refund ID, reason-time, and product-variation-time. Runtime migration/benchmark verification remains in I-11. WooCommerce order/item data is read through public CRUD APIs; no direct WooCommerce order-table SQL.
 
 ## Source synchronization
 
-- Refund-created hook writes/upserts the refund observation.
+- `woocommerce_refund_created` writes/upserts one refund-scope event keyed by WooCommerce refund ID. Exact active reason-label matches map to stable reason IDs in memory; unmatched phrases map to `unknown`; the source phrase is not persisted. This event is marked `refund_only`, never as a confirmed physical return.
+- `woocommerce_refund_deleted` soft-deletes the linked event with an audit note.
 - Updates to refund reason/line items refresh the same source event and preserve audit history only as needed.
 - Refund deletion removes or marks the linked observation according to merchant retention choice, while respecting approved 24-month default retention and privacy erasure.
 - Manual entry receives a generated UUID/idempotency key and is corrected through an authorized admin action.
@@ -91,4 +92,4 @@ The Free core owns shared event and reason schema. Pro adds only Pro-specific ac
 
 ## I-03 physical schema implemented
 
-`includes/class-installer.php` defines schema version 1 and the `{$wpdb->prefix}wpessential_return_insights_events` table. The migration stores event UUID, unique source idempotency hash, source type/record key, kind, order/item/product/variation IDs, stable reason key, decimal quantity, item attribution, mapping state, UTC timestamps, actor IDs, soft-delete timestamp, and deletion audit note. It deliberately has no free-text phrase/customer fields. I-03 manual entry converts the merchant's site-local `YYYY-MM-DD` date to UTC. Runtime migration behavior and supported database versions still require I-11 verification.
+`includes/class-installer.php` defines schema version 2 and the `{$wpdb->prefix}wpessential_return_insights_events` table. The migration stores event UUID, unique source idempotency hash, source type/record key, kind, order/refund/item/product/variation IDs, stable reason key, decimal quantity, item attribution, mapping state, UTC timestamps, actor IDs, soft-delete timestamp, and deletion audit note. It deliberately has no free-text phrase/customer fields. I-03 manual entry converts the merchant's site-local `YYYY-MM-DD` date to UTC. I-04 refund events retain the WooCommerce refund creation timestamp and refund-level attribution. Runtime migration behavior and supported database versions still require I-11 verification.
