@@ -59,6 +59,10 @@ I-03 implements the event table using the site prefix and dbDelta; I-04 advances
 - Manual entry receives a generated UUID/idempotency key and is corrected through an authorized admin action.
 - No historic backfill on activation. Explicit backfill is date-bounded, batched, resumable, cancellable, and reports unmapped/ambiguous records.
 
+## I-08 cluster persistence boundary
+
+Cluster defaults are computed deterministically from stable reason IDs. Merchant overrides live separately in a non-autoloaded option and can be reset to the computed default; source reason/event rows are never rewritten. Cluster results preserve member reason IDs/labels and inherit source cohort coverage. Alert state and audit persistence are not implemented yet.
+
 ## I-07 cohort implementation boundary
 
 I-07 reads WooCommerce orders through CRUD APIs, not direct order-table SQL. Its bounded MVP denominator is native line-item quantity in completed/refunded orders with a completion date; this is a proxy because partial fulfillment is not modeled. The numerator is active item-attributed `confirmed_return` quantity only, with exact event order/item/product/variation mapping. Refund-only and exchange rows are excluded. Two adjacent equally sized mature purchase-date cohorts are compared; defaults are 90-day maturity and window, with supported choices 30/60/90/120/180. Each cohort scan is capped at 500 orders. Incomplete mapping, scan overflow, fewer than 20 sold units, missing denominator, and return quantity above sales suppress the rate. The threshold is a minimum-volume gate, not a confidence interval. No new event table is introduced.
