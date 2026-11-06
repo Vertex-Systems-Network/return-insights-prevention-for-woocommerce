@@ -87,7 +87,7 @@ This file converts the React admin direction into reviewable merchant journeys. 
 - Loading, empty, denied, stale, low-sample, incomplete, and recoverable-error states are specified.
 - Capability checks are enforced by the REST server, not only by hiding controls.
 - External AI remains off by default and does not receive store data under these flows.
-- No CLI, runtime code, or implementation tooling is introduced before P6 approval.
+- P6 is passed; scoped runtime tasks may proceed. No CLI/build tooling is added to the repository until the plugin is final.
 
 ## Review dependencies
 
