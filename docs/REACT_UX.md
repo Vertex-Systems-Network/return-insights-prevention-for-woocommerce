@@ -1,10 +1,10 @@
 # React Admin UX — Specification
 
-**Status:** P4 specification approved; I-06 admin surfaces and I-05 Free reports are implemented. Visual QA, usability, and accessibility verification remain for I-11.
+**Status:** P4 specification approved; I-05 Free reports, I-06 admin surfaces, and I-07 Pro patterns screen are implemented. Visual QA, usability, accessibility, and runtime verification remain for I-11.
 
 ## Product UX principle
 
-Lead merchants from a repeatable signal to a practical review and a measurable follow-up. The product does not process RMAs, authorize returns, issue refunds, or claim that a pattern proves why a customer acted.
+Lead merchants from a repeatable signal to a practical review and a measurable follow-up. The product does not process RMAs, authorize returns, issue refunds, or claim that a pattern proves why a customer acted. I-07 adds an entitlement-gated patterns area with maturity/cohort selectors, current/comparison rates, eligible sold and confirmed-return quantities, percentage-point changes, and explicit unavailable/coverage states.
 
 Use the WordPress admin visual language and WooCommerce extension conventions. Build a distinct, considered information hierarchy rather than a generic grid of KPI cards. Respect the selected wp-admin color scheme, AA contrast, consistent terminology, and WordPress accessibility standards. Avoid promotional UI and decorative motion.
 
