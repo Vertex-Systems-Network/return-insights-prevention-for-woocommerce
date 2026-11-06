@@ -70,6 +70,7 @@ final class Plugin {
 		Admin::register();
 		Rest_Controller::register();
 		Refund_Observer::register();
+		Alert_Service::register();
 	}
 
 	/**
