@@ -7,7 +7,7 @@
 namespace WPEssential\ReturnInsights;
 defined( 'ABSPATH' ) || exit;
 
-/** Registers the I-03 REST routes. */
+/** Registers the catalog, capture, source-summary, and event REST routes. */
 final class Rest_Controller {
 	private const NS = 'wpessential/return-insights/v1';
 
