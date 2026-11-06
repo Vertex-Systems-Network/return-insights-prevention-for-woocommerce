@@ -6,6 +6,8 @@
 
 **Latest verification pass:** Re-ran available repository checks on 2026-11-06. Composer JSON/PSR-4 mapping, no-custom-SPL-loader scan, browser-ready JavaScript syntax, whitespace, and merge-marker scans pass. GitHub reports no combined CI statuses for the reviewed commit. These checks do not replace PHP parsing or WordPress/WooCommerce runtime verification.
 
+**Integration correction (2026-11-07):** Corrected reason-label precedence so WPML/Polylang translate the registered source label first, then an explicit merchant locale override wins. Hook detection now distinguishes `false` from a valid priority of `0`. This is source-level correction only; no active WPML/Polylang site was available to test the path.
+
 ## I-10: WPML and Polylang
 
 `includes/Multilingual.php` is an optional integration boundary. It has no hard dependency on either product and checks for their public APIs before calling them. Merchant-entered canonical reason labels are registered for string translation in the admin context. REST reason labels, event history, summary reason names, and Pro pattern names use the integration resolver. Canonical reason IDs and stored event data do not change with translated labels. If neither integration is active, the plugin uses its stored locale override or source label.
@@ -21,7 +23,7 @@ No RMA/return-management adapter was added: no adapter or source API was approve
 | Both plugins present | WPML integration is preferred when its translation filter is registered; otherwise Polylang is used | Not run; simultaneous operation is not a support claim |
 | WooCommerce Multilingual / Polylang for WooCommerce | No custom product-translation SQL/API; product and order access stays on WooCommerce CRUD boundary | Not run |
 
-Stable reason IDs are the analytics key; translated text is display-only. Merchants may still provide explicit locale overrides in the reason catalog. Optional multilingual integration does not translate historical event identities or create duplicate reasons.
+Stable reason IDs are the analytics key; translated text is display-only. Merchants may still provide explicit locale overrides in the reason catalog, which take precedence over optional engine translations. Optional multilingual integration does not translate historical event identities or create duplicate reasons.
 
 ## I-11: Audit performed
 
