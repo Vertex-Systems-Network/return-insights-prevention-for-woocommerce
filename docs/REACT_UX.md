@@ -1,6 +1,6 @@
 # React Admin UX — Specification
 
-**Status:** P4 specification approved; I-05 Free reports, I-06 admin surfaces, and I-07 Pro patterns screen are implemented. Visual QA, usability, accessibility, and runtime verification remain for I-11.
+**Status:** P4 specification approved; I-05 Free reports, I-06 admin surfaces, I-07 Pro patterns, and the I-08 cluster service/API are implemented. Cluster/alert React surfaces and runtime verification remain.
 
 ## Product UX principle
 
