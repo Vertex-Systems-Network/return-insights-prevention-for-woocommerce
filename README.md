@@ -1,6 +1,6 @@
 # WPEssential Return Insights & Prevention for WooCommerce
 
-> Early implementation repository. P6 is complete. I-02 foundation and I-03 catalog/manual-capture REST data layer are implemented; the merchant-facing React capture screen, reports, Pro insights, and runtime verification remain.
+> Early implementation repository. P6 is complete. I-02 foundation, I-03 catalog/manual-capture REST data layer, and I-04 native refund observer are implemented. Merchant-facing React screens, reports, Pro insights, and runtime verification remain.
 
 ## Product direction
 
@@ -25,11 +25,11 @@ Planning estimates in UTC; reviewed 2026-11-06. P0–P7 track planning artifacts
 | P6 Pre-development readiness gate | Resolve decisions and approve implementation scope | Complete; owner approval recorded | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | P7 Distribution and submission plan | WordPress.org Free + WooCommerce.com Paid tracks | Planning complete; actual submission blocked by release | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 
-**Planning artifact completion: 100%** across P0–P7. P6 is approved and implementation is authorized within the scoped backlog. Runtime work packages: 2/11 complete (**18%**). Dates are estimates, not delivery promises. Keep planning progress separate from implementation progress. Update this table and change log whenever the plan changes.
+**Planning artifact completion: 100%** across P0–P7. P6 is approved and implementation is authorized within the scoped backlog. Runtime work packages: 3/11 implemented (**27%**). Dates are estimates, not delivery promises. Keep planning progress separate from implementation progress. Update this table and change log whenever the plan changes.
 
 ## Implementation status
 
-P6 approval is recorded. I-02 foundation and I-03 reason catalog/manual-capture data layer are implemented: versioned event table, stable reason IDs, protected REST routes, order-item lookup, manual event create/edit/soft-delete, and idempotency. This is 2 of 11 runtime packages (**18% package progress**). The React capture UI, native refund observation, reports, Pro features, and runtime verification remain. Follow `docs/IMPLEMENTATION_BACKLOG.md` in order. React uses WordPress bundled packages without JSX/build tooling; no CLI is to be added until the plugin is final.
+P6 approval is recorded. I-02 foundation, I-03 reason catalog/manual-capture API, and I-04 native refund observation are implemented. Refunds are stored as refund-scope `refund_only` events; exact catalog-label matches are mapped in memory, raw reason phrases are not retained, and deleted refunds are soft-deleted in plugin data. This is 3 of 11 runtime packages (**27% package progress**). The React capture UI, Free reports, Pro features, and runtime verification remain. Follow `docs/IMPLEMENTATION_BACKLOG.md` in order. React uses WordPress bundled packages without JSX/build tooling; no CLI is to be added until the plugin is final.
 
 ## Distribution plan
 
@@ -43,7 +43,7 @@ Details and official source links: docs/DISTRIBUTION.md. No submission has been 
 
 ## Current gate
 
-P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS_GATE.md. I-02 and I-03 data/API foundation are in place; I-04 native refund observation is next. Keep CLI/build tooling, Composer/npm manifests, and package managers out of this repository until the plugin is final.
+P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS_GATE.md. I-02, I-03, and I-04 data/API foundations are implemented. I-06 React admin and remaining REST contract are next to unblock I-05 basic reports. Keep CLI/build tooling, Composer/npm manifests, and package managers out of this repository until the plugin is final.
 
 ## Plan files
 
@@ -93,4 +93,5 @@ P3 architecture specifies indexed custom event storage, source-level idempotency
 - 2026-11-06: Added REST payload/permission contracts, privacy/security threat controls, approved no-build React approach, and Free-core/Pro-add-on packaging decision.
 - 2026-11-06: Product owner delegated approval; D1–D12 approved, P6 marked complete, and planning artifact completion reached 100%. Runtime implementation is 0%; CLI/build tooling remains prohibited until the plugin is final.
 - 2026-11-06: Implemented I-02 foundation files: plugin header/bootstrap, dependency checks, per-site activation guard, role capabilities, WooCommerce admin entry, non-destructive deactivation, and uninstall capability cleanup. Runtime work progress is 1/11 packages (9%); no runtime verification performed.
-- 2026-11-06: Implemented I-03 reason catalog and manual-capture REST/data layer: initial dbDelta schema migration, canonical reason keys, custom reasons, protected reason/order/event routes, per-item validation, manual event idempotency, edit and audited soft-delete. Runtime work progress is 2/11 packages (18%). React capture UI, route runtime checks, and broader quantity/permission/accessibility verification remain; no CLI/build tools or tests were added.
+- 2026-11-06: Implemented I-03 reason catalog and manual-capture REST/data layer: initial dbDelta schema migration, canonical reason keys, custom reasons, protected reason/order/event routes, per-item validation, manual event idempotency, edit and audited soft-delete. Runtime work progress was 2/11 packages (18%). React capture UI, route runtime checks, and broader permission/accessibility verification remain; no CLI/build tools or tests were added.
+- 2026-11-06: Implemented I-04 native refund observation with the WooCommerce post-save refund hook, CRUD object reads, schema v2 refund linkage, idempotent refund-scope event upsert, exact catalog-label mapping without retaining free text, and soft deletion on refund deletion. Runtime work progress is 3/11 packages (27%). No physical-return inference, CLI/build tooling, or runtime tests were added.
