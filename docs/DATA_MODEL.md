@@ -1,6 +1,6 @@
 # Logical Data Model and Lifecycle — P3 Blueprint
 
-**Status:** Approved logical model; not database code.  
+**Status:** Approved logical model; I-03 physical event table and migration implemented.  
 **Reviewed:** 2026-11-06.
 
 ## Storage decision
@@ -48,7 +48,7 @@ Plan for:
 - Unique dedupe key for alert state.
 - Foreign-key-like application references from actions/clusters to event/reason/product IDs; do not assume WooCommerce tables share the plugin's lifecycle or storage engine.
 
-Exact SQL types/index order follow representative performance benchmarks and supported MySQL/MariaDB versions. P6 approved custom indexed tables; no direct WooCommerce order-table SQL.
+I-03 implements the event table using the site prefix and dbDelta, with unique event UUID/source key and indexes on item-kind-deletion, order-time, reason-time, and product-variation-time. Runtime migration/benchmark verification remains in I-11. WooCommerce order/item data is read through public CRUD APIs; no direct WooCommerce order-table SQL.
 
 ## Source synchronization
 
@@ -87,3 +87,8 @@ The Free core owns shared event and reason schema. Pro adds only Pro-specific ac
 - [WooCommerce code reference: refund creation hooks](https://woocommerce.github.io/code-reference/files/woocommerce-includes-wc-order-functions.html) — post-save observer boundary.
 - [WordPress: Adding a personal data eraser](https://developer.wordpress.org/plugins/privacy/adding-personal-data-eraser-to-your-plugin/) — erasure integration.
 - [Action Scheduler](https://actionscheduler.org/) and [usage guidance](https://actionscheduler.org/usage/) — bounded, traceable background work.
+
+
+## I-03 physical schema implemented
+
+`includes/class-installer.php` defines schema version 1 and the `{$wpdb->prefix}wpessential_return_insights_events` table. The migration stores event UUID, unique source idempotency hash, source type/record key, kind, order/item/product/variation IDs, stable reason key, decimal quantity, item attribution, mapping state, UTC timestamps, actor IDs, soft-delete timestamp, and deletion audit note. It deliberately has no free-text phrase/customer fields. I-03 manual entry converts the merchant's site-local `YYYY-MM-DD` date to UTC. Runtime migration behavior and supported database versions still require I-11 verification.
