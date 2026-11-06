@@ -1,7 +1,7 @@
 
-# Product Specification — Draft for Review
+# Product Specification — Approved V1 Scope
 
-**Stage:** Pre-development concept; no runtime code exists.  
+**Stage:** P6-approved V1 product scope; no runtime code exists.  
 **Last reviewed:** 2026-11-06
 
 ## Problem and outcome
@@ -52,19 +52,19 @@ Pricing and exact limits remain proposals.
 
 ## Reason and event model
 
-Separate the event kind from its source. Candidate event kinds: confirmed physical return, refund-only, exchange, warranty/repair, cancellation, unknown. Initial reason groups should distinguish product issues (fit/size, appearance, quality/damage, not as described, wrong item/variation) from order/fulfilment issues (delivery, duplicate/unwanted order, changed mind, other/unknown). Merchants can customize the catalog; stable IDs prevent translations from splitting analysis.
+Approved event kinds: confirmed physical return, refund-only, exchange, warranty/repair, cancellation, unknown. Seed reason keys: fit/size; quality/defect; damage; appearance/color; not as described; wrong item/variation; missing part/accessory; delivery delay; delivery damage; duplicate order; changed mind; ordered by mistake; other; unknown. Merchant-facing labels can be edited and translated while canonical IDs remain stable. Retirement never rewrites event history.
 
 ## Measurement rules
 
 - Free reports show reason counts, sample size, date range, and mapping coverage.
-- A product/variation return rate is only shown when a physical return quantity and denominator are supported.
+- Confirmed-return rate = unique confirmed returned quantity divided by eligible sold quantity in the same product/variation purchase cohort. Cohort maturity defaults to 90 days after purchase; merchants can select 30/60/90/120/180 days. Suppress immature or incompletely mapped cohorts.
 - Refund data alone is labeled as a refund signal/ratio, not a physical return rate.
 - A reason attached to a refund spanning multiple items is order/refund-level unless item-level reason is explicitly captured.
 - Recommendations are hypotheses. Before/after comparison reports association, not proof of causation.
 
 ## Intelligence behavior
 
-Keep raw reason separate from normalized category. Clustering must be explainable, editable, and reversible. Mark low samples. Rank issues by evidence and potential impact, not raw counts alone. External AI processing is off by default and requires merchant opt-in and a privacy review.
+Keep raw reason separate from normalized category. Clustering must be explainable, editable, and reversible. Mark low samples. Rank issues by evidence and potential impact, not raw counts alone. V1 clustering uses local deterministic grouping and is explainable/reversible. External AI processing is excluded from V1; any later proposal requires a separate privacy/security review and explicit owner approval.
 
 ## Success measures
 
