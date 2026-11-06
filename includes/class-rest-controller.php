@@ -136,7 +136,7 @@ final class Rest_Controller {
 		if ( $ignore_event_id ) { $sql .= ' AND event_id <> %d'; $args[] = $ignore_event_id; }
 		$already_recorded = (float) $wpdb->get_var( $wpdb->prepare( $sql, $args ) );
 		if ( $already_recorded + $q > (float) $item->get_quantity() ) {
-			return new \\WP_Error( 'quantity_exceeds_ordered', __( 'Insight quantity cannot exceed the remaining quantity on this order item.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) );
+			return new \WP_Error( 'quantity_exceeds_ordered', __( 'Insight quantity cannot exceed the remaining quantity on this order item.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) );
 		}
 		$date = sanitize_text_field( $d['occurred_at'] ?? '' );
 		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) ) { return new \WP_Error( 'invalid_date', __( 'Use a date in YYYY-MM-DD format.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) ); }
