@@ -16,6 +16,7 @@ defined( 'ABSPATH' ) || exit;
 final class Pattern_Service {
 	private const PAGE_SIZE = 50;
 	private const MAX_ORDERS_PER_COHORT = 500;
+	private const MAX_FULL_PATTERN_ROWS = 2000;
 	private const ALLOWED_DAYS = array( 30, 60, 90, 120, 180 );
 
 	public static function is_entitled(): bool {
@@ -29,7 +30,7 @@ final class Pattern_Service {
 	 * @param int $cohort_days   Number of purchase days in each comparison cohort.
 	 * @return array|\WP_Error
 	 */
-	public static function report( int $maturity_days = 90, int $cohort_days = 90 ) {
+	public static function report( int $maturity_days = 90, int $cohort_days = 90, bool $include_all_patterns = false ) {
 		if ( ! in_array( $maturity_days, self::ALLOWED_DAYS, true ) || ! in_array( $cohort_days, self::ALLOWED_DAYS, true ) ) {
 			return new \WP_Error( 'invalid_pattern_window', __( 'Choose a supported maturity and comparison window.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) );
 		}
@@ -50,7 +51,8 @@ final class Pattern_Service {
 			return $comparison;
 		}
 
-		$patterns = self::build_patterns( $current, $comparison );
+		$patterns = self::build_patterns( $current, $comparison, $include_all_patterns ? self::MAX_FULL_PATTERN_ROWS : 20 );
+		if ( is_wp_error( $patterns ) ) { return $patterns; }
 		return array(
 			'metric_definition_version' => 'confirmed-return-cohort-v1',
 			'metric_definition' => __( 'Confirmed-return quantity divided by eligible sold quantity for the same product/variation and reason in a mature purchase cohort.', WPE_RI_TEXT_DOMAIN ),
@@ -254,7 +256,7 @@ final class Pattern_Service {
 		return $rows ?: array();
 	}
 
-	private static function build_patterns( array $current, array $comparison ): array {
+	private static function build_patterns( array $current, array $comparison, int $limit = 20 ) {
 		$keys = array_unique( array_merge( array_keys( $current['products'] ), array_keys( $comparison['products'] ) ) );
 		$rows = array();
 		foreach ( $keys as $key ) {
@@ -304,7 +306,12 @@ final class Pattern_Service {
 			if ( 0 !== $by_qty ) { return $by_qty; }
 			return strcmp( $a['reason_id'], $b['reason_id'] );
 		} );
-		$rows = array_slice( $rows, 0, 20 );
+		if ( count( $rows ) > $limit ) {
+			if ( $limit > 20 ) {
+				return new \\WP_Error( 'pattern_candidate_limit', __( 'The cohort contains too many product/reason candidates for a complete alert scan.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 503 ) );
+			}
+			$rows = array_slice( $rows, 0, $limit );
+		}
 		$product_cache = array();
 		$variation_cache = array();
 		foreach ( $rows as &$row ) {
