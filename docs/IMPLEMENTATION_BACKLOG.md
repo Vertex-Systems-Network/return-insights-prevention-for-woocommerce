@@ -1,6 +1,6 @@
 # Implementation Backlog — Approved, Ordered Work
 
-**Status:** I-00 and I-01 design packages complete; runtime implementation has not started.  
+**Status:** I-00/I-01 design packages and I-02 plugin foundation implemented; capture/report features have not started.  
 **Start condition:** P6 approval recorded in `P6_READINESS_GATE.md` on 2026-11-06.  
 **Repository constraint:** Do not add CLI/build tooling to this repository until the plugin is final. React uses WordPress-bundled globals without JSX or a build step; this preserves the repository constraint.
 
@@ -12,8 +12,8 @@ Each runtime item must be scoped with named files, acceptance evidence, dependen
 |---|---|---|---|---|
 | I-00 | Lock detailed technical decisions | Final event taxonomy, rate cohort/maturity rules, thresholds, retention/export fields, package model, REST schemas/permissions | P6 approval | Complete: approved decisions recorded consistently across P6, product, data, UX, privacy, compatibility specs |
 | I-01 | Security and privacy design | Threat model, capabilities/roles, REST permission matrix, nonce/auth assumptions, validation, minimization, export/erase, retention/uninstall | I-00 | Complete: threat/privacy controls in `P6_TECHNICAL_CONTRACTS.md`; verification remains for implementation |
-| I-02 | Plugin foundation | Naming/slug/constants, activation/deactivation behavior, migrations, dependency checks, translations, admin menu, supported public APIs | I-00, I-01 | Activation/deactivation/migration behavior documented and manually verified |
-| I-03 | Reason catalog and manual capture | Stable reason keys, translated labels, per-item merchant capture, validation/audit/provenance | I-02 | Manual event saved and edited with capability checks; canonical ID stable across locales |
+| I-02 | Plugin foundation | Naming/slug/constants, activation/deactivation behavior, PHP/WP/WC dependency checks, role capabilities, translation domain, WooCommerce admin entry point, safe uninstall capability cleanup | I-00, I-01 | Foundation files added and statically inspected. Runtime activation/dependency/role checks remain for I-11. No feature tables are created on activation. |
+| I-03 | Reason catalog and manual capture | Stable reason keys, translated labels, first versioned event-table migration, per-item merchant capture, validation/audit/provenance | I-02 | Manual event saved and edited with capability checks; canonical ID stable across locales; forward-only migration recorded |
 | I-04 | Native refund observation | Supported WooCommerce refund hooks/objects, idempotent ingestion, refund-scope attribution, HPOS + legacy behavior | I-02, I-03 | Refund evidence stored once with source/line mapping and no physical-return inference |
 | I-05 | Basic reporting (Free) | Counts, date filters, coverage, source breakdown, empty/low-data states | I-03, I-04, I-06 | UI numbers reconcile to event definitions; no unsupported rate shown |
 | I-06 | REST contract and React admin | Permission-protected endpoints, pagination/errors, Overview/Insights/catalog/source screens, accessibility and RTL | I-00, I-01, WordPress-bundled script handles | Screen/API acceptance criteria met, equivalent chart data available; no JSX or CLI/build pipeline |
@@ -23,6 +23,16 @@ Each runtime item must be scoped with named files, acceptance evidence, dependen
 | I-10 | Optional multilingual/integration compatibility | WPML/Polylang integration and any approved RMA source adapters | I-03 to I-06, demand/API review | Tested optional integrations; core works when absent/disabled |
 | I-11 | Release hardening | Current compatibility matrix, security/accessibility/performance/privacy checks, migration/rollback, docs, package boundaries | I-02 to I-10 | Evidence recorded for claimed versions and release criteria |
 | I-12 | Submission preparation | WordPress.org Free and WooCommerce.com Paid artifacts/listings, QIT and reviewer responses | I-11 | Separate packages validated and submission checklists complete |
+
+## I-02 implementation references
+
+- [Plugin header requirements](https://developer.wordpress.org/plugins/plugin-basics/header-requirements/)
+- [Activation and deactivation hooks](https://developer.wordpress.org/plugins/plugin-basics/activation-deactivation-hooks/)
+- [Role and capability guidance](https://developer.wordpress.org/plugins/users/roles-and-capabilities/)
+- [WordPress submenu API](https://developer.wordpress.org/reference/functions/add_submenu_page/)
+- [WooCommerce HPOS recipe book](https://developer.woocommerce.com/docs/features/orders/high-performance-order-storage/recipe-book/)
+
+Activation currently grants role capabilities only. The first database migration is intentionally paired with I-03 when the initial event schema is introduced; plugin activation must not create a premature/empty schema.
 
 ## Execution rules for AI coding tools
 
