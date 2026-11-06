@@ -58,6 +58,33 @@ final class Reason_Catalog {
 		return null;
 	}
 
+
+	/**
+	 * Match a WooCommerce refund phrase to a catalog label without retaining it.
+	 *
+	 * @param string $phrase Refund phrase, used only in memory.
+	 * @return array|null
+	 */
+	public static function match_source_phrase( string $phrase ): ?array {
+		$normalize = static function ( string $value ): string {
+			$value = sanitize_text_field( $value );
+			return function_exists( 'mb_strtolower' ) ? mb_strtolower( trim( $value ), 'UTF-8' ) : strtolower( trim( $value ) );
+		};
+		$needle = $normalize( $phrase );
+		if ( '' === $needle ) {
+			return null;
+		}
+		foreach ( self::all( true ) as $reason ) {
+			$labels = array_merge( array( $reason['label'] ), array_values( $reason['translations'] ?? array() ) );
+			foreach ( $labels as $label ) {
+				if ( $needle === $normalize( (string) $label ) && $reason['active'] ) {
+					return $reason;
+				}
+			}
+		}
+		return null;
+	}
+
 	public static function save( array $data, ?string $id = null ) {
 		$items = get_option( self::OPTION, array() );
 		$prior = null === $id ? null : self::find( $id, true );
