@@ -62,7 +62,7 @@ final class Alert_Service {
 				continue;
 			}
 
-			$key = hash( 'sha256', implode( ':', array( $cluster['product_id'], $cluster['variation_id'], $cluster['cluster_id'], $report['metric_definition_version'], $report['periods']['current']['date_from'], $report['periods']['current']['date_to'] ) ) );
+			$key = hash( 'sha256', implode( ':', array( $cluster['product_id'], $cluster['variation_id'], $cluster['cluster_id'], $report['metric_definition_version'], 90, 90 ) ) );
 			$prior = $state[ $key ] ?? array();
 			if ( ( $prior['last_week'] ?? '' ) === $week ) { continue; }
 			$last_week = (string) ( $prior['last_week'] ?? '' );
