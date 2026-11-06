@@ -54,7 +54,7 @@ Exact SQL types/index order follow representative performance benchmarks and sup
 
 - Refund-created hook writes/upserts the refund observation.
 - Updates to refund reason/line items refresh the same source event and preserve audit history only as needed.
-- Refund deletion removes or marks the linked observation according to merchant retention choice.
+- Refund deletion removes or marks the linked observation according to merchant retention choice, while respecting approved 24-month default retention and privacy erasure.
 - Manual entry receives a generated UUID/idempotency key and is corrected through an authorized admin action.
 - No historic backfill on activation. Explicit backfill is date-bounded, batched, resumable, cancellable, and reports unmapped/ambiguous records.
 
