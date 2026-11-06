@@ -1,7 +1,7 @@
 
 # Architecture and Data Flow — Engineering Blueprint
 
-**Planning status:** Blueprint approved at P6; implementation validation remains.  
+**Planning status:** Blueprint and P6 decisions approved; implementation validation remains.  
 **Reviewed:** 2026-11-06. No runtime code exists.
 
 ## Source model
