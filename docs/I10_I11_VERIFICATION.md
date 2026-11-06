@@ -4,6 +4,8 @@
 **I-10 status:** Integration code implemented; WPML/Polylang runtime matrix remains unverified.  
 **I-11 status:** Static audit completed for this pass; release/runtime gate remains blocked.
 
+**Latest verification pass:** Re-ran available repository checks on 2026-11-06. Composer JSON/PSR-4 mapping, no-custom-SPL-loader scan, browser-ready JavaScript syntax, whitespace, and merge-marker scans pass. GitHub reports no combined CI statuses for the reviewed commit. These checks do not replace PHP parsing or WordPress/WooCommerce runtime verification.
+
 ## I-10: WPML and Polylang
 
 `includes/Multilingual.php` is an optional integration boundary. It has no hard dependency on either product and checks for their public APIs before calling them. Merchant-entered canonical reason labels are registered for string translation in the admin context. REST reason labels, event history, summary reason names, and Pro pattern names use the integration resolver. Canonical reason IDs and stored event data do not change with translated labels. If neither integration is active, the plugin uses its stored locale override or source label.
@@ -31,6 +33,7 @@ This pass checked PSR-4/bootstrap boundaries, the v1→v3 migration path by sour
 | Patch whitespace/conflict-marker check | Pass | `git diff --check`; merge-marker search |
 | Composer PSR-4 path | Pass | Manifest maps `WPEssential\\ReturnInsights\\` to `includes/` |
 | Custom SPL loader | Pass | No `spl_autoload_register`/`spl_autoload_call` in plugin PHP |
+| GitHub commit CI status | No statuses reported | Reviewed commit has no combined CI statuses available |
 | PHP parse/lint | Blocked | PHP executable unavailable |
 | Composer autoloader generation | Blocked | Composer executable unavailable; release vendor files are not generated |
 | WordPress/WooCommerce activation, migration, API and CRUD runtime | Blocked | No local PHP/database/WP/WC runtime; no live-site result claimed |
