@@ -13,13 +13,13 @@ defined( 'ABSPATH' ) || exit;
  * Merchant-approved overrides are stored separately in a non-autoloaded option.
  * The original reason IDs always remain available as cluster membership evidence.
  */
-final class Cluster_Service {
+final class ClusterService {
 	private const OPTION = 'wpe_ri_cluster_overrides';
 
 	/**
 	 * Return current clusters from pattern rows.
 	 *
-	 * @param array $patterns Pattern rows from Pattern_Service.
+	 * @param array $patterns Pattern rows from PatternService.
 	 * @return array
 	 */
 	public static function build( array $patterns, array $coverage = array() ): array {
@@ -94,7 +94,7 @@ final class Cluster_Service {
 	 * @return true|\WP_Error
 	 */
 	public static function set_override( string $reason_id, ?string $cluster_id ) {
-		$reason = Reason_Catalog::find( $reason_id, true );
+		$reason = ReasonCatalog::find( $reason_id, true );
 		if ( ! $reason ) {
 			return new \WP_Error( 'reason_not_found', __( 'Reason not found.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 404 ) );
 		}

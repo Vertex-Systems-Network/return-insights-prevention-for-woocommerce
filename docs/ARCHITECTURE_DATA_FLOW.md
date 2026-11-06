@@ -69,7 +69,7 @@ External AI remains off by default. Any future provider processing needs explici
 
 ## I-04 implementation boundary
 
-`Refund_Observer` listens to WooCommerce's documented post-save `woocommerce_refund_created` hook and deletion hook. It reads the refund and parent order through `wc_get_order()` and stores one event at `refund` scope, with no item/product attribution, so a refund-level phrase is not multiplied into product/variation evidence. Exact active reason-catalog labels map in memory; unmatched text becomes `unknown`, and source free text is not stored. Schema v2 adds refund ID linkage. Runtime behavior on HPOS/legacy stores, duplicate hook delivery, and deletion lifecycle has not been verified.
+`RefundObserver` listens to WooCommerce's documented post-save `woocommerce_refund_created` hook and deletion hook. It reads the refund and parent order through `wc_get_order()` and stores one event at `refund` scope, with no item/product attribution, so a refund-level phrase is not multiplied into product/variation evidence. Exact active reason-catalog labels map in memory; unmatched text becomes `unknown`, and source free text is not stored. Schema v2 adds refund ID linkage. Runtime behavior on HPOS/legacy stores, duplicate hook delivery, and deletion lifecycle has not been verified.
 
 ## I-07 implemented cohort boundary
 

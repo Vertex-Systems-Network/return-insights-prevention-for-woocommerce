@@ -8,7 +8,7 @@ namespace WPEssential\ReturnInsights;
 defined( 'ABSPATH' ) || exit;
 
 /** Evaluates bounded Pro pattern evidence and stores deduplicated alert state. */
-final class Alert_Service {
+final class AlertService {
 	private const OPTION = 'wpe_ri_alert_state';
 	private const SCAN_OPTION = 'wpe_ri_alert_last_scan';
 	private const CRON_HOOK = 'wpessential_return_insights_weekly_alert_refresh';
@@ -27,11 +27,11 @@ final class Alert_Service {
 
 	/** Evaluate default approved launch thresholds once per distinct ISO week. */
 	public static function refresh() {
-		if ( ! Pattern_Service::is_entitled() ) {
+		if ( ! PatternService::is_entitled() ) {
 			return new \WP_Error( 'pro_required', __( 'Alerts require the Pro add-on.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 403 ) );
 		}
 
-		$report = Pattern_Service::report( 90, 90, true );
+		$report = PatternService::report( 90, 90, true );
 		if ( is_wp_error( $report ) ) {
 			self::save_scan( array( 'status' => 'unavailable', 'reason' => $report->get_error_code(), 'checked_at_gmt' => gmdate( 'Y-m-d H:i:s' ) ) );
 			return $report;
@@ -50,7 +50,7 @@ final class Alert_Service {
 		$week = current_datetime()->format( 'o-W' );
 		$state = get_option( self::OPTION, array() );
 		if ( ! is_array( $state ) ) { $state = array(); }
-		$clusters = Cluster_Service::build( $report['patterns'] ?? array(), $coverage );
+		$clusters = ClusterService::build( $report['patterns'] ?? array(), $coverage );
 		$evaluated = 0;
 		$suppressed_counts = array();
 

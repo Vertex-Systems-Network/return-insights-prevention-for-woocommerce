@@ -8,7 +8,7 @@ namespace WPEssential\ReturnInsights;
 defined( 'ABSPATH' ) || exit;
 
 /** Stores catalog labels in a non-autoloaded option. */
-final class Reason_Catalog {
+final class ReasonCatalog {
 	private const OPTION = 'wpe_ri_reasons';
 	private const DEFAULTS = array(
 		'fit_size' => array( 'group' => 'product', 'label' => 'Fit or size mismatch' ),

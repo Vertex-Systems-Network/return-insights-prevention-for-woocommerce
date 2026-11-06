@@ -57,7 +57,7 @@ final class Admin {
 				'today' => current_datetime()->format( 'Y-m-d' ),
 				'defaultFrom' => current_datetime()->modify( '-29 days' )->format( 'Y-m-d' ),
 				'canManage' => current_user_can( Capabilities::MANAGE ),
-				'proEnabled' => Pattern_Service::is_entitled(),
+				'proEnabled' => PatternService::is_entitled(),
 				'strings' => self::strings(),
 			)
 		);

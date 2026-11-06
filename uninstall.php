@@ -11,6 +11,6 @@
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
-require_once __DIR__ . '/includes/class-capabilities.php';
+require_once __DIR__ . '/includes/autoload.php';
 
 \WPEssential\ReturnInsights\Capabilities::revoke();

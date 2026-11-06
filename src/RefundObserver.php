@@ -10,7 +10,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Stores refund-scope evidence without interpreting it as a physical return.
  */
-final class Refund_Observer {
+final class RefundObserver {
 	/** Register supported WooCommerce lifecycle hooks. */
 	public static function register(): void {
 		add_action( 'woocommerce_refund_created', array( self::class, 'created' ), 20, 2 );
@@ -42,7 +42,7 @@ final class Refund_Observer {
 				$quantity += abs( (float) $refund_item->get_quantity() );
 			}
 		}
-		$matched_reason = Reason_Catalog::match_source_phrase( (string) $refund->get_reason() );
+		$matched_reason = ReasonCatalog::match_source_phrase( (string) $refund->get_reason() );
 		$date = $refund->get_date_created();
 		$occurred = $date ? gmdate( 'Y-m-d H:i:s', $date->getTimestamp() ) : gmdate( 'Y-m-d H:i:s' );
 		$now = gmdate( 'Y-m-d H:i:s' );

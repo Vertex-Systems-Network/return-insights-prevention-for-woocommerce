@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
  * The service fails closed: incomplete order scans or item mapping never emit a
  * partial return rate. The Free core grants no Pro entitlement by default.
  */
-final class Pattern_Service {
+final class PatternService {
 	private const PAGE_SIZE = 50;
 	private const MAX_ORDERS_PER_COHORT = 500;
 	private const MAX_FULL_PATTERN_ROWS = 2000;
@@ -273,7 +273,7 @@ final class Pattern_Service {
 				$comparison_reason_quantity = (float) ( $before['reasons'][ $reason_id ]['quantity'] ?? 0 );
 				$current_rate = self::rate( $current_reason_quantity, (float) $now['sold_quantity'], (bool) $current['coverage']['complete'] );
 				$comparison_rate = self::rate( $comparison_reason_quantity, (float) $before['sold_quantity'], (bool) $comparison['coverage']['complete'] );
-				$reason = Reason_Catalog::find( (string) $reason_id, true );
+				$reason = ReasonCatalog::find( (string) $reason_id, true );
 				$rows[] = array(
 					'product_id' => $product_id,
 					'variation_id' => $variation_id,

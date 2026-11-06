@@ -8,7 +8,7 @@ namespace WPEssential\ReturnInsights;
 defined( 'ABSPATH' ) || exit;
 
 /** Registers the catalog, capture, source-summary, and event REST routes. */
-final class Rest_Controller {
+final class RestController {
 	private const NS = 'wpessential/return-insights/v1';
 
 	public static function register(): void { add_action( 'rest_api_init', array( self::class, 'routes' ) ); }
@@ -132,34 +132,34 @@ final class Rest_Controller {
 	public static function can_manage(): bool { return current_user_can( Capabilities::MANAGE ); }
 	public static function can_manage_alerts() {
 		if ( ! self::can_manage() ) { return false; }
-		return Pattern_Service::is_entitled() ? true : new \\WP_Error( 'pro_required', __( 'Alerts require the Pro add-on.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 403 ) );
+		return PatternService::is_entitled() ? true : new \\WP_Error( 'pro_required', __( 'Alerts require the Pro add-on.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 403 ) );
 	}
 	public static function can_manage_clusters() {
 		if ( ! self::can_manage() ) { return false; }
-		return Pattern_Service::is_entitled() ? true : new \\WP_Error( 'pro_required', __( 'Reason clustering requires the Pro add-on.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 403 ) );
+		return PatternService::is_entitled() ? true : new \\WP_Error( 'pro_required', __( 'Reason clustering requires the Pro add-on.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 403 ) );
 	}
 	public static function can_view_patterns() {
 		if ( ! self::can_view() ) { return false; }
-		return Pattern_Service::is_entitled() ? true : new \WP_Error( 'pro_required', __( 'Product and variation insights require the Pro add-on.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 403 ) );
+		return PatternService::is_entitled() ? true : new \WP_Error( 'pro_required', __( 'Product and variation insights require the Pro add-on.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 403 ) );
 	}
 	public static function get_reasons( \WP_REST_Request $request ): \WP_REST_Response {
 		$include_inactive = rest_sanitize_boolean( $request->get_param( 'include_inactive' ) ) && self::can_manage();
-		return rest_ensure_response( Reason_Catalog::all( $include_inactive ) );
+		return rest_ensure_response( ReasonCatalog::all( $include_inactive ) );
 	}
 	public static function get_reason( \WP_REST_Request $r ) {
-		$x = Reason_Catalog::find( (string) $r['id'], true );
+		$x = ReasonCatalog::find( (string) $r['id'], true );
 		return $x ? rest_ensure_response( $x ) : new \WP_Error( 'reason_not_found', __( 'Reason not found.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 404 ) );
 	}
 	public static function create_reason( \WP_REST_Request $r ) {
 		$data = $r->get_json_params() ?: array();
 		if ( self::has_unknown_fields( $data, array( 'label', 'group', 'active', 'translations' ) ) ) { return self::unknown_fields_error(); }
-		$x = Reason_Catalog::save( $data );
+		$x = ReasonCatalog::save( $data );
 		return is_wp_error( $x ) ? $x : new \WP_REST_Response( $x, 201 );
 	}
 	public static function update_reason( \WP_REST_Request $r ) {
 		$data = $r->get_json_params() ?: array();
 		if ( self::has_unknown_fields( $data, array( 'label', 'group', 'active', 'translations' ) ) ) { return self::unknown_fields_error(); }
-		$x = Reason_Catalog::save( $data, (string) $r['id'] );
+		$x = ReasonCatalog::save( $data, (string) $r['id'] );
 		return is_wp_error( $x ) ? $x : rest_ensure_response( $x );
 	}
 	public static function get_order_items( \WP_REST_Request $r ) {
@@ -174,31 +174,31 @@ final class Rest_Controller {
 		return rest_ensure_response( array( 'order_id' => $order->get_id(), 'order_number' => $order->get_order_number(), 'items' => $items ) );
 	}
 
-	public static function get_alerts() { return rest_ensure_response( array( 'alerts' => Alert_Service::all(), 'scan' => Alert_Service::last_scan() ) ); }
+	public static function get_alerts() { return rest_ensure_response( array( 'alerts' => AlertService::all(), 'scan' => AlertService::last_scan() ) ); }
 
 	public static function update_alert( \WP_REST_Request $r ) {
 		if ( self::has_unknown_fields( $r->get_json_params(), array( 'status', 'note' ) ) ) { return self::unknown_fields_error(); }
-		$result = Alert_Service::set_status( sanitize_text_field( (string) $r['id'] ), sanitize_key( (string) $r->get_param( 'status' ) ), sanitize_text_field( (string) $r->get_param( 'note' ) ) );
+		$result = AlertService::set_status( sanitize_text_field( (string) $r['id'] ), sanitize_key( (string) $r->get_param( 'status' ) ), sanitize_text_field( (string) $r->get_param( 'note' ) ) );
 		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
 	}
 
 	public static function get_clusters( \WP_REST_Request $r ) {
 		if ( self::has_unknown_fields( $r->get_query_params(), array( 'maturity_days', 'cohort_days' ) ) ) { return self::unknown_fields_error(); }
-		$report = Pattern_Service::report( absint( $r->get_param( 'maturity_days' ) ?: 90 ), absint( $r->get_param( 'cohort_days' ) ?: 90 ) );
+		$report = PatternService::report( absint( $r->get_param( 'maturity_days' ) ?: 90 ), absint( $r->get_param( 'cohort_days' ) ?: 90 ) );
 		if ( is_wp_error( $report ) ) { return $report; }
-		$report['clusters'] = Cluster_Service::build( $report['patterns'] ?? array(), $report['coverage'] ?? array() );
+		$report['clusters'] = ClusterService::build( $report['patterns'] ?? array(), $report['coverage'] ?? array() );
 		return rest_ensure_response( $report );
 	}
 
 	public static function update_cluster( \WP_REST_Request $r ) {
 		if ( self::has_unknown_fields( $r->get_json_params(), array( 'cluster_id' ) ) ) { return self::unknown_fields_error(); }
-		$result = Cluster_Service::set_override( sanitize_key( (string) $r['reason_id'] ), sanitize_key( (string) $r->get_param( 'cluster_id' ) ) );
+		$result = ClusterService::set_override( sanitize_key( (string) $r['reason_id'] ), sanitize_key( (string) $r->get_param( 'cluster_id' ) ) );
 		return is_wp_error( $result ) ? $result : rest_ensure_response( array( 'updated' => true, 'reason_id' => sanitize_key( (string) $r['reason_id'] ), 'cluster_id' => sanitize_key( (string) $r->get_param( 'cluster_id' ) ) ) );
 	}
 
 	public static function get_patterns( \WP_REST_Request $r ) {
 		if ( self::has_unknown_fields( $r->get_query_params(), array( 'maturity_days', 'cohort_days' ) ) ) { return self::unknown_fields_error(); }
-		return Pattern_Service::report( absint( $r->get_param( 'maturity_days' ) ?: 90 ), absint( $r->get_param( 'cohort_days' ) ?: 90 ) );
+		return PatternService::report( absint( $r->get_param( 'maturity_days' ) ?: 90 ), absint( $r->get_param( 'cohort_days' ) ?: 90 ) );
 	}
 
 	public static function get_summary( \WP_REST_Request $r ) {
@@ -250,7 +250,7 @@ final class Rest_Controller {
 
 		$locale = get_user_locale();
 		foreach ( $by_reason as &$reason_row ) {
-			$reason = Reason_Catalog::find( (string) $reason_row['reason_id'], true );
+			$reason = ReasonCatalog::find( (string) $reason_row['reason_id'], true );
 			$reason_row['label'] = $reason ? ( $reason['translations'][ $locale ] ?? $reason['label'] ) : (string) $reason_row['reason_id'];
 			$reason_row['event_count'] = (int) $reason_row['event_count'];
 			$reason_row['sample_size'] = (int) $reason_row['event_count'];
@@ -406,7 +406,7 @@ final class Rest_Controller {
 	private static function validate_event( array $d, int $ignore_event_id = 0 ) {
 		$kind = sanitize_key( $d['event_kind'] ?? '' );
 		if ( ! in_array( $kind, array( 'confirmed_return', 'exchange' ), true ) ) { return new \WP_Error( 'invalid_event_kind', __( 'Manual insights support confirmed returns or exchanges.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) ); }
-		$reason = Reason_Catalog::find( sanitize_key( $d['reason_id'] ?? '' ) );
+		$reason = ReasonCatalog::find( sanitize_key( $d['reason_id'] ?? '' ) );
 		$q = isset( $d['quantity'] ) ? (float) $d['quantity'] : 0;
 		if ( ! $reason || $q <= 0 || $q > 999999 ) { return new \WP_Error( 'invalid_event', __( 'Choose an active reason and enter a positive quantity.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) ); }
 		$order = wc_get_order( absint( $d['order_id'] ?? 0 ) ); $item = $order ? $order->get_item( absint( $d['order_item_id'] ?? 0 ) ) : false;
@@ -433,7 +433,7 @@ final class Rest_Controller {
 		return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE event_id = %d", $id ), ARRAY_A );
 	}
 	private static function serialize_event( array $row ): array {
-		$reason = Reason_Catalog::find( $row['reason_id'], true );
+		$reason = ReasonCatalog::find( $row['reason_id'], true );
 		return array( 'id' => (int) $row['event_id'], 'event_kind' => $row['event_kind'], 'source_type' => $row['source_type'], 'order_id' => (int) $row['order_id'], 'refund_id' => (int) ( $row['refund_id'] ?? 0 ), 'order_item_id' => (int) $row['order_item_id'], 'attribution_scope' => $row['attribution_scope'], 'mapping_state' => $row['mapping_state'], 'product_id' => (int) $row['product_id'], 'variation_id' => (int) $row['variation_id'], 'reason_id' => $row['reason_id'], 'reason_label' => $reason ? $reason['label'] : __( 'Archived reason', WPE_RI_TEXT_DOMAIN ), 'quantity' => (float) $row['quantity'], 'occurred_at' => gmdate( 'c', strtotime( $row['occurred_at_gmt'] . ' UTC' ) ), 'created_at' => gmdate( 'c', strtotime( $row['created_at_gmt'] . ' UTC' ) ), 'updated_at' => gmdate( 'c', strtotime( $row['updated_at_gmt'] . ' UTC' ) ), 'occurred_date' => get_date_from_gmt( $row['occurred_at_gmt'], 'Y-m-d' ) );
 	}
 	private static function has_unknown_fields( array $data, array $allowed ): bool {

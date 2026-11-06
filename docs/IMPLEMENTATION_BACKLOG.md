@@ -12,7 +12,7 @@ Each runtime item must be scoped with named files, acceptance evidence, dependen
 |---|---|---|---|---|
 | I-00 | Lock detailed technical decisions | Final event taxonomy, rate cohort/maturity rules, thresholds, retention/export fields, package model, REST schemas/permissions | P6 approval | Complete: approved decisions recorded consistently across P6, product, data, UX, privacy, compatibility specs |
 | I-01 | Security and privacy design | Threat model, capabilities/roles, REST permission matrix, nonce/auth assumptions, validation, minimization, export/erase, retention/uninstall | I-00 | Complete: threat/privacy controls in `P6_TECHNICAL_CONTRACTS.md`; verification remains for implementation |
-| I-02 | Plugin foundation | Naming/slug/constants, activation/deactivation behavior, PHP/WP/WC dependency checks, role capabilities, translation domain, WooCommerce admin entry point, safe uninstall capability cleanup | I-00, I-01 | Foundation files added and statically inspected. Runtime activation/dependency/role checks remain for I-11. I-02 itself created no table; I-03 added the first migration, run after dependency checks at activation or upgrade. |
+| I-02 | Plugin foundation | Naming/slug/constants, activation/deactivation behavior, PHP/WP/WC dependency checks, role capabilities, translation domain, WooCommerce admin entry point, safe uninstall capability cleanup | I-00, I-01 | Foundation files use a native PSR-4 autoloader (`WPEssential\ReturnInsights\` → `/src/`) with case-matched class/file names; manual class includes are removed. No Composer/CLI tooling. Static path/namespace inspection complete; runtime class-load, activation/dependency/role checks remain for I-11. I-02 itself created no table; I-03 added the first migration, run after dependency checks at activation or upgrade. |
 | I-03 | Reason catalog and manual capture | Stable reason keys, translated labels, first versioned event-table migration, per-item merchant capture, validation/audit/provenance | I-02 | Implemented: versioned event table/dbDelta migration, canonical reason IDs and editable label translations, per-item Woo order lookup through CRUD API, manual confirmed-return/exchange POST with idempotency, protected event listing/get/edit/soft-delete, and server-derived product/variation IDs. Static source inspection only; runtime permission, migration, and quantity-edge verification remains for I-11. |
 | I-04 | Native refund observation | Supported WooCommerce refund hooks/objects, idempotent ingestion, refund-scope attribution, HPOS + legacy behavior | I-02, I-03 | Implemented: post-save `woocommerce_refund_created` observer reads WooCommerce refund/order objects through CRUD APIs, stores one refund-scope `refund_only` event per refund with a unique source key, maps only exact active catalog labels without persisting raw phrase text, and soft-deletes the linked event when the refund is deleted. Source code inspected; HPOS/legacy and lifecycle runtime checks remain for I-11. |
 | I-06 | REST contract and React admin | Permission-protected endpoints, pagination/errors, overview/history/capture/catalog/source screens | I-00, I-01, WordPress-bundled script handles | Implemented: REST schemas/unknown-field rejection; permission-aware no-build React screen; source counts/latest dates; paginated/filterable history; per-item capture/edit/audited soft-delete; reason catalog. Static source review only; runtime and visual/accessibility verification is I-11. |
@@ -28,9 +28,9 @@ Each runtime item must be scoped with named files, acceptance evidence, dependen
 
 ### Implemented slice
 
-- `includes/class-cluster-service.php` groups stable reasons locally and deterministically; original reason IDs/labels remain visible as membership evidence. Merchant overrides are stored separately in a non-autoloaded option, and an empty cluster key restores the deterministic default.
+- `src/ClusterService.php` groups stable reasons locally and deterministically; original reason IDs/labels remain visible as membership evidence. Merchant overrides are stored separately in a non-autoloaded option, and an empty cluster key restores the deterministic default.
 - `GET /clusters` is Pro-gated and returns clusters plus cohort coverage; rates stay unavailable when coverage is incomplete. `PATCH /clusters/{reason_id}` is manager-capability-gated and validates catalog reason IDs. No source event is rewritten.
-- `includes/class-alert-service.php` schedules weekly WordPress Cron evaluation, uses full bounded pattern output (up to 2,000 rows; above that it fails closed), applies 5-return/80%-mapping/20-sold-unit thresholds, requires two adjacent ISO weeks, and stores deduplicated alert state. `/alerts` lists and `/alerts/{id}` dismisses/restores with actor/time/note history (last 50 actions). The option-backed storage remains subject to volume review.
+- `src/AlertService.php` schedules weekly WordPress Cron evaluation, uses full bounded pattern output (up to 2,000 rows; above that it fails closed), applies 5-return/80%-mapping/20-sold-unit thresholds, requires two adjacent ISO weeks, and stores deduplicated alert state. `/alerts` lists and `/alerts/{id}` dismisses/restores with actor/time/note history (last 50 actions). The option-backed storage remains subject to volume review.
 - `/alerts` also returns the most recent scan summary. The React Alerts screen presents scan status, coverage-block reason/mapping percentage, and counts of candidates withheld by return-volume, sample-size, or rate-availability gates. Mapping below 80% blocks evaluation; at or above 80%, the pattern service's own incomplete-coverage/rate status still suppresses affected candidates. Static syntax/localization checks pass; live WordPress runtime and persisted-state behavior remain unverified.
 
 
@@ -43,25 +43,25 @@ Each runtime item must be scoped with named files, acceptance evidence, dependen
 
 ## I-07 implementation references
 
-- `includes/class-pattern-service.php` builds current and preceding mature purchase windows (90-day default; supported maturity/cohort selections: 30/60/90/120/180 days) using WooCommerce CRUD APIs. It scans at most 500 orders per cohort; over-limit cohorts are unavailable rather than partial.
+- `src/PatternService.php` builds current and preceding mature purchase windows (90-day default; supported maturity/cohort selections: 30/60/90/120/180 days) using WooCommerce CRUD APIs. It scans at most 500 orders per cohort; over-limit cohorts are unavailable rather than partial.
 - Eligible quantity currently uses completed/refunded order line-item quantities with a completion date as a documented MVP proxy, not extension-specific fulfillment quantities. Only exact item/order/product/variation matches to active manual `confirmed_return` events enter the numerator. Refund observations and exchanges are excluded.
 - Rates are suppressed for incomplete mapping, fewer than 20 sold units, missing denominator, or returned quantity above sold quantity. Comparison changes appear only when both rates are available. Output is capped at 20 patterns.
 - `GET /patterns` is gated by `wpessential_return_insights_pro_entitled`, default false. The Free core has no commercial entitlement provider; runtime verification remains.
 
 ## I-05 implementation references
 
-- `includes/class-rest-controller.php` registers `GET /summary`, validates calendar dates, converts store-local inclusive dates into UTC query bounds, and aggregates only active plugin event records.
+- `src/RestController.php` registers `GET /summary`, validates calendar dates, converts store-local inclusive dates into UTC query bounds, and aggregates only active plugin event records.
 - The summary separates event counts from summed recorded quantities and groups reasons, event kinds, sources, item-scoped products, and assigned product categories. Category memberships can overlap; category totals are not additive across categories.
 - Mapping coverage reports mapped/unmapped event counts and a percentage with its denominator. It is not a return rate.
-- `assets/js/admin.js` adds a date range filter, overview cards, and accessible table equivalents. `includes/class-admin.php` supplies localized labels and the default last-30-days period.
+- `assets/js/admin.js` adds a date range filter, overview cards, and accessible table equivalents. `src/Admin.php` supplies localized labels and the default last-30-days period.
 - Sales denominators, mature purchase cohorts, rates, confidence, and Pro pattern outputs remain outside I-05.
 
 ## I-06 implementation references
 
-- `includes/class-admin.php` registers the WooCommerce submenu, scopes JS/CSS to that screen, and localizes site date, permissions, and translation strings.
+- `src/Admin.php` registers the WooCommerce submenu, scopes JS/CSS to that screen, and localizes site date, permissions, and translation strings.
 - `assets/js/admin.js` renders overview, capture, history, catalog, and source-summary areas with WordPress bundled globals.
 - `assets/css/admin.css` styles the UI, focus indicators, responsive layout, and reduced-motion behavior.
-- `includes/class-rest-controller.php` implements `/sources`, REST schemas, pagination/filtering, local date serialization, and strict field checks.
+- `src/RestController.php` implements `/sources`, REST schemas, pagination/filtering, local date serialization, and strict field checks.
 - RTL, accessibility, and visual behavior have not been verified in a rendered WP/WC environment; record that evidence in I-11.
 
 ## I-02 implementation references

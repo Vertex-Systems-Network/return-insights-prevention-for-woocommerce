@@ -68,9 +68,9 @@ final class Plugin {
 
 		Installer::maybe_upgrade();
 		Admin::register();
-		Rest_Controller::register();
-		Refund_Observer::register();
-		Alert_Service::register();
+		RestController::register();
+		RefundObserver::register();
+		AlertService::register();
 	}
 
 	/**
