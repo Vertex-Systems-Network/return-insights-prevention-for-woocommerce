@@ -59,12 +59,13 @@ final class Reason_Catalog {
 	}
 
 	public static function save( array $data, ?string $id = null ) {
-		$label = isset( $data['label'] ) ? sanitize_text_field( $data['label'] ) : '';
-		$group = isset( $data['group'] ) ? sanitize_key( $data['group'] ) : 'other';
+		$items = get_option( self::OPTION, array() );
+		$prior = null === $id ? null : self::find( $id, true );
+		$label = isset( $data['label'] ) ? sanitize_text_field( $data['label'] ) : ( $prior['label'] ?? '' );
+		$group = isset( $data['group'] ) ? sanitize_key( $data['group'] ) : ( $prior['group'] ?? 'other' );
 		if ( '' === $label || strlen( $label ) > 100 || ! in_array( $group, array( 'product', 'fulfillment', 'other' ), true ) ) {
 			return new \WP_Error( 'invalid_reason', __( 'Provide a label up to 100 characters and a valid group.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) );
 		}
-		$items = get_option( self::OPTION, array() );
 		if ( null === $id ) {
 			$id = 'custom_' . sanitize_title( $label );
 			$id = substr( $id, 0, 64 );
