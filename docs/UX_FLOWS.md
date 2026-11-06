@@ -1,6 +1,6 @@
 # UX Flows and Acceptance Criteria
 
-**Status:** P4 planning artifact complete; implementation and usability validation have not started.
+**Status:** P4 planning artifact complete; I-06 implements base overview, capture, history, reason-catalog, and source-summary journeys. Usability and runtime validation remain.
 
 This file converts the React admin direction into reviewable merchant journeys. Metric and data decisions in the product and architecture specifications remain authoritative.
 
@@ -16,9 +16,9 @@ This file converts the React admin direction into reviewable merchant journeys. 
 
 - Refunds are never described as confirmed physical returns.
 - No historical backfill starts automatically.
-- Counts and rates show source and coverage context.
+- Current I-06 screens show event counts with source context and avoid rates; rates require the I-05 metric contract.
 - If no data exists, the screen explains how to begin and offers no fabricated chart.
-- Setup progress can be revisited and does not block access to available reports.
+- No setup wizard blocks the available count-only screens; these are preliminary coverage information, not reports.
 
 ## Flow 2: Inspect a repeated pattern
 
