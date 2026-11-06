@@ -7,7 +7,7 @@
 
 Use plugin-owned custom tables for growing event/action records and keep small settings/reason catalogs in non-autoloaded WordPress options. Benchmark indexes and volume before freezing physical schema. The event data is relational and analytics-heavy: it must filter/group by time, reason, product, variation, event kind, and source. WordPress recommends post meta when it is practical; this event workload is the reason to evaluate indexed tables and benchmark rather than defaulting to meta queries.
 
-Use the site-specific WordPress table prefix. Include a schema-version option and forward-only, resumable migrations. Use WordPress table creation/update conventions such as dbDelta; do not require site owners to run SQL or commands.
+Use the site-specific WordPress table prefix. Include a schema-version option and forward-only, resumable migrations. Use WordPress table creation/update conventions such as dbDelta; do not require site owners to run SQL or commands. I-02 activation creates no feature tables; the first schema migration is paired with I-03 when event storage is implemented.
 
 ## Logical records
 
