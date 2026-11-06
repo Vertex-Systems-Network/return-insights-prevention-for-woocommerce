@@ -15,7 +15,7 @@
 | HTTPS | Required for supported production setup | Official WordPress/WooCommerce guidance. |
 | WordPress memory | 256 MB+ recommended | WooCommerce host recommendation; not a plugin activation gate. |
 | Order storage | HPOS and legacy storage supported | Use WooCommerce CRUD APIs; never assume legacy tables. |
-| React admin | WordPress-bundled React/component packages; shipped built assets | Merchants need no Node/npm/CLI. Build-tool selection is a P6 decision. |
+| React admin | WordPress-bundled React packages via `wp.element`, components via `wp.components`, REST via `wp.apiFetch`; browser-ready JS | No JSX/transpiler/npm/CLI/build pipeline in the repo. Enqueue WordPress package handles. Reassess only if UI requirements cannot be met. |
 | WPML | Optional integration target; not a hard dependency | Test exact supported version with WooCommerce Multilingual at release; no certification claim without evidence. |
 | Polylang | Optional integration target; not a hard dependency | Test exact supported version and relevant WooCommerce integration at release; no certification claim without evidence. |
 
@@ -35,7 +35,7 @@ Woo Marketplace currently lists PHP 7.4+ as its minimum and strongly recommends 
 - Support HPOS and legacy storage through WooCommerce public CRUD APIs.
 - Handle product variations, partial quantities, deleted products, and unknown product mapping.
 - Respect WordPress locale and RTL layout.
-- Test privacy exporter/eraser, store timezone, daylight-saving transitions, and the multisite decision before release.
+- Test privacy exporter/eraser, store timezone and daylight-saving transitions. V1 supports per-site activation; network-wide activation is out of scope.
 - If an optional RMA adapter is unavailable or disabled, it must not break WooCommerce admin.
 - State the exact plugin/platform versions tested; do not infer compatibility from activation alone.
 
