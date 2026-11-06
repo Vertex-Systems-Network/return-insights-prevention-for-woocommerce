@@ -42,6 +42,7 @@ final class Refund_Observer {
 				$quantity += abs( (float) $refund_item->get_quantity() );
 			}
 		}
+		$matched_reason = Reason_Catalog::match_source_phrase( (string) $refund->get_reason() );
 		$date = $refund->get_date_created();
 		$occurred = $date ? gmdate( 'Y-m-d H:i:s', $date->getTimestamp() ) : gmdate( 'Y-m-d H:i:s' );
 		$now = gmdate( 'Y-m-d H:i:s' );
@@ -59,10 +60,10 @@ final class Refund_Observer {
 			'order_item_id' => 0,
 			'product_id' => 0,
 			'variation_id' => 0,
-			'reason_id' => 'unknown',
+			'reason_id' => $matched_reason ? $matched_reason['id'] : 'unknown',
 			'quantity' => wc_format_decimal( $quantity, 4 ),
 			'attribution_scope' => 'refund',
-			'mapping_state' => 'unmapped',
+			'mapping_state' => $matched_reason ? 'mapped' : 'unmapped',
 			'occurred_at_gmt' => $occurred,
 			'updated_at_gmt' => $now,
 			'updated_by' => 0,
