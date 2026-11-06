@@ -51,13 +51,13 @@ Details and official source links: docs/DISTRIBUTION.md. No submission has been 
 | I-06 REST + React admin | Implemented; I-11 verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | I-05 Free reports | Implemented; I-11 verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | I-07 Pro product/variation patterns | Implemented; entitlement provider + I-11 verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
-| I-08 Pro clustering and alerts | In progress; deterministic cluster service + REST endpoints implemented; alert lifecycle/UI pending | ███░░░░░░░ 30% | 2026-11-06 | 2026-11-10 |
+| I-08 Pro clustering and alerts | In progress; cluster and weekly alert backend/REST implemented; React review UI and alert coverage hardening pending | ██████░░░░ 55% | 2026-11-06 | 2026-11-10 |
 
 Package progress means implementation scope is present; it does not mean runtime/release acceptance is verified. See `docs/IMPLEMENTATION_BACKLOG.md` for detailed evidence.
 
 ## Current gate
 
-P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS_GATE.md. I-02, I-03, I-04, I-05, I-06, and I-07 are implemented. I-08 Pro clustering and alerts are in progress (30%): reason clusters and reversible grouping overrides have backend endpoints; persistent weekly alerts, review/dismiss UI, and runtime verification remain. Keep CLI/build tooling, Composer/npm manifests, and package managers out of this repository until the plugin is final.
+P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS_GATE.md. I-02, I-03, I-04, I-05, I-06, and I-07 are implemented. I-08 Pro clustering and alerts are in progress (55%): deterministic clusters, reversible assignments, weekly Pro evaluation, threshold checks, stable deduplication, and alert list/dismiss/restore endpoints are implemented. React review UI, complete candidate coverage beyond the pattern endpoint’s top-20 rows, persistent audit history, and runtime verification remain. Keep CLI/build tooling, Composer/npm manifests, and package managers out of this repository until the plugin is final.
 
 ## Plan files
 
@@ -112,4 +112,4 @@ P3 architecture specifies indexed custom event storage, source-level idempotency
 - 2026-11-06: Implemented I-06 REST schemas and no-build React admin surfaces for overview counts, event history, manual item capture/edit/audited removal, reason catalog, and source counts/latest dates. No runtime tests, CLI, or build tooling were added.
 - 2026-11-06: Implemented I-07 mature product/variation cohorts, bounded WooCommerce CRUD order reads, exact item/reason attribution, low-sample and incomplete-data rate suppression, fail-closed Pro entitlement, and the React patterns screen. Static source inspection only; runtime verification and a production entitlement provider remain.
 - 2026-11-06: Opened I-08 with explicit alert/clustering acceptance criteria and a dated runtime-dashboard row.
-- 2026-11-06: Added the deterministic reason-cluster service plus Pro-gated cluster reads and manager-only cluster override/reset REST routes. Persistent alert lifecycle, React cluster/alert UI, and runtime validation are still pending. Local workspace has no PHP, WP-CLI, MySQL, or Docker runtime.
+- 2026-11-06: Added the deterministic reason-cluster service, reversible reason assignments, weekly Pro alert evaluation, threshold checks, stable cohort-independent dedupe keys, and alert read/dismiss/restore REST endpoints. React review UI, complete candidate coverage, append-only audit history, and runtime validation remain. Local workspace lacks PHP, WP-CLI, MySQL, and Docker.
