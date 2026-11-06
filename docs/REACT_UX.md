@@ -73,7 +73,7 @@ All data access goes through namespaced REST endpoints. The server enforces auth
 | `/insights/v1/actions` | Pro read/create/update actions | Status history, windows, linked pattern |
 | `/insights/v1/settings` | Read/update permitted settings | Schema/version, validation, capability gates |
 
-These are proposed route names, not a frozen API. HTTP methods, schemas, permissions, error codes, and pagination must be finalized before implementation.
+These are proposed route names, not a frozen API. HTTP methods, JSON schemas, error codes, and pagination are finalized in I-06 within the approved route/capability boundaries in `docs/P6_TECHNICAL_CONTRACTS.md`.
 
 ## Tier boundary
 
@@ -81,7 +81,7 @@ Free includes reason capture, reason catalog, capture status, and basic reason-l
 
 ## Design artifacts and build constraint
 
-The companion `docs/UX_FLOWS.md` defines journeys and acceptance criteria. Before implementation, review these flows with the final metric/data model and validate the REST contract and current platform components. UI source may be added after P6 approval. Do not add CLI/build tooling or package manifests to this repository until the plugin is final. Use WordPress-bundled packages; no compilation step is planned.
+The companion `docs/UX_FLOWS.md` defines journeys and acceptance criteria. Before implementation, validate these approved flows against the metric/data model and current platform components. UI source may be added after P6 approval. Do not add CLI/build tooling or package manifests to this repository until the plugin is final. Use WordPress-bundled packages; no compilation step is planned.
 
 ## Official design references
 
