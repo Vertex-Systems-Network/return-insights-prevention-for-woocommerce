@@ -308,7 +308,7 @@ final class Pattern_Service {
 		} );
 		if ( count( $rows ) > $limit ) {
 			if ( $limit > 20 ) {
-				return new \\WP_Error( 'pattern_candidate_limit', __( 'The cohort contains too many product/reason candidates for a complete alert scan.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 503 ) );
+				return new \WP_Error( 'pattern_candidate_limit', __( 'The cohort contains too many product/reason candidates for a complete alert scan.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 503 ) );
 			}
 			$rows = array_slice( $rows, 0, $limit );
 		}
