@@ -51,13 +51,13 @@ Details and official source links: docs/DISTRIBUTION.md. No submission has been 
 | I-06 REST + React admin | Implemented; I-11 verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | I-05 Free reports | Implemented; I-11 verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | I-07 Pro product/variation patterns | Implemented; entitlement provider + I-11 verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
-| I-08 Pro clustering and alerts | In progress; cluster/alert backend + React review UI implemented; suppression states and runtime checks pending | ████████░░ 75% | 2026-11-06 | 2026-11-10 |
+| I-08 Pro clustering and alerts | Implementation present; weekly scan status and suppressed-candidate reasons visible; runtime/storage verification pending | █████████░ 90% | 2026-11-06 | 2026-11-10 |
 
 Package progress means implementation scope is present; it does not mean runtime/release acceptance is verified. See `docs/IMPLEMENTATION_BACKLOG.md` for detailed evidence.
 
 ## Current gate
 
-P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS_GATE.md. I-02, I-03, I-04, I-05, I-06, and I-07 are implemented. I-08 Pro clustering and alerts are in progress (75%): deterministic clusters, reversible assignments, weekly Pro evaluation, bounded full candidate scan (up to 2,000 rows, fail-closed above limit), thresholds, stable deduplication, bounded 50-entry action history, and React cluster/alert review UI are implemented. PHP/WordPress runtime verification remains; test-site install submission was blocked by browser security policy. Keep CLI/build tooling, Composer/npm manifests, and package managers out of this repository until the plugin is final.
+P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS_GATE.md. I-02, I-03, I-04, I-05, I-06, and I-07 are implemented. I-08 implementation is 90%: deterministic clusters, reversible assignments, weekly Pro evaluation, bounded full candidate scan (up to 2,000 rows, fail-closed above limit), ≥80% mapping threshold, per-candidate sample/rate gates, stable deduplication, bounded 50-entry action history, and React cluster/alert review UI are present. The alerts screen now reports last scan status and counts/causes for withheld candidates; coverage below threshold is surfaced with measured mapping. PHP/WordPress runtime verification and bounded option-storage review remain. Test-site installation was blocked by browser security policy, so no live-site result is claimed. Keep CLI/build tooling, Composer/npm manifests, and package managers out of this repository until the plugin is final.
 
 ## Plan files
 
@@ -98,6 +98,7 @@ P3 architecture specifies indexed custom event storage, source-level idempotency
 
 ## Change log
 
+- 2026-11-06: I-08 now returns persisted weekly scan status and suppression reasons to the Alerts UI. Scans blocked below 80% mapping and candidate-level sample/coverage suppressions are visible; I-08 progress is 90%, with runtime/storage verification open.
 - 2026-11-06: Completed product scope/options plan and proposed WooCommerce refund observation plus per-item admin capture.
 - 2026-11-06: Added separate WordPress.org Free and WooCommerce.com Paid submission plan.
 - 2026-11-06: Completed P3 logical data model, HPOS-safe ingestion, metric boundaries, privacy lifecycle, and performance plan. Added official design source links; no plugin implementation or CLI tooling added.

@@ -41,7 +41,7 @@ final class Alert_Service {
 			(float) ( $coverage['current']['return_mapping_percent'] ?? 0 ),
 			(float) ( $coverage['comparison']['return_mapping_percent'] ?? 0 )
 		);
-		if ( empty( $coverage['current']['complete'] ) || empty( $coverage['comparison']['complete'] ) || $mapping < 80 ) {
+		if ( $mapping < 80 ) {
 			$scan = array( 'status' => 'coverage_blocked', 'reason' => 'coverage_below_threshold', 'mapping_percent' => $mapping, 'current_coverage' => $coverage['current'] ?? array(), 'comparison_coverage' => $coverage['comparison'] ?? array(), 'checked_at_gmt' => gmdate( 'Y-m-d H:i:s' ) );
 			self::save_scan( $scan );
 			return array( 'evaluated' => 0, 'suppressed' => 'coverage_below_threshold', 'scan' => $scan );

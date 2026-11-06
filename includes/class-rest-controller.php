@@ -174,7 +174,7 @@ final class Rest_Controller {
 		return rest_ensure_response( array( 'order_id' => $order->get_id(), 'order_number' => $order->get_order_number(), 'items' => $items ) );
 	}
 
-	public static function get_alerts() { return rest_ensure_response( array( 'alerts' => Alert_Service::all() ) ); }
+	public static function get_alerts() { return rest_ensure_response( array( 'alerts' => Alert_Service::all(), 'scan' => Alert_Service::last_scan() ) ); }
 
 	public static function update_alert( \WP_REST_Request $r ) {
 		if ( self::has_unknown_fields( $r->get_json_params(), array( 'status', 'note' ) ) ) { return self::unknown_fields_error(); }

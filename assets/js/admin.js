@@ -34,6 +34,7 @@
 		const [ patternData, setPatternData ] = useState( null );
 		const [ clusterData, setClusterData ] = useState( null );
 		const [ alerts, setAlerts ] = useState( [] );
+		const [ alertScan, setAlertScan ] = useState( null );
 		const [ alertsBusy, setAlertsBusy ] = useState( false );
 		const [ patternBusy, setPatternBusy ] = useState( false );
 		const [ patternMaturity, setPatternMaturity ] = useState( '90' );
@@ -118,6 +119,7 @@
 			try {
 				const response = await apiFetch( { path: namespace + '/alerts' } );
 				setAlerts( response.alerts || [] );
+				setAlertScan( response.scan || null );
 			} catch ( error ) {
 				showError( error, config.strings.loadAlertsError );
 			} finally { setAlertsBusy( false ); }
@@ -174,8 +176,17 @@
 
 		function renderAlerts() {
 			if ( ! config.proEnabled ) { return h( 'section', { className: 'wpe-ri-panel' }, h( 'div', { className: 'wpe-ri-pro-lock', role: 'note' }, h( 'span', { className: 'wpe-ri-pro-lock-badge' }, 'PRO' ), h( 'h3', null, config.strings.proLockedTitle ), h( 'p', null, config.strings.proLockedIntro ) ) ); }
+			const scanLabels = { below_return_units: config.strings.alertBelowReturns, low_current_sold_sample: config.strings.alertLowCurrentSample, low_comparison_sold_sample: config.strings.alertLowComparisonSample, current_incomplete_coverage: config.strings.incompleteCoverage, comparison_incomplete_coverage: config.strings.incompleteCoverage };
+			const suppressed = alertScan && alertScan.suppressed_counts ? Object.keys( alertScan.suppressed_counts ).map( function ( key ) { return h( 'li', { key: key }, ( scanLabels[ key ] || key.replace( /_/g, ' ' ) ) + ': ' + alertScan.suppressed_counts[ key ] ); } ) : [];
+			const scanNotice = alertScan ? h( 'div', { className: 'wpe-ri-empty', role: 'status' }, [
+				h( 'strong', null, config.strings.alertScanStatus + ': ' + ( alertScan.status || config.strings.rateUnavailable ) ),
+				alertScan.reason === 'coverage_below_threshold' ? h( 'p', null, config.strings.alertCoverageBlocked + ' (' + ( alertScan.mapping_percent || 0 ) + '%)' ) : null,
+				suppressed.length ? h( 'div', null, [ h( 'p', null, config.strings.alertSuppressed ), h( 'ul', null, suppressed ) ] ) : null,
+				alertScan.checked_at_gmt ? h( 'small', null, alertScan.checked_at_gmt + ' UTC' ) : null
+			] ) : null;
 			return h( 'section', { className: 'wpe-ri-panel', 'aria-labelledby': 'wpe-ri-alerts-heading' },
 				h( 'div', { className: 'wpe-ri-panel-heading' }, h( 'div', null, h( 'h2', { id: 'wpe-ri-alerts-heading' }, config.strings.alertsTitle ), h( 'p', { className: 'wpe-ri-muted' }, config.strings.alertsIntro ) ), h( Button, { onClick: loadAlerts, disabled: alertsBusy }, config.strings.refreshAlerts ) ),
+				scanNotice,
 				alertsBusy ? h( 'div', { className: 'wpe-ri-loading', role: 'status' }, h( Spinner ), h( 'span', null, config.strings.loading ) ) : alerts.length ? h( 'div', { className: 'wpe-ri-table-wrap' }, h( 'table', { className: 'wpe-ri-table' }, h( 'thead', null, h( 'tr', null, [ config.strings.product, config.strings.cluster, config.strings.alertEvidence, config.strings.alertStatus, config.strings.clusterActions ].map( function ( label ) { return h( 'th', { key: label }, label ); } ) ) ), h( 'tbody', null, alerts.map( function ( row ) { return h( 'tr', { key: row.alert_id }, h( 'td', null, '#' + row.product_id + ( row.variation_id ? ' / #' + row.variation_id : '' ) ), h( 'td', null, row.cluster_id ), h( 'td', null, row.current_returned_quantity + ' / ' + row.current_sold_quantity + ' · ' + row.current_rate_percent + '% · ' + row.mapping_percent + '% mapping' ), h( 'td', null, row.status ), h( 'td', null, h( Button, { onClick: function () { setAlertStatus( row, row.status === 'dismissed' ? 'active' : 'dismissed' ); } }, row.status === 'dismissed' ? config.strings.restoreAlert : config.strings.dismissAlert ) ) ); } ) ) ) ) : h( 'div', { className: 'wpe-ri-empty' }, h( 'h3', null, config.strings.noAlerts ), h( 'p', null, config.strings.noAlertsHelp ) )
 			);
 		}
