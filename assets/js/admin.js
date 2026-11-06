@@ -32,6 +32,9 @@
 		const [ reportFrom, setReportFrom ] = useState( config.defaultFrom );
 		const [ reportTo, setReportTo ] = useState( config.today );
 		const [ patternData, setPatternData ] = useState( null );
+		const [ clusterData, setClusterData ] = useState( null );
+		const [ alerts, setAlerts ] = useState( [] );
+		const [ alertsBusy, setAlertsBusy ] = useState( false );
 		const [ patternBusy, setPatternBusy ] = useState( false );
 		const [ patternMaturity, setPatternMaturity ] = useState( '90' );
 		const [ cohortDays, setCohortDays ] = useState( '90' );
@@ -100,11 +103,51 @@
 				params.set( 'cohort_days', String( cohort || cohortDays ) );
 				const response = await apiFetch( { path: namespace + '/patterns?' + params.toString() } );
 				setPatternData( response );
+				const clusters = await apiFetch( { path: namespace + '/clusters?' + params.toString() } );
+				setClusterData( clusters.clusters || [] );
 			} catch ( error ) {
 				showError( error, config.strings.loadPatternsError );
 			} finally {
 				setPatternBusy( false );
 			}
+		}
+
+		async function loadAlerts() {
+			if ( ! config.proEnabled ) { return; }
+			setAlertsBusy( true );
+			try {
+				const response = await apiFetch( { path: namespace + '/alerts' } );
+				setAlerts( response.alerts || [] );
+			} catch ( error ) {
+				showError( error, config.strings.loadAlertsError );
+			} finally { setAlertsBusy( false ); }
+		}
+
+		async function setAlertStatus( alert, status ) {
+			try {
+				await apiFetch( { path: namespace + '/alerts/' + alert.alert_id, method: 'PATCH', data: { status: status, note: status === 'dismissed' ? config.strings.alertDismissAudit : '' } } );
+				loadAlerts();
+			} catch ( error ) { showError( error, config.strings.loadAlertsError ); }
+		}
+
+		function renderClusters() {
+			const rows = clusterData || [];
+			return h( 'section', { className: 'wpe-ri-panel', 'aria-labelledby': 'wpe-ri-clusters-heading' },
+				h( 'div', { className: 'wpe-ri-panel-heading' }, h( 'div', null, h( 'h2', { id: 'wpe-ri-clusters-heading' }, config.strings.clustersTitle ), h( 'p', { className: 'wpe-ri-muted' }, config.strings.clustersIntro ) ) ),
+				rows.length ? h( 'div', { className: 'wpe-ri-table-wrap' }, h( 'table', { className: 'wpe-ri-table' },
+					h( 'thead', null, h( 'tr', null, [ config.strings.product, config.strings.cluster, config.strings.clusterMembers, config.strings.currentRate, config.strings.clusterActions ].map( function ( label ) { return h( 'th', { key: label }, label ); } ) ) ),
+					h( 'tbody', null, rows.map( function ( row ) { return h( 'tr', { key: row.product_id + ':' + row.variation_id + ':' + row.cluster_id },
+						h( 'td', null, '#' + row.product_id + ( row.variation_id ? ' / #' + row.variation_id : '' ) ), h( 'td', null, row.cluster_label ), h( 'td', null, ( row.reason_ids || [] ).join( ', ' ) ), h( 'td', null, null === row.current.rate_percent ? config.strings.rateUnavailable : row.current.rate_percent + '%' ),
+						h( 'td', null, ( row.reason_ids || [] ).map( function ( id ) { return h( 'label', { className: 'wpe-ri-cluster-control', key: id }, id, h( 'select', { 'aria-label': config.strings.assignCluster + ' ' + id, defaultValue: row.cluster_id, onChange: function ( event ) { apiFetch( { path: namespace + '/clusters/' + id, method: 'PATCH', data: { cluster_id: event.target.value } } ).then( function () { loadPatterns( patternMaturity, cohortDays ); } ).catch( function () { showError( null, config.strings.clusterUpdateError ); } ); } }, [ 'fit_size', 'product_condition', 'product_description', 'fulfillment', 'order_intent' ].map( function ( value ) { return h( 'option', { key: value, value: value }, value ); } ) ) ); } ) ) ); } ) ) ) : h( 'p', { className: 'wpe-ri-muted' }, config.strings.noClusters )
+			);
+		}
+
+		function renderAlerts() {
+			if ( ! config.proEnabled ) { return h( 'section', { className: 'wpe-ri-panel' }, h( 'div', { className: 'wpe-ri-pro-lock', role: 'note' }, h( 'span', { className: 'wpe-ri-pro-lock-badge' }, 'PRO' ), h( 'h3', null, config.strings.proLockedTitle ), h( 'p', null, config.strings.proLockedIntro ) ) ); }
+			return h( 'section', { className: 'wpe-ri-panel', 'aria-labelledby': 'wpe-ri-alerts-heading' },
+				h( 'div', { className: 'wpe-ri-panel-heading' }, h( 'div', null, h( 'h2', { id: 'wpe-ri-alerts-heading' }, config.strings.alertsTitle ), h( 'p', { className: 'wpe-ri-muted' }, config.strings.alertsIntro ) ), h( Button, { onClick: loadAlerts, disabled: alertsBusy }, config.strings.refreshAlerts ) ),
+				alertsBusy ? h( 'div', { className: 'wpe-ri-loading', role: 'status' }, h( Spinner ), h( 'span', null, config.strings.loading ) ) : alerts.length ? h( 'div', { className: 'wpe-ri-table-wrap' }, h( 'table', { className: 'wpe-ri-table' }, h( 'thead', null, h( 'tr', null, [ config.strings.product, config.strings.cluster, config.strings.alertEvidence, config.strings.alertStatus, config.strings.clusterActions ].map( function ( label ) { return h( 'th', { key: label }, label ); } ) ) ), h( 'tbody', null, alerts.map( function ( row ) { return h( 'tr', { key: row.alert_id }, h( 'td', null, '#' + row.product_id + ( row.variation_id ? ' / #' + row.variation_id : '' ) ), h( 'td', null, row.cluster_id ), h( 'td', null, row.current_returned_quantity + ' / ' + row.current_sold_quantity + ' · ' + row.current_rate_percent + '% · ' + row.mapping_percent + '% mapping' ), h( 'td', null, row.status ), h( 'td', null, h( Button, { onClick: function () { setAlertStatus( row, row.status === 'dismissed' ? 'active' : 'dismissed' ); } }, row.status === 'dismissed' ? config.strings.restoreAlert : config.strings.dismissAlert ) ) ); } ) ) ) ) : h( 'div', { className: 'wpe-ri-empty' }, h( 'h3', null, config.strings.noAlerts ), h( 'p', null, config.strings.noAlertsHelp ) )
+			);
 		}
 
 		async function loadSources() {
@@ -711,7 +754,8 @@
 			{ id: 'capture', label: config.strings.captureTab },
 			{ id: 'catalog', label: config.strings.catalogTab },
 			{ id: 'sources', label: config.strings.sourcesTab },
-			{ id: 'patterns', label: config.strings.patternsTab }
+			{ id: 'patterns', label: config.strings.patternsTab },
+			{ id: 'alerts', label: config.strings.alertsTab }
 		];
 
 		return h( 'div', { className: 'wpe-ri-app' },
@@ -736,11 +780,12 @@
 							if ( item.id === 'overview' ) { loadReport( reportFrom, reportTo ); loadSources(); }
 							if ( item.id === 'sources' ) { loadSources(); }
 							if ( item.id === 'patterns' && config.proEnabled ) { loadPatterns( patternMaturity, cohortDays ); }
+							if ( item.id === 'alerts' ) { loadAlerts(); }
 						}
 					}, item.label );
 				} )
 			),
-			tab === 'overview' ? renderOverview() : tab === 'capture' ? renderCapture() : tab === 'history' ? renderHistory() : tab === 'sources' ? renderSources() : tab === 'patterns' ? renderPatterns() : renderCatalog(),
+			tab === 'overview' ? renderOverview() : tab === 'capture' ? renderCapture() : tab === 'history' ? renderHistory() : tab === 'sources' ? renderSources() : tab === 'patterns' ? h( wp.element.Fragment, null, renderPatterns(), renderClusters() ) : tab === 'alerts' ? renderAlerts() : renderCatalog(),
 			h( 'footer', { className: 'wpe-ri-footer' }, config.strings.footer )
 		);
 	}
