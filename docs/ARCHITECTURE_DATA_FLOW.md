@@ -1,8 +1,8 @@
 
 # Architecture and Data Flow — Engineering Blueprint
 
-**Planning status:** Blueprint and P6 decisions approved; implementation validation remains.  
-**Reviewed:** 2026-11-06. No runtime code exists.
+**Status:** Blueprint and P6 decisions approved; I-02 foundation, I-03 manual capture/catalog, and I-04 refund observer implemented; runtime validation remains.  
+**Reviewed:** 2026-11-06. 
 
 ## Source model
 
@@ -65,6 +65,10 @@ React admin uses WordPress bundled `wp.element`, `wp.components`, and `wp.apiFet
 Minimize data and treat free-text refund reasons as potentially identifying. Raw phrase storage is off by default; if enabled, cap at 500 characters and purge after 90 days. Canonical event retention defaults to 24 months and is merchant-configurable. Resolve privacy export/erasure through the linked Woo order without storing customer email. On erasure, remove personal linkage while retaining only non-identifying aggregates where permitted. Deactivation preserves data. Uninstall retains data by default and offers explicit, confirmed deletion.
 
 External AI remains off by default. Any future provider processing needs explicit opt-in, field minimization, disclosure, retention/cost policy and a security/privacy review.
+
+## I-04 implementation boundary
+
+`Refund_Observer` listens to WooCommerce's documented post-save `woocommerce_refund_created` hook and deletion hook. It reads the refund and parent order through `wc_get_order()` and stores one event at `refund` scope, with no item/product attribution, so a refund-level phrase is not multiplied into product/variation evidence. Exact active reason-catalog labels map in memory; unmatched text becomes `unknown`, and source free text is not stored. Schema v2 adds refund ID linkage. Runtime behavior on HPOS/legacy stores, duplicate hook delivery, and deletion lifecycle has not been verified.
 
 ## P6 decisions and remaining implementation validation
 
