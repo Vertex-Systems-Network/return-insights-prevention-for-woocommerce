@@ -10,8 +10,8 @@ Each runtime item must be scoped with named files, acceptance evidence, dependen
 
 | ID | Work package | Main scope | Depends on | Exit evidence |
 |---|---|---|---|---|
-| I-00 | Lock detailed technical decisions | Final event taxonomy, rate cohort/maturity rules, thresholds, retention/export fields, package model, REST schemas/permissions | P6 approval | Complete: decisions recorded consistently across P6, product, data, UX, privacy, compatibility specs |
-| I-01 | Security and privacy design | Threat model, capabilities/roles, REST permission matrix, nonce/auth assumptions, validation, minimization, export/erase, retention/uninstall | I-00 | Design complete: threat/privacy controls in `P6_TECHNICAL_CONTRACTS.md`; verification remains for implementation |
+| I-00 | Lock detailed technical decisions | Final event taxonomy, rate cohort/maturity rules, thresholds, retention/export fields, package model, REST schemas/permissions | P6 approval | Complete: approved decisions recorded consistently across P6, product, data, UX, privacy, compatibility specs |
+| I-01 | Security and privacy design | Threat model, capabilities/roles, REST permission matrix, nonce/auth assumptions, validation, minimization, export/erase, retention/uninstall | I-00 | Complete: threat/privacy controls in `P6_TECHNICAL_CONTRACTS.md`; verification remains for implementation |
 | I-02 | Plugin foundation | Naming/slug/constants, activation/deactivation behavior, migrations, dependency checks, translations, admin menu, supported public APIs | I-00, I-01 | Activation/deactivation/migration behavior documented and manually verified |
 | I-03 | Reason catalog and manual capture | Stable reason keys, translated labels, per-item merchant capture, validation/audit/provenance | I-02 | Manual event saved and edited with capability checks; canonical ID stable across locales |
 | I-04 | Native refund observation | Supported WooCommerce refund hooks/objects, idempotent ingestion, refund-scope attribution, HPOS + legacy behavior | I-02, I-03 | Refund evidence stored once with source/line mapping and no physical-return inference |
