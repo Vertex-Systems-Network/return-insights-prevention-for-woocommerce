@@ -24,7 +24,7 @@ This improves discovery but cannot guarantee every version auto-loads the file. 
 | AI-07 | Set runtime compatibility baseline | Planning baseline complete; implementation/release matrix pending | PHP/WP/WC floors and optional WPML/Polylang behavior documented; rolling two-major targets dated and official evidence linked in `docs/COMPATIBILITY.md`. Actual runtime verification remains a release task. |
 | AI-08 | Threat model capture and AI clustering | Approved V1 privacy/security design; runtime verification pending | Threat cases, REST controls, privacy lifecycle, and verification scenarios in `docs/P6_TECHNICAL_CONTRACTS.md`; external AI excluded from V1. |
 | AI-09 | Cross-model contradiction review | Not started | ChatGPT, Cursor, Claude, Gemini reviews reconciled into decisions. |
-| AI-10 | Break approved spec into implementation work | Active; I-02 foundation implemented | I-00/I-01 design complete; I-02 files added and statically inspected; I-03 is next. Keep CLI/build tooling out until plugin final. |
+| AI-10 | Break approved spec into implementation work | Active; I-02 to I-04 implemented | I-00/I-01 design complete; I-02 foundation, I-03 catalog/manual capture, and I-04 refund observation added. I-06 React admin/REST completion is next; keep CLI/build tooling out until plugin final. |
 | AI-11 | Prepare WordPress.org Free and Woo Marketplace Paid submissions | Plan complete; release blocked | Separate packages/listings, accounts, test evidence, and review gates tracked in docs/DISTRIBUTION.md. |
 
 ## Collaboration protocol
