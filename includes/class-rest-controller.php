@@ -246,8 +246,8 @@ final class Rest_Controller {
 		return (bool) array_diff( array_keys( $data ), $allowed );
 	}
 
-	private static function unknown_fields_error(): \\WP_Error {
-		return new \\WP_Error( 'unknown_fields', __( 'The request contains unsupported fields.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) );
+	private static function unknown_fields_error(): \WP_Error {
+		return new \WP_Error( 'unknown_fields', __( 'The request contains unsupported fields.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) );
 	}
 
 	private static function missing_event(): \WP_Error { return new \WP_Error( 'event_not_found', __( 'Insight event not found.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 404 ) ); }
