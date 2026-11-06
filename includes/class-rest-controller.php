@@ -104,7 +104,7 @@ final class Rest_Controller {
 		if ( ! $row ) { return self::missing_event(); }
 		if ( 'manual' !== $row['source_type'] ) { return new \WP_Error( 'immutable_source', __( 'Observed source records cannot be edited here.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 409 ) ); }
 		$d = $r->get_json_params() ?: array();
-		$v = self::validate_event( array_merge( $d, array( 'order_id' => $row['order_id'], 'order_item_id' => $row['order_item_id'] ) ) );
+		$v = self::validate_event( array_merge( $d, array( 'order_id' => $row['order_id'], 'order_item_id' => $row['order_item_id'] ) ), $id );
 		if ( is_wp_error( $v ) ) { return $v; }
 		$wpdb->update( Installer::events_table(), array( 'event_kind' => $v['kind'], 'quantity' => $v['quantity'], 'reason_id' => $v['reason']['id'], 'occurred_at_gmt' => $v['date'], 'updated_at_gmt' => gmdate( 'Y-m-d H:i:s' ), 'updated_by' => get_current_user_id() ), array( 'event_id' => $id ) );
 		return rest_ensure_response( self::serialize_event( self::find_event( $id ) ) );
@@ -119,7 +119,7 @@ final class Rest_Controller {
 		$wpdb->update( Installer::events_table(), array( 'deleted_at_gmt' => gmdate( 'Y-m-d H:i:s' ), 'deletion_note' => $note, 'updated_at_gmt' => gmdate( 'Y-m-d H:i:s' ), 'updated_by' => get_current_user_id() ), array( 'event_id' => $id ) );
 		return new \WP_REST_Response( null, 204 );
 	}
-	private static function validate_event( array $d ) {
+	private static function validate_event( array $d, int $ignore_event_id = 0 ) {
 		$kind = sanitize_key( $d['event_kind'] ?? '' );
 		if ( ! in_array( $kind, array( 'confirmed_return', 'exchange' ), true ) ) { return new \WP_Error( 'invalid_event_kind', __( 'Manual insights support confirmed returns or exchanges.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) ); }
 		$reason = Reason_Catalog::find( sanitize_key( $d['reason_id'] ?? '' ) );
@@ -129,6 +129,15 @@ final class Rest_Controller {
 		if ( ! $order || ! $item instanceof \WC_Order_Item_Product ) { return new \WP_Error( 'invalid_order_item', __( 'The selected item does not belong to this order.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) ); }
 		$p = $item->get_product();
 		if ( ! $p ) { return new \WP_Error( 'product_missing', __( 'The product for this order item is unavailable.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) ); }
+		global $wpdb;
+		$table = Installer::events_table();
+		$sql = "SELECT COALESCE(SUM(quantity), 0) FROM {$table} WHERE order_item_id = %d AND event_kind IN ('confirmed_return','exchange') AND deleted_at_gmt IS NULL";
+		$args = array( $item->get_id() );
+		if ( $ignore_event_id ) { $sql .= ' AND event_id <> %d'; $args[] = $ignore_event_id; }
+		$already_recorded = (float) $wpdb->get_var( $wpdb->prepare( $sql, $args ) );
+		if ( $already_recorded + $q > (float) $item->get_quantity() ) {
+			return new \\WP_Error( 'quantity_exceeds_ordered', __( 'Insight quantity cannot exceed the remaining quantity on this order item.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) );
+		}
 		$date = sanitize_text_field( $d['occurred_at'] ?? '' );
 		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) ) { return new \WP_Error( 'invalid_date', __( 'Use a date in YYYY-MM-DD format.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) ); }
 		$local = \DateTimeImmutable::createFromFormat( '!Y-m-d', $date, wp_timezone() );
