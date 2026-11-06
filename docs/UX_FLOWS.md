@@ -1,6 +1,6 @@
 # UX Flows and Acceptance Criteria
 
-**Status:** P4 planning artifact complete; I-06 implements base overview, capture, history, reason-catalog, and source-summary journeys. Usability and runtime validation remain.
+**Status:** P4 planning artifact complete; I-06 implements overview/capture/history/catalog/source flows and I-05 adds date-filtered Free reports. Usability and runtime validation remain.
 
 This file converts the React admin direction into reviewable merchant journeys. Metric and data decisions in the product and architecture specifications remain authoritative.
 
@@ -16,11 +16,27 @@ This file converts the React admin direction into reviewable merchant journeys. 
 
 - Refunds are never described as confirmed physical returns.
 - No historical backfill starts automatically.
-- Current I-06 screens show event counts with source context and avoid rates; rates require the I-05 metric contract.
+- I-05 reports show captured event counts and coverage with source context; no return rate is shown because eligible sales denominators are not yet implemented.
 - If no data exists, the screen explains how to begin and offers no fabricated chart.
 - No setup wizard blocks the available count-only screens; these are preliminary coverage information, not reports.
 
-## Flow 2: Inspect a repeated pattern
+## Flow 2: Review a Free evidence report
+
+1. Merchant opens Overview and sees the default last-30-days reporting period in the store timezone.
+2. Merchant changes inclusive start/end dates and submits the filter.
+3. The screen shows captured event count, summed recorded quantity, mapped/unmapped reason coverage, and reason/event-kind/source tables. Tables are limited to the top 20 reasons and top 10 products/categories.
+4. Product and category tables show only item-attributed evidence; category membership may overlap.
+5. An empty period explains how to widen the range or add an item-level record.
+
+**Acceptance criteria**
+
+- UI totals come from the server summary endpoint and are filtered by `occurred_at_gmt` within converted store-local date bounds.
+- Refund-scope evidence remains a refund observation and is never presented as a confirmed physical return.
+- The interface shows counts and recorded quantities; it does not imply a return rate, causal reason, or sales denominator.
+- Mapping coverage states numerator and denominator; it is not a product performance rate.
+- Empty and loading states do not fabricate values.
+
+## Flow 3: Inspect a repeated pattern
 
 1. Merchant opens a pattern from Overview or Insights.
 2. Pattern detail shows reason, date window, observed count, data source, sample size, and available comparison.
@@ -36,7 +52,7 @@ This file converts the React admin direction into reviewable merchant journeys. 
 - Low samples, incomplete coverage, and unknown mappings are visible.
 - Recommendations use review/hypothesis wording and do not claim causation.
 
-## Flow 3: Create and measure a corrective action (Pro)
+## Flow 4: Create and measure a corrective action (Pro)
 
 1. Merchant starts an action from a pattern.
 2. Merchant writes a proposed change, assigns an owner, selects a status, and sets a review date/window.
@@ -52,7 +68,7 @@ This file converts the React admin direction into reviewable merchant journeys. 
 - Copy describes changes as associated with the action, not proven to be caused by it.
 - Action history is retained according to the approved retention policy.
 
-## Flow 4: Resolve a capture or data-quality issue
+## Flow 5: Resolve a capture or data-quality issue
 
 1. Merchant opens Capture sources or an event warning.
 2. The screen identifies the affected source, last successful observation, and actionable mapping/error detail.
@@ -66,7 +82,7 @@ This file converts the React admin direction into reviewable merchant journeys. 
 - Retry does not create duplicate events.
 - Error copy avoids raw stack traces and gives a stable reference for support.
 
-## Flow 5: Edit a reason label
+## Flow 6: Edit a reason label
 
 1. Merchant edits a reason’s display label or its translated labels.
 2. The canonical reason identity remains stable.
