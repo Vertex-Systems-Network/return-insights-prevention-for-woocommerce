@@ -57,7 +57,7 @@ final class Admin {
 		echo '<h1>' . esc_html__( 'Return Insights', WPE_RI_TEXT_DOMAIN ) . '</h1>';
 		echo '<p>' . esc_html__( 'Review return reasons and discover product issues that may need attention.', WPE_RI_TEXT_DOMAIN ) . '</p>';
 		echo '<div class="notice notice-info inline"><p>';
-		echo esc_html__( 'Return reason capture and reports are not available in this build yet.', WPE_RI_TEXT_DOMAIN );
+		echo esc_html__( 'The capture service is available through the protected REST API. The merchant-facing React capture screen and reports are planned next.', WPE_RI_TEXT_DOMAIN );
 		echo '</p></div>';
 		echo '</div>';
 	}
