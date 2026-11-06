@@ -20,7 +20,7 @@ This improves discovery but cannot guarantee every version auto-loads the file. 
 | AI-02 | Audit competitor APIs, live UI, and plan limits | In progress | Zorem/Recoup options reviewed from official sources; remaining API/changelog/full plan audit recorded with evidence. |
 | AI-03 | Finalize capture/event definitions | Draft ready; approval pending | Refund evidence vs confirmed return, manual per-item capture, event scope documented. |
 | AI-04 | Deduplicate feature/system options | Plan complete; approval pending | Canonical IDs map competitor options without duplicating RMA workflows. |
-| AI-05 | Finalize schema, rate math, privacy | In progress | Event schema, source confidence, denominator, retention, HPOS reviewed. |
+| AI-05 | Specify schema, rate math, privacy, performance | Blueprint complete; review pending | Logical event model, idempotency, HPOS boundary, privacy flow, and bounded aggregation documented in P3 files. |
 | AI-06 | Finalize React flows and REST contract | In progress | Screens/states/accessibility/capabilities approved. |
 | AI-07 | Set runtime compatibility baseline | Baseline selected; Marketplace release range alignment pending | V1 minimums documented; two-major support range rechecked at submission. |
 | AI-08 | Threat model capture and AI clustering | Planned | Abuse controls, opt-in, data sent, explainability approved. |
@@ -36,7 +36,7 @@ This improves discovery but cannot guarantee every version auto-loads the file. 
 4. Models can propose alternatives but cannot silently change approved decisions.
 5. No implementation agent acts until P6 approval.
 6. A second model checks contradictions and duplicate features, not unrelated prose.
-7. Final review checks scope, privacy/security, compatibility, and progress evidence.
+7. Final review checks plan scope, privacy/security, compatibility, and progress evidence.
 8. Never provide credentials, production customer data, or private store records as test context.
 
 ## Reusable task prompt
