@@ -27,6 +27,9 @@
 		const [ notice, setNotice ] = useState( null );
 		const [ reasons, setReasons ] = useState( [] );
 		const [ events, setEvents ] = useState( [] );
+		const [ summaryTotal, setSummaryTotal ] = useState( 0 );
+		const [ sourceRows, setSourceRows ] = useState( [] );
+		const [ sourceBusy, setSourceBusy ] = useState( false );
 		const [ orderId, setOrderId ] = useState( '' );
 		const [ historyOrderId, setHistoryOrderId ] = useState( '' );
 		const [ order, setOrder ] = useState( null );
@@ -64,6 +67,27 @@
 			}
 		}
 
+		async function loadSummary() {
+			try {
+				const response = await apiFetch( { path: namespace + '/events?per_page=1', parse: false } );
+				setSummaryTotal( Number( response.headers.get( 'X-WP-Total' ) || 0 ) );
+			} catch ( error ) {
+				showError( error, config.strings.loadEventsError );
+			}
+		}
+
+		async function loadSources() {
+			setSourceBusy( true );
+			try {
+				const response = await apiFetch( { path: namespace + '/sources' } );
+				setSourceRows( response.sources || [] );
+			} catch ( error ) {
+				showError( error, config.strings.loadSourcesError );
+			} finally {
+				setSourceBusy( false );
+			}
+		}
+
 		async function loadEvents( requestedPage, filterOrder ) {
 			setLoadingEvents( true );
 			try {
@@ -89,6 +113,8 @@
 		useEffect( function () {
 			loadReasons();
 			loadEvents( 1, '' );
+			loadSummary();
+			loadSources();
 		}, [] );
 
 		async function loadOrder( id, targetEvent ) {
@@ -163,6 +189,8 @@
 					setNotice( { status: 'success', message: config.strings.eventSaved } );
 				}
 				await loadEvents( 1, historyOrderId );
+				await loadSummary();
+				await loadSources();
 				resetCapture();
 			} catch ( error ) {
 				showError( error, config.strings.saveError );
@@ -192,6 +220,8 @@
 				setDeleteTarget( null );
 				setDeleteNote( '' );
 				await loadEvents( page, historyOrderId );
+				await loadSummary();
+				await loadSources();
 			} catch ( error ) {
 				showError( error, config.strings.deleteError );
 			}
@@ -274,6 +304,72 @@
 				options.map( function ( option ) {
 					return h( 'option', { key: option.value, value: option.value }, option.label );
 				} )
+			);
+		}
+
+
+		function renderOverview() {
+			const sourceCount = function ( type ) {
+				const match = sourceRows.find( function ( row ) { return row.source_type === type; } );
+				return match ? match.event_count : 0;
+			};
+			return h( 'section', { className: 'wpe-ri-panel', 'aria-labelledby': 'wpe-ri-overview-heading' },
+				h( 'div', { className: 'wpe-ri-panel-heading' },
+					h( 'div', null,
+						h( 'p', { className: 'wpe-ri-eyebrow' }, config.strings.overviewEyebrow ),
+						h( 'h2', { id: 'wpe-ri-overview-heading' }, config.strings.overviewTitle ),
+						h( 'p', { className: 'wpe-ri-muted' }, config.strings.overviewIntro )
+					),
+					h( Button, { variant: 'secondary', onClick: function () { loadSummary(); loadSources(); } }, config.strings.refresh )
+				),
+				h( 'div', { className: 'wpe-ri-stat-grid' },
+					h( 'article', { className: 'wpe-ri-stat-card' }, h( 'span', { className: 'wpe-ri-stat-label' }, config.strings.totalInsights ), h( 'strong', null, summaryTotal ), h( 'small', null, config.strings.recordCountNote ) ),
+					h( 'article', { className: 'wpe-ri-stat-card' }, h( 'span', { className: 'wpe-ri-stat-label' }, config.strings.manualInsights ), h( 'strong', null, sourceCount( 'manual' ) ), h( 'small', null, config.strings.manualSource ) ),
+					h( 'article', { className: 'wpe-ri-stat-card' }, h( 'span', { className: 'wpe-ri-stat-label' }, config.strings.refundObservations ), h( 'strong', null, sourceCount( 'woocommerce_refund' ) ), h( 'small', null, config.strings.refundSource ) )
+				),
+				h( 'div', { className: 'wpe-ri-callout' },
+					h( 'span', { className: 'wpe-ri-callout-mark', 'aria-hidden': true }, 'i' ),
+					h( 'div', null, h( 'strong', null, config.strings.reportsComing ), h( 'p', null, config.strings.recordCountNote ) )
+				),
+				h( 'div', { className: 'wpe-ri-overview-actions' },
+					h( Button, { variant: 'primary', onClick: function () { setTab( 'capture' ); } }, config.strings.insightStart ),
+					h( Button, { variant: 'secondary', onClick: function () { setTab( 'history' ); loadEvents( 1, '' ); } }, config.strings.historyTab )
+				)
+			);
+		}
+
+		function renderSources() {
+			const descriptions = {
+				manual: config.strings.manualSource,
+				woocommerce_refund: config.strings.refundSource
+			};
+			return h( 'section', { className: 'wpe-ri-panel', 'aria-labelledby': 'wpe-ri-sources-heading' },
+				h( 'div', { className: 'wpe-ri-panel-heading' },
+					h( 'div', null,
+						h( 'p', { className: 'wpe-ri-eyebrow' }, config.strings.sourcesEyebrow ),
+						h( 'h2', { id: 'wpe-ri-sources-heading' }, config.strings.sourcesTitle ),
+						h( 'p', { className: 'wpe-ri-muted' }, config.strings.sourcesIntro )
+					),
+					h( Button, { variant: 'secondary', onClick: loadSources }, config.strings.refresh )
+				),
+				sourceBusy ? h( 'div', { className: 'wpe-ri-loading' }, h( Spinner ), h( 'span', null, config.strings.loading ) ) :
+					sourceRows.length ? h( 'div', { className: 'wpe-ri-source-list' }, sourceRows.map( function ( row ) {
+						return h( 'article', { className: 'wpe-ri-source-card', key: row.source_type },
+							h( 'div', { className: 'wpe-ri-source-icon', 'aria-hidden': true }, row.source_type === 'manual' ? '↳' : '↻' ),
+							h( 'div', { className: 'wpe-ri-source-copy' },
+								h( 'h3', null, row.source_type === 'manual' ? config.strings.manualSourceTitle : config.strings.refundSourceTitle ),
+								h( 'p', null, descriptions[ row.source_type ] || config.strings.otherSource ),
+								h( 'small', null, config.strings.lastSeen + ': ' + ( row.latest_event_at ? new Date( row.latest_event_at ).toLocaleString() : '—' ) )
+							),
+							h( 'div', { className: 'wpe-ri-source-count' }, h( 'strong', null, row.event_count ), h( 'span', null, config.strings.recordCount )
+							)
+						);
+					} ) ) : h( 'div', { className: 'wpe-ri-empty' },
+						h( 'span', { className: 'wpe-ri-empty-icon', 'aria-hidden': true }, '↻' ),
+						h( 'h3', null, config.strings.noSourceEvents ),
+						h( 'p', null, config.strings.noSourceEventsHelp )
+					),
+				h( 'p', { className: 'wpe-ri-source-note' }, config.strings.sourcePrivacy )
 			);
 		}
 
@@ -458,9 +554,11 @@
 		}
 
 		const tabs = [
-			{ id: 'capture', label: config.strings.captureTab },
+			{ id: 'overview', label: config.strings.overviewTab },
 			{ id: 'history', label: config.strings.historyTab },
-			{ id: 'catalog', label: config.strings.catalogTab }
+			{ id: 'capture', label: config.strings.captureTab },
+			{ id: 'catalog', label: config.strings.catalogTab },
+			{ id: 'sources', label: config.strings.sourcesTab }
 		];
 
 		return h( 'div', { className: 'wpe-ri-app' },
@@ -482,11 +580,13 @@
 							setTab( item.id );
 							if ( item.id === 'history' ) { loadEvents( 1, historyOrderId ); }
 							if ( item.id === 'catalog' ) { loadReasons(); }
+							if ( item.id === 'overview' ) { loadSummary(); loadSources(); }
+							if ( item.id === 'sources' ) { loadSources(); }
 						}
 					}, item.label );
 				} )
 			),
-			tab === 'capture' ? renderCapture() : tab === 'history' ? renderHistory() : renderCatalog(),
+			tab === 'overview' ? renderOverview() : tab === 'capture' ? renderCapture() : tab === 'history' ? renderHistory() : tab === 'sources' ? renderSources() : renderCatalog(),
 			h( 'footer', { className: 'wpe-ri-footer' }, config.strings.footer )
 		);
 	}
