@@ -103,6 +103,7 @@ final class Admin {
 			'clusterMembers' => __( 'Member reasons', WPE_RI_TEXT_DOMAIN ),
 			'clusterActions' => __( 'Review', WPE_RI_TEXT_DOMAIN ),
 			'assignCluster' => __( 'Assign cluster for', WPE_RI_TEXT_DOMAIN ),
+			'resetCluster' => __( 'Use suggested group', WPE_RI_TEXT_DOMAIN ),
 			'clusterUpdateError' => __( 'Could not update the reason cluster.', WPE_RI_TEXT_DOMAIN ),
 			'noClusters' => __( 'No reason clusters in these cohorts.', WPE_RI_TEXT_DOMAIN ),
 			'patternsTab' => __( 'Product trends · Pro', WPE_RI_TEXT_DOMAIN ),
