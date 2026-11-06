@@ -35,7 +35,10 @@ final class Rest_Controller {
 	}
 	public static function can_view(): bool { return current_user_can( Capabilities::VIEW ); }
 	public static function can_manage(): bool { return current_user_can( Capabilities::MANAGE ); }
-	public static function get_reasons(): \WP_REST_Response { return rest_ensure_response( Reason_Catalog::all() ); }
+	public static function get_reasons( \\WP_REST_Request $request ): \\WP_REST_Response {
+		$include_inactive = rest_sanitize_boolean( $request->get_param( 'include_inactive' ) ) && self::can_manage();
+		return rest_ensure_response( Reason_Catalog::all( $include_inactive ) );
+	}
 	public static function get_reason( \WP_REST_Request $r ) {
 		$x = Reason_Catalog::find( (string) $r['id'], true );
 		return $x ? rest_ensure_response( $x ) : new \WP_Error( 'reason_not_found', __( 'Reason not found.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 404 ) );
