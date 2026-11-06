@@ -52,6 +52,18 @@ final class Rest_Controller {
 				'cohort_days' => array( 'type' => 'integer', 'default' => 90, 'enum' => array( 30, 60, 90, 120, 180 ) ),
 			),
 		) );
+		register_rest_route( self::NS, '/clusters', array(
+			'methods' => 'GET',
+			'callback' => array( self::class, 'get_clusters' ),
+			'permission_callback' => array( self::class, 'can_view_patterns' ),
+			'args' => array( 'maturity_days' => array( 'type' => 'integer', 'default' => 90, 'enum' => array( 30, 60, 90, 120, 180 ) ), 'cohort_days' => array( 'type' => 'integer', 'default' => 90, 'enum' => array( 30, 60, 90, 120, 180 ) ) ),
+		) );
+		register_rest_route( self::NS, '/clusters/(?P<reason_id>[a-z0-9_-]+)', array(
+			'methods' => 'PATCH',
+			'callback' => array( self::class, 'update_cluster' ),
+			'permission_callback' => array( self::class, 'can_manage' ),
+			'args' => array( 'cluster_id' => array( 'type' => 'string', 'required' => true, 'maxLength' => 48 ) ),
+		) );
 		register_rest_route( self::NS, '/summary', array(
 			'methods' => 'GET',
 			'callback' => array( self::class, 'get_summary' ),
@@ -145,6 +157,20 @@ final class Rest_Controller {
 			$items[] = array( 'order_item_id' => $item->get_id(), 'product_id' => $p->get_parent_id() ?: $p->get_id(), 'variation_id' => $p->get_parent_id() ? $p->get_id() : 0, 'name' => $item->get_name(), 'ordered_quantity' => (float) $item->get_quantity() );
 		}
 		return rest_ensure_response( array( 'order_id' => $order->get_id(), 'order_number' => $order->get_order_number(), 'items' => $items ) );
+	}
+
+	public static function get_clusters( \WP_REST_Request $r ) {
+		if ( self::has_unknown_fields( $r->get_query_params(), array( 'maturity_days', 'cohort_days' ) ) ) { return self::unknown_fields_error(); }
+		$report = Pattern_Service::report( absint( $r->get_param( 'maturity_days' ) ?: 90 ), absint( $r->get_param( 'cohort_days' ) ?: 90 ) );
+		if ( is_wp_error( $report ) ) { return $report; }
+		$report['clusters'] = Cluster_Service::build( $report['patterns'] ?? array() );
+		return rest_ensure_response( $report );
+	}
+
+	public static function update_cluster( \WP_REST_Request $r ) {
+		if ( self::has_unknown_fields( $r->get_json_params(), array( 'cluster_id' ) ) ) { return self::unknown_fields_error(); }
+		$result = Cluster_Service::set_override( sanitize_key( (string) $r['reason_id'] ), sanitize_key( (string) $r->get_param( 'cluster_id' ) ) );
+		return is_wp_error( $result ) ? $result : rest_ensure_response( array( 'updated' => true, 'reason_id' => sanitize_key( (string) $r['reason_id'] ), 'cluster_id' => sanitize_key( (string) $r->get_param( 'cluster_id' ) ) ) );
 	}
 
 	public static function get_patterns( \WP_REST_Request $r ) {
