@@ -1,6 +1,6 @@
 # P6 — Pre-Development Readiness Gate
 
-**Status:** Recommendations consolidated; explicit product-owner approval pending.  
+**Status:** Recommendations and technical contracts consolidated; explicit product-owner approval pending.  
 **Reviewed:** 2026-11-06  
 **Implementation status:** Not authorized by this document. No plugin runtime code, CLI, package manifest, or build tooling is added.
 
@@ -45,12 +45,12 @@ The P6 gate passes only after the owner approves/revises D1–D12 and these impl
 | Review area | Evidence | Gate status |
 |---|---|---|
 | Product scope and capture model | `PRODUCT_SPEC.md`, `OPTIONS_BANK.md` | Recommendation ready; owner approval pending |
-| Data model, privacy, event boundaries | `ARCHITECTURE_DATA_FLOW.md`, `DATA_MODEL.md` | Blueprint ready; detailed retention/schema validation remains |
+| Data model, privacy, event boundaries | `ARCHITECTURE_DATA_FLOW.md`, `DATA_MODEL.md`, `P6_TECHNICAL_CONTRACTS.md` | Event/API/security contracts drafted; owner decisions on retention, schema, and multisite remain |
 | React UX and user journeys | `REACT_UX.md`, `UX_FLOWS.md` | Blueprint ready; visual/API review remains |
 | Compatibility | `COMPATIBILITY.md` | Dated baseline ready; tests await implementation |
 | Distribution | `DISTRIBUTION.md` | Separate submission tracks planned; no packages/listings created |
-| Security / threat model | This gate + implementation tasks | Baseline constraints set; detailed threat review remains before capture/API coding |
-| Implementation sequence | `IMPLEMENTATION_BACKLOG.md` | Ordered; blocked pending gate approval |
+| Security / threat model | `P6_TECHNICAL_CONTRACTS.md` | Threat register and control requirements drafted; implementation verification remains |
+| REST contract and route controls | `P6_TECHNICAL_CONTRACTS.md` | Proposed route, permission, payload, and verification contracts ready for review |\n| Implementation sequence | `IMPLEMENTATION_BACKLOG.md` | Ordered; blocked pending gate approval |
 | Owner decision | D1–D12 | Pending |
 
 ## Approval record
