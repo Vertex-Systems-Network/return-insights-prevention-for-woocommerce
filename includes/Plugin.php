@@ -66,7 +66,10 @@ final class Plugin {
 			return;
 		}
 
-		Installer::maybe_upgrade();
+		if ( ! Installer::maybe_upgrade() ) {
+			add_action( 'admin_notices', array( self::class, 'render_database_notice' ) );
+			return;
+		}
 		Admin::register();
 		RestController::register();
 		RefundObserver::register();
@@ -90,6 +93,17 @@ final class Plugin {
 
 		echo '<div class="notice notice-error"><p>';
 		echo esc_html( implode( ' ', $errors ) );
+		echo '</p></div>';
+	}
+
+	/** Display a safe admin notice when a schema install/upgrade fails. */
+	public static function render_database_notice(): void {
+		if ( ! current_user_can( 'activate_plugins' ) ) {
+			return;
+		}
+
+		echo '<div class="notice notice-error"><p>';
+		echo esc_html__( 'WPEssential Return Insights could not verify its database schema. Its admin and event-observation services are paused until the database upgrade succeeds.', WPE_RI_TEXT_DOMAIN );
 		echo '</p></div>';
 	}
 

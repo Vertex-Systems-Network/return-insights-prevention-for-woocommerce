@@ -29,10 +29,17 @@ final class ReasonCatalog {
 
 	public static function all( bool $include_inactive = false ): array {
 		$stored = get_option( self::OPTION, array() );
+		if ( ! is_array( $stored ) ) {
+			$stored = array();
+		}
 		$items = array();
 		foreach ( self::DEFAULTS as $id => $definition ) {
-			$entry = isset( $stored[ $id ] ) ? wp_parse_args( $stored[ $id ], $definition ) : $definition;
+			$stored_entry = isset( $stored[ $id ] ) && is_array( $stored[ $id ] ) ? $stored[ $id ] : array();
+			$entry = wp_parse_args( $stored_entry, $definition );
 			$entry = array_merge( array( 'id' => $id, 'active' => true, 'custom' => false, 'translations' => array() ), $entry );
+			$entry['label'] = is_scalar( $entry['label'] ) ? sanitize_text_field( (string) $entry['label'] ) : $definition['label'];
+			$entry['active'] = rest_sanitize_boolean( $entry['active'] );
+			$entry['translations'] = self::clean_translations( $entry['translations'] );
 			if ( $include_inactive || $entry['active'] ) {
 				$items[] = $entry;
 			}
@@ -42,6 +49,9 @@ final class ReasonCatalog {
 				continue;
 			}
 			$entry = array_merge( array( 'id' => $id, 'group' => 'other', 'label' => '', 'active' => true, 'custom' => true, 'translations' => array() ), $entry );
+			$entry['label'] = is_scalar( $entry['label'] ) ? sanitize_text_field( (string) $entry['label'] ) : '';
+			$entry['active'] = rest_sanitize_boolean( $entry['active'] );
+			$entry['translations'] = self::clean_translations( $entry['translations'] );
 			if ( $include_inactive || $entry['active'] ) {
 				$items[] = $entry;
 			}
@@ -56,6 +66,22 @@ final class ReasonCatalog {
 			}
 		}
 		return null;
+	}
+
+	private static function clean_translations( $translations ): array {
+		if ( ! is_array( $translations ) ) {
+			return array();
+		}
+		$clean = array();
+		foreach ( $translations as $locale => $label ) {
+			if ( is_scalar( $label ) && preg_match( '/^[a-z]{2,3}(?:_[A-Z]{2})?$/', (string) $locale ) ) {
+				$value = sanitize_text_field( (string) $label );
+				if ( '' !== $value && strlen( $value ) <= 100 ) {
+					$clean[ $locale ] = $value;
+				}
+			}
+		}
+		return $clean;
 	}
 
 
@@ -87,9 +113,18 @@ final class ReasonCatalog {
 
 	public static function save( array $data, ?string $id = null ) {
 		$items = get_option( self::OPTION, array() );
+		if ( ! is_array( $items ) ) {
+			$items = array();
+		}
 		$prior = null === $id ? null : self::find( $id, true );
-		$label = isset( $data['label'] ) ? sanitize_text_field( $data['label'] ) : ( $prior['label'] ?? '' );
-		$group = isset( $data['group'] ) ? sanitize_key( $data['group'] ) : ( $prior['group'] ?? 'other' );
+		if ( isset( $data['label'] ) && ! is_scalar( $data['label'] ) ) {
+			return new \WP_Error( 'invalid_reason', __( 'Provide a text label up to 100 characters.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) );
+		}
+		if ( isset( $data['group'] ) && ! is_scalar( $data['group'] ) ) {
+			return new \WP_Error( 'invalid_reason', __( 'Choose a valid reason group.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) );
+		}
+		$label = isset( $data['label'] ) ? sanitize_text_field( (string) $data['label'] ) : ( $prior['label'] ?? '' );
+		$group = isset( $data['group'] ) ? sanitize_key( (string) $data['group'] ) : ( $prior['group'] ?? 'other' );
 		if ( '' === $label || strlen( $label ) > 100 || ! in_array( $group, array( 'product', 'fulfillment', 'other' ), true ) ) {
 			return new \WP_Error( 'invalid_reason', __( 'Provide a label up to 100 characters and a valid group.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) );
 		}
@@ -103,11 +138,14 @@ final class ReasonCatalog {
 			return new \WP_Error( 'reason_not_found', __( 'Reason not found.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 404 ) );
 		}
 		$existing = isset( $items[ $id ] ) ? $items[ $id ] : array();
-		$translations = isset( $data['translations'] ) && is_array( $data['translations'] ) ? $data['translations'] : ( $existing['translations'] ?? array() );
+		if ( isset( $data['translations'] ) && ! is_array( $data['translations'] ) ) {
+			return new \WP_Error( 'invalid_translations', __( 'Translations must be a locale-to-label object.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) );
+		}
+		$translations = isset( $data['translations'] ) ? $data['translations'] : ( $existing['translations'] ?? array() );
 		$clean_translations = array();
 		foreach ( $translations as $locale => $translated_label ) {
-			if ( preg_match( '/^[a-z]{2,3}(?:_[A-Z]{2})?$/', (string) $locale ) ) {
-				$value = sanitize_text_field( $translated_label );
+			if ( preg_match( '/^[a-z]{2,3}(?:_[A-Z]{2})?$/', (string) $locale ) && is_scalar( $translated_label ) ) {
+				$value = sanitize_text_field( (string) $translated_label );
 				if ( '' !== $value && strlen( $value ) <= 100 ) {
 					$clean_translations[ $locale ] = $value;
 				}

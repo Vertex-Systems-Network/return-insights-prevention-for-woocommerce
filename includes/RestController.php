@@ -280,11 +280,17 @@ final class RestController {
 		$table = Installer::events_table();
 		$where = 'deleted_at_gmt IS NULL AND occurred_at_gmt >= %s AND occurred_at_gmt < %s';
 		$totals = $wpdb->get_row( $wpdb->prepare( "SELECT COUNT(*) AS event_count, COALESCE(SUM(quantity), 0) AS quantity_total FROM {$table} WHERE {$where}", $start_utc, $end_utc ), ARRAY_A );
+		if ( ! empty( $wpdb->last_error ) ) { return self::report_query_error(); }
 		$by_reason = $wpdb->get_results( $wpdb->prepare( "SELECT reason_id, COUNT(*) AS event_count, COALESCE(SUM(quantity), 0) AS quantity_total FROM {$table} WHERE {$where} GROUP BY reason_id ORDER BY event_count DESC, reason_id ASC LIMIT 20", $start_utc, $end_utc ), ARRAY_A );
+		if ( ! empty( $wpdb->last_error ) ) { return self::report_query_error(); }
 		$by_kind = $wpdb->get_results( $wpdb->prepare( "SELECT event_kind, COUNT(*) AS event_count, COALESCE(SUM(quantity), 0) AS quantity_total FROM {$table} WHERE {$where} GROUP BY event_kind ORDER BY event_count DESC, event_kind ASC", $start_utc, $end_utc ), ARRAY_A );
+		if ( ! empty( $wpdb->last_error ) ) { return self::report_query_error(); }
 		$by_source = $wpdb->get_results( $wpdb->prepare( "SELECT source_type, COUNT(*) AS event_count, COALESCE(SUM(quantity), 0) AS quantity_total FROM {$table} WHERE {$where} GROUP BY source_type ORDER BY event_count DESC, source_type ASC", $start_utc, $end_utc ), ARRAY_A );
+		if ( ! empty( $wpdb->last_error ) ) { return self::report_query_error(); }
 		$mapping = $wpdb->get_row( $wpdb->prepare( "SELECT COUNT(*) AS total_events, COALESCE(SUM(mapping_state = 'mapped'), 0) AS mapped_events, COALESCE(SUM(mapping_state = 'unmapped'), 0) AS unmapped_events FROM {$table} WHERE {$where}", $start_utc, $end_utc ), ARRAY_A );
+		if ( ! empty( $wpdb->last_error ) ) { return self::report_query_error(); }
 		$by_product = $wpdb->get_results( $wpdb->prepare( "SELECT product_id, variation_id, COUNT(*) AS event_count, COALESCE(SUM(quantity), 0) AS quantity_total FROM {$table} WHERE {$where} AND attribution_scope = 'item' AND product_id > 0 GROUP BY product_id, variation_id ORDER BY event_count DESC, product_id ASC, variation_id ASC LIMIT 10", $start_utc, $end_utc ), ARRAY_A );
+		if ( ! empty( $wpdb->last_error ) ) { return self::report_query_error(); }
 		$by_category = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT tt.term_id, t.name, COUNT(DISTINCT e.event_id) AS event_count, COALESCE(SUM(e.quantity), 0) AS quantity_total FROM {$table} e INNER JOIN {$wpdb->term_relationships} tr ON tr.object_id = e.product_id INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id INNER JOIN {$wpdb->terms} t ON t.term_id = tt.term_id WHERE e.deleted_at_gmt IS NULL AND e.occurred_at_gmt >= %s AND e.occurred_at_gmt < %s AND e.attribution_scope = 'item' AND e.product_id > 0 AND tt.taxonomy = %s GROUP BY tt.term_id, t.name ORDER BY event_count DESC, t.name ASC LIMIT 10",
@@ -294,6 +300,7 @@ final class RestController {
 			),
 			ARRAY_A
 		);
+		if ( ! empty( $wpdb->last_error ) ) { return self::report_query_error(); }
 
 		if ( ! empty( $wpdb->last_error ) ) {
 			return new \WP_Error( 'report_query_failed', __( 'The report could not be loaded. Please try again later.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
@@ -369,10 +376,17 @@ final class RestController {
 		return $local->setTimezone( new \DateTimeZone( 'UTC' ) )->format( 'Y-m-d H:i:s' );
 	}
 
-	public static function get_sources(): \WP_REST_Response {
+	private static function report_query_error(): \WP_Error {
+		return new \WP_Error( 'report_query_failed', __( 'The report could not be loaded. Please try again later.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+	}
+
+	public static function get_sources() {
 		global $wpdb;
 		$table = Installer::events_table();
 		$rows = $wpdb->get_results( "SELECT source_type, COUNT(*) AS event_count, MAX(occurred_at_gmt) AS latest_event_at FROM {$table} WHERE deleted_at_gmt IS NULL GROUP BY source_type ORDER BY source_type ASC", ARRAY_A );
+		if ( ! empty( $wpdb->last_error ) ) {
+			return new \WP_Error( 'source_query_failed', __( 'Return sources could not be loaded. Please try again later.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+		}
 		$sources = array_map(
 			static function ( array $row ): array {
 				return array(
@@ -397,10 +411,18 @@ final class RestController {
 		$table = Installer::events_table(); $where = 'deleted_at_gmt IS NULL'; $args = array();
 		if ( $order_id ) { $where .= ' AND order_id = %d'; $args[] = $order_id; }
 		$total = (int) $wpdb->get_var( $args ? $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE {$where}", $args ) : "SELECT COUNT(*) FROM {$table} WHERE {$where}" );
+		if ( ! empty( $wpdb->last_error ) ) {
+			return new \WP_Error( 'event_count_query_failed', __( 'Return history could not be loaded. Please try again later.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+		}
+		$total_pages = (int) ceil( $total / $per );
+		$page = min( $page, max( 1, $total_pages ) );
 		$list_args = array_merge( $args, array( $per, ( $page - 1 ) * $per ) );
 		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE {$where} ORDER BY occurred_at_gmt DESC, event_id DESC LIMIT %d OFFSET %d", $list_args ), ARRAY_A );
+		if ( ! empty( $wpdb->last_error ) ) {
+			return new \WP_Error( 'event_list_query_failed', __( 'Return history could not be loaded. Please try again later.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+		}
 		$res = rest_ensure_response( array_map( array( self::class, 'serialize_event' ), $rows ?: array() ) );
-		$res->header( 'X-WP-Total', (string) $total ); $res->header( 'X-WP-TotalPages', (string) ceil( $total / $per ) );
+		$res->header( 'X-WP-Total', (string) $total ); $res->header( 'X-WP-TotalPages', (string) $total_pages );
 		return $res;
 	}
 	public static function get_event( \WP_REST_Request $r ) {
@@ -439,8 +461,12 @@ final class RestController {
 		if ( self::has_unknown_fields( $d, array( 'event_kind', 'quantity', 'reason_id', 'occurred_at' ) ) ) { return self::unknown_fields_error(); }
 		$v = self::validate_event( array_merge( $d, array( 'order_id' => $row['order_id'], 'order_item_id' => $row['order_item_id'] ) ), $id );
 		if ( is_wp_error( $v ) ) { return $v; }
-		$wpdb->update( Installer::events_table(), array( 'event_kind' => $v['kind'], 'quantity' => $v['quantity'], 'reason_id' => $v['reason']['id'], 'occurred_at_gmt' => $v['date'], 'updated_at_gmt' => gmdate( 'Y-m-d H:i:s' ), 'updated_by' => get_current_user_id() ), array( 'event_id' => $id ) );
-		return rest_ensure_response( self::serialize_event( self::find_event( $id ) ) );
+		$updated = $wpdb->update( Installer::events_table(), array( 'event_kind' => $v['kind'], 'quantity' => $v['quantity'], 'reason_id' => $v['reason']['id'], 'occurred_at_gmt' => $v['date'], 'updated_at_gmt' => gmdate( 'Y-m-d H:i:s' ), 'updated_by' => get_current_user_id() ), array( 'event_id' => $id ) );
+		if ( false === $updated ) {
+			return new \WP_Error( 'event_update_failed', __( 'The insight could not be updated.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+		}
+		$updated_row = self::find_event( $id );
+		return is_array( $updated_row ) ? rest_ensure_response( self::serialize_event( $updated_row ) ) : new \WP_Error( 'event_read_failed', __( 'The updated insight could not be read.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
 	}
 	public static function delete_event( \WP_REST_Request $r ) {
 		global $wpdb;
@@ -451,7 +477,10 @@ final class RestController {
 		if ( self::has_unknown_fields( $data, array( 'audit_reason' ) ) ) { return self::unknown_fields_error(); }
 		$note = sanitize_text_field( (string) ( $data['audit_reason'] ?? '' ) );
 		if ( '' === $note || strlen( $note ) > 200 ) { return new \WP_Error( 'audit_reason_required', __( 'Provide an audit reason up to 200 characters.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) ); }
-		$wpdb->update( Installer::events_table(), array( 'deleted_at_gmt' => gmdate( 'Y-m-d H:i:s' ), 'deletion_note' => $note, 'updated_at_gmt' => gmdate( 'Y-m-d H:i:s' ), 'updated_by' => get_current_user_id() ), array( 'event_id' => $id ) );
+		$deleted = $wpdb->update( Installer::events_table(), array( 'deleted_at_gmt' => gmdate( 'Y-m-d H:i:s' ), 'deletion_note' => $note, 'updated_at_gmt' => gmdate( 'Y-m-d H:i:s' ), 'updated_by' => get_current_user_id() ), array( 'event_id' => $id ) );
+		if ( false === $deleted ) {
+			return new \WP_Error( 'event_delete_failed', __( 'The insight could not be removed.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+		}
 		return new \WP_REST_Response( null, 204 );
 	}
 	private static function validate_event( array $d, int $ignore_event_id = 0 ) {

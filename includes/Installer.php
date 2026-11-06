@@ -1,6 +1,6 @@
 <?php
 /**
- * Versioned event-table installation.
+ * Versioned plugin-table installation.
  *
  * @package WPEssentialReturnInsights
  */
@@ -10,7 +10,7 @@ namespace WPEssential\ReturnInsights;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Creates and upgrades the plugin-owned event table.
+ * Creates and upgrades the plugin-owned data tables.
  */
 final class Installer {
 	/**
@@ -153,6 +153,24 @@ final class Installer {
 
 		if ( ! empty( $wpdb->last_error ) ) {
 			return false;
+		}
+
+		$required_columns = array(
+			$table_name => array( 'event_id', 'event_uuid', 'source_key', 'event_kind', 'refund_id', 'order_item_id', 'reason_id', 'quantity', 'deleted_at_gmt' ),
+			$actions_table => array( 'action_id', 'action_uuid', 'title', 'hypothesis', 'owner_id', 'status', 'measurement_days', 'planned_review_date' ),
+			$targets_table => array( 'target_id', 'action_id', 'product_id', 'variation_id', 'reason_id' ),
+			$history_table => array( 'history_id', 'action_id', 'previous_status', 'new_status', 'actor_id', 'changed_at_gmt' ),
+			$evidence_table => array( 'evidence_id', 'action_id', 'phase', 'metric_definition_version', 'period_from', 'period_to', 'returned_quantity', 'sold_quantity', 'rate_percent', 'mapping_percent', 'eligible_orders' ),
+		);
+		foreach ( $required_columns as $table => $columns ) {
+			$found = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) );
+			if ( $table !== $found || ! empty( $wpdb->last_error ) ) {
+				return false;
+			}
+			$installed_columns = $wpdb->get_col( "SHOW COLUMNS FROM {$table}", 0 );
+			if ( ! is_array( $installed_columns ) || array_diff( $columns, $installed_columns ) || ! empty( $wpdb->last_error ) ) {
+				return false;
+			}
 		}
 
 		update_option( self::DB_VERSION_OPTION, self::DB_VERSION, false );
