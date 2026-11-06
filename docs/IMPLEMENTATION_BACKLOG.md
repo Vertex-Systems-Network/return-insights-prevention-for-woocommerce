@@ -1,6 +1,6 @@
 # Implementation Backlog — Approved, Ordered Work
 
-**Status:** I-00/I-01 design packages and I-02 foundation, I-03 catalog/manual-capture API, I-04 refund observation, and I-06 REST/React admin surfaces implemented. I-05 Free reports are implemented; I-11 verification remains.  
+**Status:** I-00/I-01 design packages and I-02 foundation, I-03 catalog/manual-capture API, I-04 refund observation, I-05 Free reports, I-06 REST/React admin, and I-07 Pro pattern implementation are present. I-11 verification and a production Pro entitlement provider remain.  
 **Start condition:** P6 approval recorded in `P6_READINESS_GATE.md` on 2026-11-06.  
 **Repository constraint:** Do not add CLI/build tooling to this repository until the plugin is final. React uses WordPress-bundled globals without JSX or a build step; this preserves the repository constraint.
 
@@ -17,12 +17,19 @@ Each runtime item must be scoped with named files, acceptance evidence, dependen
 | I-04 | Native refund observation | Supported WooCommerce refund hooks/objects, idempotent ingestion, refund-scope attribution, HPOS + legacy behavior | I-02, I-03 | Implemented: post-save `woocommerce_refund_created` observer reads WooCommerce refund/order objects through CRUD APIs, stores one refund-scope `refund_only` event per refund with a unique source key, maps only exact active catalog labels without persisting raw phrase text, and soft-deletes the linked event when the refund is deleted. Source code inspected; HPOS/legacy and lifecycle runtime checks remain for I-11. |
 | I-06 | REST contract and React admin | Permission-protected endpoints, pagination/errors, overview/history/capture/catalog/source screens | I-00, I-01, WordPress-bundled script handles | Implemented: REST schemas/unknown-field rejection; permission-aware no-build React screen; source counts/latest dates; paginated/filterable history; per-item capture/edit/audited soft-delete; reason catalog. Static source review only; runtime and visual/accessibility verification is I-11. |
 | I-05 | Basic reporting (Free) | Counts, date filters, reason/source breakdown, item-scoped product/category counts, coverage, empty/low-data states | I-03, I-04, I-06 | Implemented: `GET /summary` provides store-timezone date filtering, event and quantity totals, reason/event-kind/source counts, mapped/unmapped coverage, top 10 item-scoped products/categories, and period metadata. React overview renders date filters, tables, loading/empty/error states. No return rates or causality claims. Static source review only; I-11 runtime, visual, accessibility, and performance checks remain. |
-| I-07 | Pro product/variation insights | Aggregation, eligible denominators, comparable cohorts, sample-aware pattern output | I-04, I-05 | Counts/rates show definitions and coverage; weak/incomplete cohorts suppress rates |
+| I-07 | Pro product/variation insights | Aggregation, eligible denominators, comparable cohorts, sample-aware pattern output | I-04, I-05 | Implemented: `GET /patterns` compares mature cohorts and exact item/reason matches. Completed/refunded order line-item quantities with completion dates provide an MVP proxy; refund-only and exchange events are excluded. Each scan is capped at 500 orders. Incomplete mapping, fewer than 20 sold units, missing denominator, or returns above sales suppress rates. Entitlement defaults fail-closed; provider and runtime verification remain. |
 | I-08 | Pro clustering and alerts | Local explainable grouping; thresholds, deduplication, dismissal and audit | I-07 | Membership is reviewable/reversible; alert evidence and suppression reasons visible |
 | I-09 | Corrective-action tracking | Hypothesis, owner, statuses, dates, measurement windows, before/after view | I-07, I-08 | Status history and comparable pre/post evidence; no causality claims |
 | I-10 | Optional multilingual/integration compatibility | WPML/Polylang integration and any approved RMA source adapters | I-03 to I-06, demand/API review | Tested optional integrations; core works when absent/disabled |
 | I-11 | Release hardening | Current compatibility matrix, security/accessibility/performance/privacy checks, migration/rollback, docs, package boundaries | I-02 to I-10 | Evidence recorded for claimed versions and release criteria |
 | I-12 | Submission preparation | WordPress.org Free and WooCommerce.com Paid artifacts/listings, QIT and reviewer responses | I-11 | Separate packages validated and submission checklists complete |
+
+## I-07 implementation references
+
+- `includes/class-pattern-service.php` builds current and preceding mature purchase windows (90-day default; supported maturity/cohort selections: 30/60/90/120/180 days) using WooCommerce CRUD APIs. It scans at most 500 orders per cohort; over-limit cohorts are unavailable rather than partial.
+- Eligible quantity currently uses completed/refunded order line-item quantities with a completion date as a documented MVP proxy, not extension-specific fulfillment quantities. Only exact item/order/product/variation matches to active manual `confirmed_return` events enter the numerator. Refund observations and exchanges are excluded.
+- Rates are suppressed for incomplete mapping, fewer than 20 sold units, missing denominator, or returned quantity above sold quantity. Comparison changes appear only when both rates are available. Output is capped at 20 patterns.
+- `GET /patterns` is gated by `wpessential_return_insights_pro_entitled`, default false. The Free core has no commercial entitlement provider; runtime verification remains.
 
 ## I-05 implementation references
 
