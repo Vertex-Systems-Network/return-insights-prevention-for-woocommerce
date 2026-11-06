@@ -21,11 +21,11 @@ Planning estimates in UTC; reviewed 2026-11-06. Progress describes planning arti
 | P2 Product scope and options bank | Capture model and deduplicated capability/system inventory | Plan complete; approval pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | P3 Data-flow and engineering blueprint | Data model, attribution, metrics, privacy, performance | Blueprint complete; review/implementation validation pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | P4 React admin UX specification | Screen map, interaction and accessibility | Blueprint complete; visual design/API review pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
-| P5 Compatibility/release baseline | PHP, WP, WC, WPML, Polylang requirements | Baseline chosen; Marketplace range alignment pending | █████████░ 90% | 2026-11-06 | 2026-11-07 |
+| P5 Compatibility/release baseline | PHP, WP, WC, WPML, Polylang requirements | Planning baseline complete; implementation/release matrix pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | P6 Pre-development readiness gate | Resolve decisions and approve implementation scope | Not started | ░░░░░░░░░░ 0% | 2026-11-09 | 2026-11-10 |
 | P7 Distribution and submission plan | WordPress.org Free + WooCommerce.com Paid tracks | Planning complete; actual submission blocked by release | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 
-**Overall planning readiness: 86%**, equally weighted across phases. Dates are estimates, not delivery promises. Keep planning progress separate from implementation progress. Update this table and change log whenever the plan changes.
+**Overall planning readiness: 88%**, equally weighted across phases (rounded from 87.5%). Dates are estimates, not delivery promises. Keep planning progress separate from implementation progress. Update this table and change log whenever the plan changes.
 
 ## Distribution plan
 
@@ -33,7 +33,7 @@ Planning estimates in UTC; reviewed 2026-11-06. Progress describes planning arti
 - **Paid Pro edition:** submit separately to the WooCommerce.com Marketplace.
 - For a freemium product, Woo currently requires separate Free and Paid submissions; they may be combined on one product page after approval.
 - Woo Marketplace submission also requires an approved vendor account, product/business details, test instructions, compatibility with the two latest major WordPress and WooCommerce releases, HPOS, accessibility, and required Quality Insights Toolkit checks.
-- Re-evaluate version targets, licensing, listing name, pricing, vendor terms, and packages at release. The current runtime baseline is not a guarantee of future marketplace approval.
+- Re-evaluate version targets, licensing, listing name, pricing, vendor terms, and packages at release. The current compatibility baseline is a planning target, not proof of future marketplace approval.
 
 Details and official source links: docs/DISTRIBUTION.md. No submission has been made.
 
@@ -69,7 +69,7 @@ Before implementation, review and approve the recommended capture model, metric 
 
 ## Research snapshot
 
-Selected V1 planning baseline: WordPress 6.9+, WooCommerce 10.8+, PHP 8.3+, MySQL 8.0+ or MariaDB 10.6+, HTTPS. Woo Marketplace's current two-major-version support rule can change this target at submission; see docs/COMPATIBILITY.md. WPML and Polylang are optional integrations.
+Dated platform review (2026-11-06): WordPress 7.1.4 and WooCommerce 11.2.2 are the latest releases listed in the official release archives. Planned support matrix targets WordPress 7.1/7.0 series and WooCommerce 11.2/11.1 series, with PHP 8.3+, MySQL 8.0+ or MariaDB 10.11+, HTTPS. Woo Marketplace requires the two latest major WP and WC release series; refresh these moving targets before implementation and again at submission. WPML and Polylang are optional integrations. See docs/COMPATIBILITY.md for evidence and caveats.
 
 Recommended MVP capture model: observe native WooCommerce refund records and allow per-item admin insight entry for non-refund returns. A refund is not proof that an item physically returned, and an order-level reason must not be guessed onto every line item.
 
@@ -81,3 +81,4 @@ P3 architecture specifies indexed custom event storage, source-level idempotency
 - 2026-11-06: Added separate WordPress.org Free and WooCommerce.com Paid submission plan.
 - 2026-11-06: Completed P3 logical data model, HPOS-safe ingestion, metric boundaries, privacy lifecycle, and performance plan. Added official design source links; no plugin implementation or CLI tooling added.
 - 2026-11-06: Completed P4 React admin UX blueprint, merchant flow acceptance criteria, accessibility/state requirements, tier boundary, and REST contract outline. Overall planning readiness 86%; no plugin implementation or CLI tooling added.
+- 2026-11-06: Completed P5 compatibility policy with dated WordPress 7.1/7.0 and WooCommerce 11.2/11.1 targets, PHP 8.3+, database floor, optional WPML/Polylang requirements, and release-time recheck rule. Overall planning readiness 88%; no plugin implementation or CLI tooling added.
