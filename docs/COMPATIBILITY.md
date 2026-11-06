@@ -1,35 +1,40 @@
 
-# Compatibility and Release Requirements — Draft
+# Compatibility and Release Requirements
 
-**Checked:** 2026-11-06. These are platform recommendations and candidate test targets, not final plugin header values.
+**Planning baseline selected:** 2026-11-06  
+**Release verification:** Not yet performed; this repository contains no runtime plugin code.
 
-## Evidence and proposed baseline
+## V1 platform requirements
 
-| Area | Current official guidance | Planning interpretation |
+| Requirement | Planned V1 minimum | Basis / caveat |
 |---|---|---|
-| WordPress | Recommends PHP 8.3+, MySQL 8.0+ or MariaDB 10.11+, HTTPS. Older PHP/DB may run but are EOL. | Target current supported WordPress; set plugin minimum at release-policy decision. |
-| WooCommerce | Server guidance for 10.8+ lists WP 6.9+, PHP 8.3+, MySQL 8.0+ or MariaDB 10.6+, HTTPS, WP memory 256 MB. | Candidate testing baseline, then verify current stable WC before release. |
-| PHP | Current WooCommerce guidance recommends 8.3+. | Test PHP 8.3+ plus newest supported version; test prior supported version if feasible. |
-| WPML | WooCommerce compatibility uses WooCommerce Multilingual; custom extension strings/config may need registration. Current compatibility page lists WC 11.2 tested. | Optional, not hard dependency; gettext first and config/registration where needed. |
-| Polylang | Developer docs describe pll_register_string for plugin-defined strings; WooCommerce settings translation uses its WooCommerce integration. | Optional, guarded APIs only for merchant-defined strings or language-aware data. |
+| WordPress | 6.9+ | Current WooCommerce 10.8+ server guidance. |
+| WooCommerce | 10.8+ | Planning floor aligned to current server-requirements guidance; recheck at release. |
+| PHP | 8.3+ | Current WordPress and WooCommerce recommendations. |
+| Database | MySQL 8.0+ or MariaDB 10.6+ | WooCommerce 10.8+ guidance; WordPress recommends MariaDB 10.11+, which is also supported by this floor. |
+| HTTPS | Required for supported production setup | Official WordPress/WooCommerce guidance. |
+| WordPress memory | 256 MB+ recommended | WooCommerce host recommendation; not a plugin activation gate. |
+| Order storage | HPOS and legacy storage supported | Use WooCommerce CRUD APIs; never assume legacy tables. |
+| React admin | WordPress-bundled React/component packages; assets shipped built | Merchants do not need Node/npm/CLI. Build tool is a development concern after P6 approval. |
+| WPML | Optional integration target; WPML/WooCommerce Multilingual not a hard dependency | Test latest supported versions at release; no certification claim without evidence. |
+| Polylang | Optional integration target; Polylang for WooCommerce not a hard dependency | Test latest supported versions at release; no certification claim without evidence. |
 
-Recommended, minimum, tested, and compatible versions are not interchangeable. Set Requires at least, Requires PHP, and WC requires at least based on the release support policy, not host recommendations alone.
+These are the planned V1 support requirements, not a claim that code already passes them. At release, record exact tested versions and set plugin metadata from the verified support matrix. Recheck current vendor requirements before each major release.
 
-## Required test matrix
+## Required compatibility behavior
 
-- Current stable WordPress/WooCommerce at release.
-- HPOS and legacy order storage; CRUD APIs only.
-- Products, variations, partial quantities.
-- WPML active/inactive/absent; cross-language canonical reason identity.
-- Polylang active/inactive/absent; same stable reason identity.
-- WooCommerce Multilingual and Polylang for WooCommerce where relevant.
-- Declared PHP/database versions and WordPress privacy exporter/eraser.
-- Store timezone, daylight-saving boundaries, multisite decision, RTL UI.
-- Existing RMA plugin present/absent/disabled; adapter failure must not block WooCommerce admin.
+- Work with WPML active, inactive, or absent; preserve one canonical reason ID across translated labels.
+- Work with Polylang active, inactive, or absent; translated labels must not split analytics.
+- Where relevant, test WooCommerce Multilingual and Polylang for WooCommerce.
+- Support HPOS and legacy storage via WooCommerce public CRUD APIs.
+- Handle product variations, partial quantities, and unknown product mapping.
+- Respect WordPress locale and RTL layout.
+- Test privacy exporter/eraser, store timezone, daylight-saving transitions, and multisite decision.
+- If an optional RMA adapter is unavailable or disabled, it must not break WooCommerce admin.
 
-## Localization rules
+## Localization implementation requirements
 
-Use stable text domain and WordPress translation APIs. Internal reason identity is separate from translated label. A translated label must roll up to the same canonical reason. Define cross-language product grouping through WPML/Polylang APIs only when needed. Keep event locale explicit and support RTL without hard-coded left/right layout.
+Use WordPress translation APIs and one stable text domain for shipped UI. Keep internal reason identity separate from translated display strings. Use WPML config/string registration or Polylang string APIs only for the relevant merchant-defined data; guard optional APIs. Define cross-language product grouping before implementing multilingual rollups.
 
 ## Official sources reviewed 2026-11-06
 
@@ -42,6 +47,6 @@ Use stable text domain and WordPress translation APIs. Internal reason identity 
 - [Polylang developer guidance](https://polylang.pro/documentation/support/developers/developpers-how-to/)
 - [Polylang WooCommerce settings and strings](https://polylang.pro/documentation/support/guides/translating-woocommerce-urls-and-strings/)
 
-## Release gate
+## Release verification gate
 
-Before release, record exact tested versions and build date. Keep compatibility claims only where CI or documented manual verification exists. Standard translation functions alone do not certify WPML/Polylang compatibility.
+Before public release, run and document the compatibility matrix across declared PHP, WordPress, WooCommerce, HPOS, WPML, and Polylang cases. Keep a compatibility claim only where automated or documented manual verification exists. Standard gettext use alone is not certification.
