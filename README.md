@@ -22,10 +22,10 @@ Planning estimates in UTC; reviewed 2026-11-06. Progress describes planning arti
 | P2 Product scope and options bank | Deduplicated capability/system inventory | Draft ready for review | ██████████ 95% | 2026-11-06 | 2026-11-07 |
 | P3 Data-flow and engineering blueprint | Storage, capture, privacy, reporting boundaries | Draft ready for review | ████████░░ 80% | 2026-11-06 | 2026-11-08 |
 | P4 React admin UX specification | Screen map, interaction and accessibility | In progress | ██████░░░░ 60% | 2026-11-06 | 2026-11-09 |
-| P5 Compatibility and release requirements | PHP, WP, WC, WPML, Polylang matrix | Draft ready for review | ████████░░ 75% | 2026-11-06 | 2026-11-08 |
+| P5 Compatibility/release baseline | PHP, WP, WC, WPML, Polylang requirements | Planning complete; release tests pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | P6 Pre-development readiness gate | Resolve decisions and approve implementation scope | Not started | ░░░░░░░░░░ 0% | 2026-11-09 | 2026-11-10 |
 
-**Overall planning readiness: 73%**, equally weighted across phases. Dates are estimates, not delivery promises. Keep planning progress separate from implementation progress. Update this table and the change log whenever the plan changes.
+**Overall planning readiness: 76%**, equally weighted across phases. Dates are estimates, not delivery promises. Keep planning progress separate from implementation progress. Update this table and the change log whenever the plan changes.
 
 ## Current gate
 
@@ -56,10 +56,10 @@ Before implementation, resolve Product Specification decisions, review the Optio
 
 ## Research snapshot
 
-WooCommerce server guidance for 10.8+ lists WordPress 6.9+, PHP 8.3+, MySQL 8.0+ or MariaDB 10.6+, HTTPS, and 256 MB WP memory. WordPress independently recommends PHP 8.3+, MySQL 8.0+ or MariaDB 10.11+, and HTTPS. Candidate baselines only; see docs/COMPATIBILITY.md.
+The selected V1 planning baseline is WordPress 6.9+, WooCommerce 10.8+, PHP 8.3+, and MySQL 8.0+ or MariaDB 10.6+, over HTTPS. WPML and Polylang are optional integrations with explicit test requirements. These requirements are grounded in current official recommendations; release claims still require test evidence. See docs/COMPATIBILITY.md.
 
-The source-level competitor settings audit confirmed mature RMA workflows, reason collection, eligibility/exclusion controls, notifications, analytics, and even return-processing AI tools in-market. These operational controls are intentionally excluded; see docs/MARKET_RESEARCH.md and docs/OPTIONS_BANK.md.
+Competitor review confirms mature RMA workflows, reason capture, eligibility/exclusion controls, notifications, analytics, and return-processing AI tools in-market. These operational controls are intentionally excluded; see docs/MARKET_RESEARCH.md and docs/OPTIONS_BANK.md.
 
 ## Change log
 
-- 2026-11-06: Created plan, AI entry points, competitor workflow/settings audit, deduplicated options bank, data-flow proposal, React UX direction, and compatibility matrix. No plugin implementation or CLI tooling added.
+- 2026-11-06: Created the planning baseline and AI entry points; completed source-level competitor settings crosswalk, options bank, architecture proposal, React UX direction, and compatibility baseline. No plugin implementation or CLI tooling added.
