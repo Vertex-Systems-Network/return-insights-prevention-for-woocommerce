@@ -1,6 +1,6 @@
 # React Admin UX — Specification
 
-**Status:** P4 specification approved; I-06 base admin surfaces are implemented. Visual QA, usability, and accessibility verification remain for I-11.
+**Status:** P4 specification approved; I-06 admin surfaces and I-05 Free reports are implemented. Visual QA, usability, and accessibility verification remain for I-11.
 
 ## Product UX principle
 
@@ -65,19 +65,19 @@ All data access goes through namespaced REST endpoints. The server enforces auth
 
 | Endpoint family | Read/write intent | Required response context |
 |---|---|---|
-| `/insights/v1/summary` | Read overview for filters | Metric definitions, period, coverage, counts |
+| `/insights/v1/summary` | Read overview for filters | I-05 implements date-windowed event/quantity counts, reason/source groups, mapping coverage, and top item-scoped product/category groups. No return rates. |
 | `/insights/v1/patterns` | Read/filter patterns and drill-downs | Sample size, source, confidence/quality flags |
 | `/insights/v1/events` | Read paginated captured events | Provenance, mapping state, stable pagination |
 | `/insights/v1/reasons` | Read; manage reason catalog | Canonical key, localized labels, active state |
-| `/insights/v1/sources` | Read source health and mappings | Source state, last success/error, notices |
+| `/insights/v1/sources` | Read source coverage | I-06 currently provides event counts and latest dates by source; health/error monitoring remains future work. |
 | `/insights/v1/actions` | Pro read/create/update actions | Status history, windows, linked pattern |
 | `/insights/v1/settings` | Read/update permitted settings | Schema/version, validation, capability gates |
 
-The implemented namespace is `/wp-json/wpessential/return-insights/v1`. I-06 currently provides `/reasons`, `/reasons/{id}`, `/orders/{id}`, `/events`, `/events/{id}`, and `/sources`; method schemas and behavior are documented in `docs/P6_TECHNICAL_CONTRACTS.md`. Future `/summary`, `/patterns`, `/actions`, and `/settings` routes remain planned, not implemented.
+The implemented namespace is `/wp-json/wpessential/return-insights/v1`. I-06 provides `/reasons`, `/reasons/{id}`, `/orders/{id}`, `/events`, `/events/{id}`, and `/sources`; I-05 adds `/summary`. Method schemas and behavior are documented in `docs/P6_TECHNICAL_CONTRACTS.md`. Future `/patterns`, `/actions`, and `/settings` routes remain planned, not implemented.
 
 ## I-06 implementation boundary
 
-The current UI displays event totals and source counts/latest event dates. It does not calculate rates, date-window comparisons, product/variation patterns, charts, or corrective actions. I-05 adds basic reporting; I-07/I-09 own deeper Pro insights and action tracking. Event lists use server pagination (20 by default, API max 100) and can filter by order ID. Refund observations remain read-only and distinct from confirmed physical returns. The UI uses WordPress-bundled `wp.element`, `wp.components`, and `wp.apiFetch`, without JSX/build tooling.
+The current UI provides date-filtered evidence totals, reason/event-kind/source tables, mapped/unmapped reason coverage, and top item-scoped product/category count tables. It does not calculate return rates, sales-denominator metrics, trends, product variation comparisons, or corrective actions. Product/category tables exclude refund-scope records because line-item attribution is not known; category membership can overlap. I-07/I-09 own deeper Pro insights and action tracking. Event lists use server pagination (20 by default, API max 100) and can filter by order ID. Refund observations remain read-only and distinct from confirmed physical returns. The UI uses WordPress-bundled `wp.element`, `wp.components`, and `wp.apiFetch`, without JSX/build tooling.
 
 ## Tier boundary
 
