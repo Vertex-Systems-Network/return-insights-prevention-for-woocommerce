@@ -1,6 +1,6 @@
 # React Admin UX — Specification
 
-**Status:** P4 planning artifact complete; visual design and API validation remain pre-development review items. No UI is implemented.
+**Status:** P4 UX approved at P6; no UI is implemented. Visual QA/accessibility validation remain implementation tasks.
 
 ## Product UX principle
 
@@ -57,7 +57,7 @@ Keyboard operation, visible focus, programmatic labels, semantic headings, annou
 
 ## Component and implementation direction
 
-Prefer WordPress-provided React packages and supported WooCommerce admin components where they fit the chosen platform baseline. Candidate packages include `@wordpress/components`, `@wordpress/element`, and `@wordpress/api-fetch`; final component/package versions and WooCommerce design-system choice are a P6 decision. Avoid unsupported internal WooCommerce APIs. Load styles with correct WordPress dependencies and verify RTL behavior.
+Use WordPress-provided React through the `wp.element` global, components through `wp.components`, and `wp.apiFetch` for REST. Enqueue registered handles as dependencies and load component styles correctly. To preserve the no-CLI constraint, use browser-ready JavaScript without JSX, transpilation, npm packages, or a build step in this repository. Avoid unsupported internal WooCommerce APIs; verify RTL behavior.
 
 All data access goes through namespaced REST endpoints. The server enforces authentication, capability checks, validation, and response shaping; hiding a UI control is not authorization. Paginated collections use stable ordering and explicit totals/cursors. Mutations return validation errors in a consistent field-aware format. All REST timestamps use an explicit timezone convention and all metric responses include their definition/version and coverage metadata.
 
@@ -81,7 +81,7 @@ Free includes reason capture, reason catalog, capture status, and basic reason-l
 
 ## Design artifacts and build constraint
 
-The companion `docs/UX_FLOWS.md` defines journeys and acceptance criteria. Before implementation, review these flows with the final metric/data model and validate the REST contract and current platform components. Do not add UI source, compiled assets, package manifests, or build commands before P6 approval. Releases should ship built assets so store owners need no CLI tooling.
+The companion `docs/UX_FLOWS.md` defines journeys and acceptance criteria. Before implementation, review these flows with the final metric/data model and validate the REST contract and current platform components. UI source may be added after P6 approval. Do not add CLI/build tooling or package manifests to this repository until the plugin is final. Use WordPress-bundled packages; no compilation step is planned.
 
 ## Official design references
 
