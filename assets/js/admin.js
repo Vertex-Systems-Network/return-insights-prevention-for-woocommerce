@@ -755,10 +755,10 @@
 							return h( 'div', { className: 'wpe-ri-translation-row', key: 'translation-' + index },
 								field( config.strings.locale, 'wpe-ri-locale-' + index, h( 'input', { id: 'wpe-ri-locale-' + index, placeholder: 'fr_FR', value: row.locale, onChange: function ( e ) {
 									const next = translations.slice(); next[ index ] = { locale: e.target.value, label: row.label }; setTranslations( next );
-								} ) } ),
+								} } ) ),
 								field( config.strings.translatedLabel, 'wpe-ri-translated-label-' + index, h( 'input', { id: 'wpe-ri-translated-label-' + index, maxLength: 100, value: row.label, onChange: function ( e ) {
 									const next = translations.slice(); next[ index ] = { locale: row.locale, label: e.target.value }; setTranslations( next );
-								} ) } ),
+								} } ) ),
 								h( Button, { variant: 'tertiary', type: 'button', onClick: function () { setTranslations( translations.filter( function ( _, i ) { return i !== index; } ) ); } }, config.strings.removeLanguage )
 							);
 						} )
