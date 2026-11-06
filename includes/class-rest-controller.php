@@ -16,22 +16,79 @@ final class Rest_Controller {
 	public static function routes(): void {
 		register_rest_route( self::NS, '/reasons', array(
 			array( 'methods' => 'GET', 'callback' => array( self::class, 'get_reasons' ), 'permission_callback' => array( self::class, 'can_view' ), 'args' => array( 'include_inactive' => array( 'type' => 'boolean', 'default' => false, 'sanitize_callback' => 'rest_sanitize_boolean' ) ) ),
-			array( 'methods' => 'POST', 'callback' => array( self::class, 'create_reason' ), 'permission_callback' => array( self::class, 'can_manage' ) ),
+			array(
+				'methods' => 'POST',
+				'callback' => array( self::class, 'create_reason' ),
+				'permission_callback' => array( self::class, 'can_manage' ),
+				'args' => array(
+					'label' => array( 'type' => 'string', 'required' => true, 'minLength' => 1, 'maxLength' => 100 ),
+					'group' => array( 'type' => 'string', 'required' => true, 'enum' => array( 'product', 'fulfillment', 'other' ) ),
+					'active' => array( 'type' => 'boolean' ),
+					'translations' => array( 'type' => 'object' ),
+				),
+			),
 		) );
 		register_rest_route( self::NS, '/reasons/(?P<id>[a-z0-9_-]+)', array(
 			array( 'methods' => 'GET', 'callback' => array( self::class, 'get_reason' ), 'permission_callback' => array( self::class, 'can_view' ) ),
-			array( 'methods' => 'PATCH', 'callback' => array( self::class, 'update_reason' ), 'permission_callback' => array( self::class, 'can_manage' ) ),
+			array(
+				'methods' => 'PATCH',
+				'callback' => array( self::class, 'update_reason' ),
+				'permission_callback' => array( self::class, 'can_manage' ),
+				'args' => array(
+					'label' => array( 'type' => 'string', 'minLength' => 1, 'maxLength' => 100 ),
+					'group' => array( 'type' => 'string', 'enum' => array( 'product', 'fulfillment', 'other' ) ),
+					'active' => array( 'type' => 'boolean' ),
+					'translations' => array( 'type' => 'object' ),
+				),
+			),
 		) );
 		register_rest_route( self::NS, '/orders/(?P<id>\d+)', array( 'methods' => 'GET', 'callback' => array( self::class, 'get_order_items' ), 'permission_callback' => array( self::class, 'can_manage' ) ) );
 		register_rest_route( self::NS, '/sources', array( 'methods' => 'GET', 'callback' => array( self::class, 'get_sources' ), 'permission_callback' => array( self::class, 'can_view' ) ) );
 		register_rest_route( self::NS, '/events', array(
-			array( 'methods' => 'GET', 'callback' => array( self::class, 'get_events' ), 'permission_callback' => array( self::class, 'can_view' ) ),
-			array( 'methods' => 'POST', 'callback' => array( self::class, 'create_event' ), 'permission_callback' => array( self::class, 'can_manage' ) ),
+			array(
+				'methods' => 'GET',
+				'callback' => array( self::class, 'get_events' ),
+				'permission_callback' => array( self::class, 'can_view' ),
+				'args' => array(
+					'page' => array( 'type' => 'integer', 'default' => 1, 'minimum' => 1 ),
+					'per_page' => array( 'type' => 'integer', 'default' => 20, 'minimum' => 1, 'maximum' => 100 ),
+					'order_id' => array( 'type' => 'integer', 'minimum' => 1, 'sanitize_callback' => 'absint' ),
+				),
+			),
+			array(
+				'methods' => 'POST',
+				'callback' => array( self::class, 'create_event' ),
+				'permission_callback' => array( self::class, 'can_manage' ),
+				'args' => array(
+					'event_kind' => array( 'type' => 'string', 'required' => true, 'enum' => array( 'confirmed_return', 'exchange' ) ),
+					'order_id' => array( 'type' => 'integer', 'required' => true, 'minimum' => 1 ),
+					'order_item_id' => array( 'type' => 'integer', 'required' => true, 'minimum' => 1 ),
+					'quantity' => array( 'type' => 'number', 'required' => true, 'minimum' => 0.0001 ),
+					'reason_id' => array( 'type' => 'string', 'required' => true, 'maxLength' => 64 ),
+					'occurred_at' => array( 'type' => 'string', 'required' => true, 'format' => 'date' ),
+					'idempotency_key' => array( 'type' => 'string', 'required' => true, 'minLength' => 16, 'maxLength' => 100 ),
+				),
+			),
 		) );
 		register_rest_route( self::NS, '/events/(?P<id>\d+)', array(
 			array( 'methods' => 'GET', 'callback' => array( self::class, 'get_event' ), 'permission_callback' => array( self::class, 'can_view' ) ),
-			array( 'methods' => 'PATCH', 'callback' => array( self::class, 'update_event' ), 'permission_callback' => array( self::class, 'can_manage' ) ),
-			array( 'methods' => 'DELETE', 'callback' => array( self::class, 'delete_event' ), 'permission_callback' => array( self::class, 'can_manage' ) ),
+			array(
+				'methods' => 'PATCH',
+				'callback' => array( self::class, 'update_event' ),
+				'permission_callback' => array( self::class, 'can_manage' ),
+				'args' => array(
+					'event_kind' => array( 'type' => 'string', 'required' => true, 'enum' => array( 'confirmed_return', 'exchange' ) ),
+					'quantity' => array( 'type' => 'number', 'required' => true, 'minimum' => 0.0001 ),
+					'reason_id' => array( 'type' => 'string', 'required' => true, 'maxLength' => 64 ),
+					'occurred_at' => array( 'type' => 'string', 'required' => true, 'format' => 'date' ),
+				),
+			),
+			array(
+				'methods' => 'DELETE',
+				'callback' => array( self::class, 'delete_event' ),
+				'permission_callback' => array( self::class, 'can_manage' ),
+				'args' => array( 'audit_reason' => array( 'type' => 'string', 'required' => true, 'minLength' => 1, 'maxLength' => 200 ) ),
+			),
 		) );
 	}
 	public static function can_view(): bool { return current_user_can( Capabilities::VIEW ); }
