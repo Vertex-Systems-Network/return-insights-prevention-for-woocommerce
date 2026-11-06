@@ -15,7 +15,7 @@ final class Rest_Controller {
 
 	public static function routes(): void {
 		register_rest_route( self::NS, '/reasons', array(
-			array( 'methods' => 'GET', 'callback' => array( self::class, 'get_reasons' ), 'permission_callback' => array( self::class, 'can_view' ) ),
+			array( 'methods' => 'GET', 'callback' => array( self::class, 'get_reasons' ), 'permission_callback' => array( self::class, 'can_view' ), 'args' => array( 'include_inactive' => array( 'type' => 'boolean', 'default' => false, 'sanitize_callback' => 'rest_sanitize_boolean' ) ) ),
 			array( 'methods' => 'POST', 'callback' => array( self::class, 'create_reason' ), 'permission_callback' => array( self::class, 'can_manage' ) ),
 		) );
 		register_rest_route( self::NS, '/reasons/(?P<id>[a-z0-9_-]+)', array(
@@ -150,7 +150,7 @@ final class Rest_Controller {
 	}
 	private static function serialize_event( array $row ): array {
 		$reason = Reason_Catalog::find( $row['reason_id'], true );
-		return array( 'id' => (int) $row['event_id'], 'event_kind' => $row['event_kind'], 'source_type' => $row['source_type'], 'order_id' => (int) $row['order_id'], 'refund_id' => (int) ( $row['refund_id'] ?? 0 ), 'order_item_id' => (int) $row['order_item_id'], 'attribution_scope' => $row['attribution_scope'], 'mapping_state' => $row['mapping_state'], 'product_id' => (int) $row['product_id'], 'variation_id' => (int) $row['variation_id'], 'reason_id' => $row['reason_id'], 'reason_label' => $reason ? $reason['label'] : __( 'Archived reason', WPE_RI_TEXT_DOMAIN ), 'quantity' => (float) $row['quantity'], 'occurred_at' => gmdate( 'c', strtotime( $row['occurred_at_gmt'] . ' UTC' ) ), 'created_at' => gmdate( 'c', strtotime( $row['created_at_gmt'] . ' UTC' ) ), 'updated_at' => gmdate( 'c', strtotime( $row['updated_at_gmt'] . ' UTC' ) ) );
+		return array( 'id' => (int) $row['event_id'], 'event_kind' => $row['event_kind'], 'source_type' => $row['source_type'], 'order_id' => (int) $row['order_id'], 'refund_id' => (int) ( $row['refund_id'] ?? 0 ), 'order_item_id' => (int) $row['order_item_id'], 'attribution_scope' => $row['attribution_scope'], 'mapping_state' => $row['mapping_state'], 'product_id' => (int) $row['product_id'], 'variation_id' => (int) $row['variation_id'], 'reason_id' => $row['reason_id'], 'reason_label' => $reason ? $reason['label'] : __( 'Archived reason', WPE_RI_TEXT_DOMAIN ), 'quantity' => (float) $row['quantity'], 'occurred_at' => gmdate( 'c', strtotime( $row['occurred_at_gmt'] . ' UTC' ) ), 'created_at' => gmdate( 'c', strtotime( $row['created_at_gmt'] . ' UTC' ) ), 'updated_at' => gmdate( 'c', strtotime( $row['updated_at_gmt'] . ' UTC' ) ), 'occurred_date' => get_date_from_gmt( $row['occurred_at_gmt'], 'Y-m-d' ) );
 	}
 	private static function missing_event(): \WP_Error { return new \WP_Error( 'event_not_found', __( 'Insight event not found.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 404 ) ); }
 }
