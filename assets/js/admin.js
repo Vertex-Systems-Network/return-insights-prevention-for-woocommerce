@@ -1,0 +1,498 @@
+( function ( wp, config ) {
+	'use strict';
+
+	if ( ! wp || ! wp.element || ! wp.apiFetch || ! config ) {
+		return;
+	}
+
+	const h = wp.element.createElement;
+	const useEffect = wp.element.useEffect;
+	const useState = wp.element.useState;
+	const apiFetch = wp.apiFetch;
+	const components = wp.components || {};
+	const Button = components.Button || 'button';
+	const Notice = components.Notice || 'div';
+	const Spinner = components.Spinner || 'span';
+	const namespace = config.namespace;
+
+	function makeKey() {
+		if ( window.crypto && window.crypto.randomUUID ) {
+			return window.crypto.randomUUID();
+		}
+		return 'manual-' + Date.now() + '-' + Math.random().toString( 36 ).slice( 2, 12 );
+	}
+
+	function App() {
+		const [ tab, setTab ] = useState( 'capture' );
+		const [ notice, setNotice ] = useState( null );
+		const [ reasons, setReasons ] = useState( [] );
+		const [ events, setEvents ] = useState( [] );
+		const [ orderId, setOrderId ] = useState( '' );
+		const [ historyOrderId, setHistoryOrderId ] = useState( '' );
+		const [ order, setOrder ] = useState( null );
+		const [ selectedItem, setSelectedItem ] = useState( '' );
+		const [ eventKind, setEventKind ] = useState( 'confirmed_return' );
+		const [ reasonId, setReasonId ] = useState( '' );
+		const [ quantity, setQuantity ] = useState( '1' );
+		const [ occurredDate, setOccurredDate ] = useState( config.today );
+		const [ editing, setEditing ] = useState( null );
+		const [ orderBusy, setOrderBusy ] = useState( false );
+		const [ saving, setSaving ] = useState( false );
+		const [ loadingEvents, setLoadingEvents ] = useState( false );
+		const [ page, setPage ] = useState( 1 );
+		const [ totalPages, setTotalPages ] = useState( 1 );
+		const [ catalog, setCatalog ] = useState( [] );
+		const [ catalogBusy, setCatalogBusy ] = useState( false );
+		const [ reasonLabel, setReasonLabel ] = useState( '' );
+		const [ reasonGroup, setReasonGroup ] = useState( 'product' );
+		const [ translations, setTranslations ] = useState( [] );
+		const [ editingReason, setEditingReason ] = useState( null );
+		const [ deleteTarget, setDeleteTarget ] = useState( null );
+		const [ deleteNote, setDeleteNote ] = useState( '' );
+
+		function showError( error, fallback ) {
+			setNotice( { status: 'error', message: error && error.message ? error.message : fallback } );
+		}
+
+		async function loadReasons() {
+			try {
+				const response = await apiFetch( { path: namespace + '/reasons?include_inactive=1' } );
+				setReasons( ( response || [] ).filter( function ( item ) { return item.active; } ) );
+				setCatalog( response || [] );
+			} catch ( error ) {
+				showError( error, config.strings.loadReasonsError );
+			}
+		}
+
+		async function loadEvents( requestedPage, filterOrder ) {
+			setLoadingEvents( true );
+			try {
+				const params = new URLSearchParams();
+				params.set( 'page', String( requestedPage || 1 ) );
+				params.set( 'per_page', '20' );
+				if ( filterOrder ) {
+					params.set( 'order_id', String( filterOrder ) );
+				}
+				const response = await apiFetch( { path: namespace + '/events?' + params.toString(), parse: false } );
+				const list = await response.json();
+				const count = Number( response.headers.get( 'X-WP-TotalPages' ) || 1 );
+				setEvents( Array.isArray( list ) ? list : [] );
+				setPage( requestedPage || 1 );
+				setTotalPages( Math.max( 1, count ) );
+			} catch ( error ) {
+				showError( error, config.strings.loadEventsError );
+			} finally {
+				setLoadingEvents( false );
+			}
+		}
+
+		useEffect( function () {
+			loadReasons();
+			loadEvents( 1, '' );
+		}, [] );
+
+		async function loadOrder( id, targetEvent ) {
+			const cleanId = String( id || '' ).trim();
+			if ( ! /^\d+$/.test( cleanId ) || Number( cleanId ) < 1 ) {
+				setNotice( { status: 'error', message: config.strings.orderIdRequired } );
+				return;
+			}
+			setOrderBusy( true );
+			setNotice( null );
+			try {
+				const found = await apiFetch( { path: namespace + '/orders/' + encodeURIComponent( cleanId ) } );
+				setOrder( found );
+				setOrderId( cleanId );
+				if ( targetEvent ) {
+					setSelectedItem( String( targetEvent.order_item_id ) );
+					setEventKind( targetEvent.event_kind );
+					setReasonId( targetEvent.reason_id );
+					setQuantity( String( targetEvent.quantity ) );
+					setOccurredDate( targetEvent.occurred_date || config.today );
+				} else {
+					setSelectedItem( found.items && found.items.length ? String( found.items[ 0 ].order_item_id ) : '' );
+				}
+				if ( !found.items || !found.items.length ) {
+					setNotice( { status: 'warning', message: config.strings.noOrderItems } );
+				}
+			} catch ( error ) {
+				setOrder( null );
+				showError( error, config.strings.loadOrderError );
+			} finally {
+				setOrderBusy( false );
+			}
+		}
+
+		function resetCapture() {
+			setEditing( null );
+			setOrder( null );
+			setOrderId( '' );
+			setSelectedItem( '' );
+			setEventKind( 'confirmed_return' );
+			setReasonId( '' );
+			setQuantity( '1' );
+			setOccurredDate( config.today );
+		}
+
+		async function saveEvent( event ) {
+			event.preventDefault();
+			if ( !config.canManage ) {
+				return;
+			}
+			if ( !order || !selectedItem || !reasonId ) {
+				setNotice( { status: 'error', message: config.strings.completeRequired } );
+				return;
+			}
+			setSaving( true );
+			setNotice( null );
+			const data = {
+				event_kind: eventKind,
+				order_id: Number( order.order_id ),
+				order_item_id: Number( selectedItem ),
+				quantity: Number( quantity ),
+				reason_id: reasonId,
+				occurred_at: occurredDate
+			};
+			try {
+				if ( editing ) {
+					await apiFetch( { path: namespace + '/events/' + editing.id, method: 'PATCH', data: data } );
+					setNotice( { status: 'success', message: config.strings.eventUpdated } );
+				} else {
+					data.idempotency_key = makeKey();
+					await apiFetch( { path: namespace + '/events', method: 'POST', data: data } );
+					setNotice( { status: 'success', message: config.strings.eventSaved } );
+				}
+				await loadEvents( 1, historyOrderId );
+				resetCapture();
+			} catch ( error ) {
+				showError( error, config.strings.saveError );
+			} finally {
+				setSaving( false );
+			}
+		}
+
+		function editEvent( record ) {
+			setTab( 'capture' );
+			setEditing( record );
+			setOrderId( String( record.order_id ) );
+			loadOrder( record.order_id, record );
+		}
+
+		async function deleteEvent( record ) {
+			if ( !deleteNote.trim() ) {
+				return;
+			}
+			try {
+				await apiFetch( {
+					path: namespace + '/events/' + record.id,
+					method: 'DELETE',
+					data: { audit_reason: deleteNote.trim() }
+				} );
+				setNotice( { status: 'success', message: config.strings.eventDeleted } );
+				setDeleteTarget( null );
+				setDeleteNote( '' );
+				await loadEvents( page, historyOrderId );
+			} catch ( error ) {
+				showError( error, config.strings.deleteError );
+			}
+		}
+
+		function beginReasonEdit( reason ) {
+			setEditingReason( reason );
+			setReasonLabel( reason.label );
+			setReasonGroup( reason.group );
+			setTranslations( Object.keys( reason.translations || {} ).map( function ( locale ) {
+				return { locale: locale, label: reason.translations[ locale ] };
+			} ) );
+		}
+
+		function clearReasonForm() {
+			setEditingReason( null );
+			setReasonLabel( '' );
+			setReasonGroup( 'product' );
+			setTranslations( [] );
+		}
+
+		async function saveReason( event ) {
+			event.preventDefault();
+			if ( !config.canManage || !reasonLabel.trim() ) {
+				return;
+			}
+			setCatalogBusy( true );
+			setNotice( null );
+			const labels = {};
+			translations.forEach( function ( row ) {
+				if ( row.locale && row.label.trim() ) {
+					labels[ row.locale.trim() ] = row.label.trim();
+				}
+			} );
+			const body = { label: reasonLabel.trim(), group: reasonGroup, translations: labels };
+			try {
+				if ( editingReason ) {
+					await apiFetch( { path: namespace + '/reasons/' + editingReason.id, method: 'PATCH', data: body } );
+					setNotice( { status: 'success', message: config.strings.reasonUpdated } );
+				} else {
+					await apiFetch( { path: namespace + '/reasons', method: 'POST', data: body } );
+					setNotice( { status: 'success', message: config.strings.reasonCreated } );
+				}
+				clearReasonForm();
+				await loadReasons();
+			} catch ( error ) {
+				showError( error, config.strings.reasonSaveError );
+			} finally {
+				setCatalogBusy( false );
+			}
+		}
+
+		async function toggleReason( reason ) {
+			try {
+				await apiFetch( { path: namespace + '/reasons/' + reason.id, method: 'PATCH', data: { active: !reason.active } } );
+				await loadReasons();
+				setNotice( { status: 'success', message: reason.active ? config.strings.reasonDisabled : config.strings.reasonEnabled } );
+			} catch ( error ) {
+				showError( error, config.strings.reasonSaveError );
+			}
+		}
+
+		const activeReasons = reasons.map( function ( item ) {
+			return { label: item.label, value: item.id };
+		} );
+		const selectedOrderItem = order && order.items ? order.items.find( function ( item ) {
+			return String( item.order_item_id ) === String( selectedItem );
+		} ) : null;
+
+		function field( label, id, input, hint ) {
+			return h( 'div', { className: 'wpe-ri-field' },
+				h( 'label', { htmlFor: id }, label ),
+				input,
+				hint ? h( 'p', { className: 'wpe-ri-hint' }, hint ) : null
+			);
+		}
+
+		function nativeSelect( id, value, options, onChange, disabled ) {
+			return h( 'select', { id: id, value: value, onChange: function ( e ) { onChange( e.target.value ); }, disabled: !!disabled },
+				options.map( function ( option ) {
+					return h( 'option', { key: option.value, value: option.value }, option.label );
+				} )
+			);
+		}
+
+		function renderCapture() {
+			return h( 'section', { className: 'wpe-ri-panel', 'aria-labelledby': 'wpe-ri-capture-heading' },
+				h( 'div', { className: 'wpe-ri-panel-heading' },
+					h( 'div', null,
+						h( 'p', { className: 'wpe-ri-eyebrow' }, config.strings.captureEyebrow ),
+						h( 'h2', { id: 'wpe-ri-capture-heading' }, editing ? config.strings.editCapture : config.strings.newCapture ),
+						h( 'p', { className: 'wpe-ri-muted' }, config.strings.captureIntro )
+					),
+					editing ? h( Button, { variant: 'secondary', onClick: resetCapture, disabled: saving }, config.strings.cancelEdit ) : null
+				),
+				!config.canManage ? h( Notice, { status: 'warning', isDismissible: false }, config.strings.readOnlyNotice ) : null,
+				h( 'div', { className: 'wpe-ri-order-lookup' },
+					field( config.strings.orderNumber, 'wpe-ri-order-id', h( 'input', {
+						id: 'wpe-ri-order-id', type: 'number', min: '1', step: '1', value: orderId,
+						onChange: function ( e ) { setOrderId( e.target.value ); },
+						disabled: !!editing || !config.canManage
+					} ), config.strings.orderLookupHint ),
+					h( Button, {
+						variant: 'secondary',
+						onClick: function () { loadOrder( orderId ); },
+						disabled: orderBusy || !config.canManage
+					}, orderBusy ? h( Spinner ) : config.strings.loadOrder )
+				),
+				order ? h( 'div', { className: 'wpe-ri-order-summary', role: 'status' },
+					h( 'span', { className: 'wpe-ri-order-mark' }, '#' + order.order_number ),
+					h( 'span', null, ( order.items || [] ).length + ' ' + config.strings.lineItems )
+				) : null,
+				h( 'form', { onSubmit: saveEvent, className: 'wpe-ri-capture-form' },
+					h( 'div', { className: 'wpe-ri-form-grid' },
+						field( config.strings.productItem, 'wpe-ri-item', nativeSelect( 'wpe-ri-item', selectedItem, ( order && order.items ? order.items : [] ).map( function ( item ) {
+							return { value: String( item.order_item_id ), label: item.name + ' · ' + config.strings.ordered + ': ' + item.ordered_quantity };
+						} ), setSelectedItem, !order || !config.canManage ) ),
+						field( config.strings.reason, 'wpe-ri-reason', nativeSelect( 'wpe-ri-reason', reasonId, [ { value: '', label: config.strings.chooseReason } ].concat( activeReasons ), setReasonId, !config.canManage ) ),
+						field( config.strings.eventType, 'wpe-ri-event-kind', nativeSelect( 'wpe-ri-event-kind', eventKind, [
+							{ value: 'confirmed_return', label: config.strings.confirmedReturn },
+							{ value: 'exchange', label: config.strings.exchange }
+						], setEventKind, !config.canManage ) ),
+						field( config.strings.quantity, 'wpe-ri-quantity', h( 'input', {
+							id: 'wpe-ri-quantity', type: 'number', min: '0.0001', step: '0.0001',
+							max: selectedOrderItem ? selectedOrderItem.ordered_quantity : undefined,
+							value: quantity, onChange: function ( e ) { setQuantity( e.target.value ); }, disabled: !config.canManage
+						} ), selectedOrderItem ? config.strings.quantityHint.replace( '%s', String( selectedOrderItem.ordered_quantity ) ) : '' ),
+						field( config.strings.occurredDate, 'wpe-ri-date', h( 'input', {
+							id: 'wpe-ri-date', type: 'date', value: occurredDate,
+							onChange: function ( e ) { setOccurredDate( e.target.value ); }, disabled: !config.canManage
+						} ), config.strings.siteDateHint )
+					),
+					h( 'div', { className: 'wpe-ri-form-actions' },
+						h( Button, { variant: 'primary', type: 'submit', disabled: saving || !config.canManage || !order || !selectedItem }, saving ? h( Spinner ) : ( editing ? config.strings.updateInsight : config.strings.saveInsight ) ),
+						editing ? h( 'span', { className: 'wpe-ri-muted' }, config.strings.editScope ) : null
+					)
+				)
+			);
+		}
+
+		function renderHistory() {
+			const rows = events.map( function ( item ) {
+				return h( 'tr', { key: item.id },
+					h( 'td', null, item.occurred_date || item.occurred_at ),
+					h( 'td', null, '#' + item.order_id ),
+					h( 'td', null, item.attribution_scope === 'refund' ? config.strings.refundScope : ( item.order_item_id ? '#' + item.order_item_id : '—' ) ),
+					h( 'td', null, item.reason_label || config.strings.unknown ),
+					h( 'td', null, item.event_kind === 'confirmed_return' ? config.strings.confirmedReturn : item.event_kind === 'exchange' ? config.strings.exchange : config.strings.refundOnly ),
+					h( 'td', null, item.quantity ),
+					h( 'td', { className: 'wpe-ri-actions-cell' },
+						item.source_type === 'manual' && config.canManage ? h( Button, { variant: 'secondary', onClick: function () { editEvent( item ); } }, config.strings.edit ) : null,
+						item.source_type === 'manual' && config.canManage ? h( Button, { variant: 'tertiary', onClick: function () { setDeleteTarget( item ); setDeleteNote( '' ); } }, config.strings.delete ) : null,
+						deleteTarget && deleteTarget.id === item.id ? h( 'div', { className: 'wpe-ri-delete-confirm' },
+							h( 'label', { htmlFor: 'wpe-ri-delete-note' }, config.strings.deleteReason ),
+							h( 'input', { id: 'wpe-ri-delete-note', value: deleteNote, maxLength: 200, onChange: function ( e ) { setDeleteNote( e.target.value ); } } ),
+							h( Button, { variant: 'primary', isDestructive: true, disabled: !deleteNote.trim(), onClick: function () { deleteEvent( item ); } }, config.strings.confirmDelete ),
+							h( Button, { variant: 'tertiary', onClick: function () { setDeleteTarget( null ); } }, config.strings.cancelDelete )
+						) : null
+					)
+				);
+			} );
+			return h( 'section', { className: 'wpe-ri-panel', 'aria-labelledby': 'wpe-ri-history-heading' },
+				h( 'div', { className: 'wpe-ri-panel-heading' },
+					h( 'div', null,
+						h( 'p', { className: 'wpe-ri-eyebrow' }, config.strings.historyEyebrow ),
+						h( 'h2', { id: 'wpe-ri-history-heading' }, config.strings.eventHistory ),
+						h( 'p', { className: 'wpe-ri-muted' }, config.strings.historyIntro )
+					),
+					h( Button, { variant: 'secondary', onClick: function () { loadEvents( 1, historyOrderId ); } }, config.strings.refresh )
+				),
+				h( 'div', { className: 'wpe-ri-history-filter' },
+					field( config.strings.filterOrder, 'wpe-ri-filter-order', h( 'input', {
+						id: 'wpe-ri-filter-order', type: 'number', min: '1', value: historyOrderId,
+						onChange: function ( e ) { setHistoryOrderId( e.target.value ); },
+						onKeyDown: function ( e ) { if ( e.key === 'Enter' ) { loadEvents( 1, historyOrderId ); } }
+					} ), config.strings.filterHint ),
+					h( Button, { variant: 'secondary', onClick: function () { loadEvents( 1, historyOrderId ); } }, config.strings.applyFilter ),
+					h( Button, { variant: 'tertiary', onClick: function () { setHistoryOrderId( '' ); loadEvents( 1, '' ); } }, config.strings.clearFilter )
+				),
+				loadingEvents ? h( 'div', { className: 'wpe-ri-loading' }, h( Spinner ), h( 'span', null, config.strings.loading ) ) :
+					events.length ? h( 'div', { className: 'wpe-ri-table-wrap' },
+						h( 'table', { className: 'wpe-ri-table' },
+							h( 'thead', null, h( 'tr', null,
+								[ config.strings.date, config.strings.order, config.strings.item, config.strings.reason, config.strings.type, config.strings.quantity, config.strings.actions ].map( function ( title ) { return h( 'th', { key: title, scope: 'col' }, title ); } )
+							) ),
+							h( 'tbody', null, rows )
+						),
+						h( 'div', { className: 'wpe-ri-pagination' },
+							h( 'span', { className: 'wpe-ri-muted' }, config.strings.page.replace( '%1$s', String( page ) ).replace( '%2$s', String( totalPages ) ) ),
+							h( Button, { variant: 'secondary', disabled: page <= 1 || loadingEvents, onClick: function () { loadEvents( page - 1, historyOrderId ); } }, config.strings.previous ),
+							h( Button, { variant: 'secondary', disabled: page >= totalPages || loadingEvents, onClick: function () { loadEvents( page + 1, historyOrderId ); } }, config.strings.next )
+						)
+					) : h( 'div', { className: 'wpe-ri-empty' },
+						h( 'span', { className: 'wpe-ri-empty-icon', 'aria-hidden': true }, '↗' ),
+						h( 'h3', null, config.strings.noEvents ),
+						h( 'p', null, config.strings.noEventsHelp )
+					)
+			);
+		}
+
+		function renderCatalog() {
+			const rows = catalog.map( function ( reason ) {
+				return h( 'tr', { key: reason.id, className: reason.active ? '' : 'is-inactive' },
+					h( 'td', null, h( 'strong', null, reason.label ), h( 'code', { className: 'wpe-ri-key' }, reason.id ) ),
+					h( 'td', null, config.strings.groups[ reason.group ] || reason.group ),
+					h( 'td', null, ( reason.translations && Object.keys( reason.translations ).length ) ? Object.keys( reason.translations ).map( function ( locale ) {
+						return h( 'span', { className: 'wpe-ri-locale', key: locale }, locale + ': ' + reason.translations[ locale ] );
+					} ) : h( 'span', { className: 'wpe-ri-muted' }, config.strings.noTranslations ) ),
+					h( 'td', null, h( 'span', { className: 'wpe-ri-status ' + ( reason.active ? 'is-active' : 'is-inactive' ) }, reason.active ? config.strings.active : config.strings.inactive ) ),
+					h( 'td', { className: 'wpe-ri-actions-cell' },
+						config.canManage ? h( Button, { variant: 'secondary', onClick: function () { beginReasonEdit( reason ); } }, config.strings.edit ) : null,
+						config.canManage ? h( Button, { variant: 'tertiary', onClick: function () { toggleReason( reason ); } }, reason.active ? config.strings.deactivate : config.strings.activate ) : null
+					)
+				);
+			} );
+			return h( 'section', { className: 'wpe-ri-panel', 'aria-labelledby': 'wpe-ri-catalog-heading' },
+				h( 'div', { className: 'wpe-ri-panel-heading' },
+					h( 'div', null,
+						h( 'p', { className: 'wpe-ri-eyebrow' }, config.strings.catalogEyebrow ),
+						h( 'h2', { id: 'wpe-ri-catalog-heading' }, config.strings.reasonCatalog ),
+						h( 'p', { className: 'wpe-ri-muted' }, config.strings.catalogIntro )
+					)
+				),
+				config.canManage ? h( 'form', { className: 'wpe-ri-reason-form', onSubmit: saveReason },
+					h( 'h3', null, editingReason ? config.strings.editReason : config.strings.addReason ),
+					h( 'div', { className: 'wpe-ri-form-grid' },
+						field( config.strings.reasonLabel, 'wpe-ri-reason-label', h( 'input', { id: 'wpe-ri-reason-label', maxLength: 100, required: true, value: reasonLabel, onChange: function ( e ) { setReasonLabel( e.target.value ); } } ) ),
+						field( config.strings.reasonGroup, 'wpe-ri-reason-group', nativeSelect( 'wpe-ri-reason-group', reasonGroup, [
+							{ value: 'product', label: config.strings.groups.product },
+							{ value: 'fulfillment', label: config.strings.groups.fulfillment },
+							{ value: 'other', label: config.strings.groups.other }
+						], setReasonGroup ) )
+					),
+					h( 'div', { className: 'wpe-ri-translations' },
+						h( 'div', { className: 'wpe-ri-translation-heading' },
+							h( 'div', null, h( 'h4', null, config.strings.translatedLabels ), h( 'p', { className: 'wpe-ri-hint' }, config.strings.translationsHint ) ),
+							h( Button, { variant: 'secondary', type: 'button', onClick: function () { setTranslations( translations.concat( [ { locale: '', label: '' } ] ) ); } }, config.strings.addLanguage )
+						),
+						translations.map( function ( row, index ) {
+							return h( 'div', { className: 'wpe-ri-translation-row', key: 'translation-' + index },
+								field( config.strings.locale, 'wpe-ri-locale-' + index, h( 'input', { id: 'wpe-ri-locale-' + index, placeholder: 'fr_FR', value: row.locale, onChange: function ( e ) {
+									const next = translations.slice(); next[ index ] = { locale: e.target.value, label: row.label }; setTranslations( next );
+								} ) } ),
+								field( config.strings.translatedLabel, 'wpe-ri-translated-label-' + index, h( 'input', { id: 'wpe-ri-translated-label-' + index, maxLength: 100, value: row.label, onChange: function ( e ) {
+									const next = translations.slice(); next[ index ] = { locale: row.locale, label: e.target.value }; setTranslations( next );
+								} ) } ),
+								h( Button, { variant: 'tertiary', type: 'button', onClick: function () { setTranslations( translations.filter( function ( _, i ) { return i !== index; } ) ); } }, config.strings.removeLanguage )
+							);
+						} )
+					),
+					h( 'div', { className: 'wpe-ri-form-actions' },
+						h( Button, { variant: 'primary', type: 'submit', disabled: catalogBusy || !reasonLabel.trim() }, catalogBusy ? h( Spinner ) : ( editingReason ? config.strings.updateReason : config.strings.createReason ) ),
+						editingReason ? h( Button, { variant: 'tertiary', type: 'button', onClick: clearReasonForm }, config.strings.cancelEdit ) : null
+					)
+				) : h( Notice, { status: 'info', isDismissible: false }, config.strings.readOnlyNotice ),
+				catalogBusy ? h( 'div', { className: 'wpe-ri-loading' }, h( Spinner ), h( 'span', null, config.strings.loading ) ) :
+					h( 'div', { className: 'wpe-ri-table-wrap' },
+						h( 'table', { className: 'wpe-ri-table wpe-ri-catalog-table' },
+							h( 'thead', null, h( 'tr', null, [ config.strings.reason, config.strings.group, config.strings.translatedLabels, config.strings.status, config.strings.actions ].map( function ( title ) { return h( 'th', { key: title, scope: 'col' }, title ); } ) ) ),
+							h( 'tbody', null, rows )
+						)
+					)
+			);
+		}
+
+		const tabs = [
+			{ id: 'capture', label: config.strings.captureTab },
+			{ id: 'history', label: config.strings.historyTab },
+			{ id: 'catalog', label: config.strings.catalogTab }
+		];
+
+		return h( 'div', { className: 'wpe-ri-app' },
+			h( 'header', { className: 'wpe-ri-hero' },
+				h( 'div', { className: 'wpe-ri-hero-mark', 'aria-hidden': true }, 'RI' ),
+				h( 'div', null,
+					h( 'p', { className: 'wpe-ri-eyebrow' }, config.strings.brand ),
+					h( 'h1', null, config.strings.title ),
+					h( 'p', { className: 'wpe-ri-hero-copy' }, config.strings.subtitle )
+				)
+			),
+			notice ? h( Notice, { status: notice.status, isDismissible: true, onRemove: function () { setNotice( null ); } }, notice.message ) : null,
+			h( 'nav', { className: 'wpe-ri-tabs', 'aria-label': config.strings.navigation },
+				tabs.map( function ( item ) {
+					return h( 'button', {
+						key: item.id, type: 'button', className: 'wpe-ri-tab' + ( tab === item.id ? ' is-current' : '' ),
+						'aria-current': tab === item.id ? 'page' : undefined,
+						onClick: function () {
+							setTab( item.id );
+							if ( item.id === 'history' ) { loadEvents( 1, historyOrderId ); }
+							if ( item.id === 'catalog' ) { loadReasons(); }
+						}
+					}, item.label );
+				} )
+			),
+			tab === 'capture' ? renderCapture() : tab === 'history' ? renderHistory() : renderCatalog(),
+			h( 'footer', { className: 'wpe-ri-footer' }, config.strings.footer )
+		);
+	}
+
+	const root = document.getElementById( config.rootId );
+	if ( root ) {
+		wp.element.createRoot( root ).render( h( App ) );
+	}
+} )( window.wp, window.WPEssentialReturnInsights || {} );
