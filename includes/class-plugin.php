@@ -41,6 +41,16 @@ final class Plugin {
 	}
 
 	/**
+	 * Deactivation intentionally preserves role capabilities and merchant data.
+	 * No scheduled jobs or rewrite rules exist in this foundation package.
+	 *
+	 * @return void
+	 */
+	public static function deactivate(): void {
+		// Preserve access configuration and merchant data on deactivation.
+	}
+
+	/**
 	 * Start plugin services after dependencies have loaded.
 	 *
 	 * @return void
