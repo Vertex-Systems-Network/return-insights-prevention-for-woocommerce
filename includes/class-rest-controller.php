@@ -63,7 +63,7 @@ final class Rest_Controller {
 		}
 		return rest_ensure_response( array( 'order_id' => $order->get_id(), 'order_number' => $order->get_order_number(), 'items' => $items ) );
 	}
-	public static function get_sources(): \\WP_REST_Response {
+	public static function get_sources(): \WP_REST_Response {
 		global $wpdb;
 		$table = Installer::events_table();
 		$rows = $wpdb->get_results( "SELECT source_type, COUNT(*) AS event_count, MAX(occurred_at_gmt) AS latest_event_at FROM {$table} WHERE deleted_at_gmt IS NULL GROUP BY source_type ORDER BY source_type ASC", ARRAY_A );
