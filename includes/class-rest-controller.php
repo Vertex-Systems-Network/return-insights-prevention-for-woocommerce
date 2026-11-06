@@ -73,6 +73,7 @@ final class Rest_Controller {
 					'source_type' => $row['source_type'],
 					'event_count' => (int) $row['event_count'],
 					'latest_event_at' => $row['latest_event_at'] ? gmdate( 'c', strtotime( $row['latest_event_at'] . ' UTC' ) ) : null,
+					'latest_event_date' => $row['latest_event_at'] ? get_date_from_gmt( $row['latest_event_at'], 'Y-m-d' ) : null,
 				);
 			},
 			$rows ?: array()
