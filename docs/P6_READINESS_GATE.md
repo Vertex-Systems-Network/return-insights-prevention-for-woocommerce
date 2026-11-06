@@ -1,10 +1,10 @@
 # P6 — Pre-Development Readiness Gate
 
-**Status:** Recommendations and technical contracts consolidated; explicit product-owner approval pending.  
+**Status:** Approved; P6 readiness gate passed.  
 **Reviewed:** 2026-11-06  
-**Implementation status:** Not authorized by this document. No plugin runtime code, CLI, package manifest, or build tooling is added.
+**Implementation status:** P6 authorizes scoped runtime implementation. No plugin runtime code or CLI was added in this approval update; the separate no-CLI-until-final constraint remains active.
 
-This gate turns the planning documents into concrete defaults and an ordered implementation scope. Approval is a product-owner decision; an AI agent must not mark it approved on the owner's behalf.
+The product owner explicitly delegated approval and final choices in ChatGPT on 2026-11-06 (“Aproval ha jo krna ha tumne karna ha”). The following defaults are recorded as approved. Reopen a decision only through a documented change request.
 
 ## Recommended V1 decisions
 
@@ -12,20 +12,20 @@ This gate turns the planning documents into concrete defaults and an ordered imp
 |---|---|---|---|
 | D1 | Capture scope | Observe native WooCommerce refund records and permit authorized manual per-item return-insight entry. No customer return portal or RMA workflow in V1. | Matches `PRODUCT_SPEC.md` and the prevention-only scope. Approve or revise. |
 | D2 | Event meaning | Keep confirmed physical return, refund-only, exchange, warranty/repair, cancellation, and unknown as distinct event kinds. Native refund records create refund-only evidence; do not infer a physical return. | Matches data/metric boundaries in P3. Approve or revise event kinds and transition rules. |
-| D3 | Reasons | Start with editable canonical reason keys grouped into product/fit/quality/listing issues and order/fulfilment issues. Keep display and translated labels separate from stable keys; include other/unknown. | Exact seed list can be finalized in a follow-up spec after approval. Approve taxonomy principle or specify additions. |
-| D4 | Rates | Keep counts as the default everywhere. Show a confirmed-return rate only with a confirmed-return numerator and eligible sold-unit denominator over a stated, comparable cohort/window. Show refund ratio separately. Suppress a rate when attribution, cohort, or denominator is incomplete. | Product-level denominator is planned; exact maturity window and cohort rules require approval before rate implementation. |
-| D5 | Alerts | Pro alerts only. Require a minimum sample and coverage, deduplicate repeated notices, and provide a reason/evidence trail. Keep thresholds configurable and disabled until a baseline can be evaluated. | Avoid inventing a universal statistically meaningful threshold before merchant data exists. Choose initial threshold method during API/analytics design. |
+| D3 | Reasons | Seed keys: fit/size; quality/defect; damage; appearance/color; not as described; wrong item/variation; missing part/accessory; delivery delay; delivery damage; duplicate order; changed mind; ordered by mistake; other; unknown. Labels are editable/translatable; stable keys remain immutable. | Approved default taxonomy; additions/retirements are versioned and never rewrite event history. |
+| D4 | Rates | Confirmed return rate = unique confirmed returned quantity / eligible sold quantity for the same product/variation purchase cohort. Cohort matures 90 days after order date by default; merchant may select 30/60/90/120/180 days. Refund quantity ratio is separate. Suppress rates when mapping, denominator, cohort, or maturity is incomplete. | Approved; 90-day default is a product heuristic, not a legal return period or statistical guarantee. API must show denominator, window, metric version, and coverage. |
+| D5 | Alerts | Pro in-product alerts only in V1. Initial heuristic: at least 5 confirmed returned units and 80% item mapping in a mature 90-day cohort, at least 20 eligible sold units in both current and comparison cohorts, and the pattern persists across two weekly refreshes. Deduplicate and show why an alert fired. | Approved as configurable launch defaults; label as operational heuristic, never statistical significance. No email/push until separately specified. |
 | D6 | Clustering / AI | V1 uses local, deterministic normalization/clustering with explainable membership, merchant correction, and reversible results. External AI is off and excluded from V1. | Safer privacy default; matches `AGENTS.md`. Revisit only through separate consent, data-minimization, and vendor review. |
-| D7 | Tiers / price | Free: reason capture, catalog, source/data coverage, basic reason counts and filters. Pro proposal: product/variation trends, clustering, alerts, corrective actions. Keep $79/year as an unapproved pricing proposal; do not hard-code price. Provide data export and retention controls without using license expiry to hide or delete data. | Confirm the proposed tier boundary and price; define export fields/retention in implementation spec. |
+| D7 | Tiers / price / retention | Free: capture, catalog, source/coverage, basic reason counts/filters, privacy export/erase. Pro: product/variation trends, clustering, alerts, actions. $79/year remains a proposed launch price and must be market-validated before listing. Keep canonical events 24 months by default; optional raw source phrase is off by default and, if enabled, purged after 90 days. Merchant can shorten/extend retention. | Approved product defaults; these retention values are product policy proposals, not legal advice. License expiry never hides/deletes event data. |
 | D8 | Integrations | V1 directly supports WooCommerce native refund evidence and manual insight entry. Defer third-party RMA adapters until official API feasibility, demand, data quality, and privacy are reviewed per adapter. | Current research does not justify promising broad adapter compatibility. |
 | D9 | Storage / processing | Keep settings and reason catalog in WP options where appropriate; use versioned indexed event/action tables for growing data; queue bounded aggregation through Action Scheduler. Use WooCommerce CRUD and public APIs for order/product data. | Matches P3 proposal. Validate volume assumptions, migrations, and indexes before implementation. |
-| D10 | Free/Pro packaging | Plan separate Free and Paid submission artifacts for WordPress.org and WooCommerce.com; keep the exact shared-code/add-on dependency model open until a policy and update-flow review confirms it. Free must remain usable independently. | Distribution plan requires separate submissions; package architecture still needs product-owner decision. |
+| D10 | Free/Pro packaging | One repository produces two independent ZIPs: a complete Free core for WordPress.org and a Pro add-on for WooCommerce.com that requires Free. Free works independently; Pro stores only Pro-specific actions/alerts and reuses the Free event store. Version handshake fails safely; license expiry never deletes data. | Approved architecture. Woo Freemium guidance supports two submissions and an additional plugin for premium functionality; verify final vendor requirements at submission. |
 | D11 | Compatibility | Plan PHP 8.3+, rolling support for the current and previous required WordPress/WooCommerce release series at submission, HPOS and legacy storage, optional WPML/Polylang integrations. Refresh versions before coding and submission. | Dated matrix and official evidence in `COMPATIBILITY.md`; runtime test matrix remains unrun. |
-| D12 | Admin UI / build | React admin UX following WordPress/Woo patterns. Ship compiled assets. Do not add CLI/build tooling to this repository until the plugin is final, per project direction; select a compliant build/release process before React implementation. | UX is specified; toolchain and distribution of build artifacts need approval without violating the no-CLI constraint. |
+| D12 | Admin UI / build | Use WordPress-provided React via the `wp.element` global, WordPress components via `wp.components`, and REST requests via `wp.apiFetch`; enqueue registered package handles. Write browser-ready JavaScript without JSX/transpilation and no npm/CLI/build tooling in the repository. | Approved no-build approach. Reassess only if maintainability/accessibility review shows it cannot meet the UX bar; any change must preserve the no-CLI-until-final constraint. |
 
 ## Implementation entry criteria
 
-The P6 gate passes only after the owner approves/revises D1–D12 and these implementation constraints are recorded:
+P6 passed on 2026-11-06 after owner delegation and recording approved decisions D1–D12. These constraints govern implementation:
 
 - Product remains prevention intelligence, not an RMA/refund processing system.
 - Refund observations are never silently presented as confirmed physical returns.
@@ -36,7 +36,7 @@ The P6 gate passes only after the owner approves/revises D1–D12 and these impl
 - HPOS and legacy order storage use public WooCommerce CRUD/API surfaces.
 - WPML and Polylang remain optional; translated labels cannot split canonical reason identity.
 - Free and Paid editions have distinct responsibilities and a documented update/dependency model before release packaging.
-- The agreed React build/distribution approach honors the no-CLI-in-repository-until-final constraint.
+- React uses WordPress-bundled globals and no build tool or CLI is added to the repository until the plugin is final.
 - Every agent task follows `AGENTS.md`, names files and acceptance evidence, and updates README progress in the same update.
 - No runtime plugin code, CLI, Composer/npm manifest, or build script is authorized until this gate has explicit owner approval.
 
@@ -44,21 +44,22 @@ The P6 gate passes only after the owner approves/revises D1–D12 and these impl
 
 | Review area | Evidence | Gate status |
 |---|---|---|
-| Product scope and capture model | `PRODUCT_SPEC.md`, `OPTIONS_BANK.md` | Recommendation ready; owner approval pending |
-| Data model, privacy, event boundaries | `ARCHITECTURE_DATA_FLOW.md`, `DATA_MODEL.md`, `P6_TECHNICAL_CONTRACTS.md` | Event/API/security contracts drafted; owner decisions on retention, schema, and multisite remain |
-| React UX and user journeys | `REACT_UX.md`, `UX_FLOWS.md` | Blueprint ready; visual/API review remains |
+| Product scope and capture model | `PRODUCT_SPEC.md`, `OPTIONS_BANK.md` | D1–D3 approved; implementation acceptance evidence pending |
+| Data model, privacy, event boundaries | `ARCHITECTURE_DATA_FLOW.md`, `DATA_MODEL.md`, `P6_TECHNICAL_CONTRACTS.md` | D4–D9 approved; implementation and migration evidence pending |
+| React UX and user journeys | `REACT_UX.md`, `UX_FLOWS.md` | UX contract approved; UI implementation/accessibility validation pending |
 | Compatibility | `COMPATIBILITY.md` | Dated baseline ready; tests await implementation |
-| Distribution | `DISTRIBUTION.md` | Separate submission tracks planned; no packages/listings created |
-| Security / threat model | `P6_TECHNICAL_CONTRACTS.md` | Threat register and control requirements drafted; implementation verification remains |
-| REST contract and route controls | `P6_TECHNICAL_CONTRACTS.md` | Proposed route, permission, payload, and verification contracts ready for review |\n| Implementation sequence | `IMPLEMENTATION_BACKLOG.md` | Ordered; blocked pending gate approval |
-| Owner decision | D1–D12 | Pending |
+| Distribution | `DISTRIBUTION.md` | D10 approved; packages/listings still require release readiness and submission |
+| Security / threat model | `P6_TECHNICAL_CONTRACTS.md` | Design controls approved; verification remains an implementation/release task |
+| REST contract and route controls | `P6_TECHNICAL_CONTRACTS.md` | Approved design contract; concrete JSON schemas finalized per I-06 |
+| Implementation sequence | `IMPLEMENTATION_BACKLOG.md` | I-00/I-01 design complete; runtime tasks authorized in dependency order |
+| Owner decision | D1–D12 | Approved by owner delegation on 2026-11-06 |
 
 ## Approval record
 
-- **Decision:** Pending.
-- **Approver:** Product owner.
-- **Approved/revised decision IDs:** Pending.
-- **Date:** Pending.
-- **Scope/version approved:** Pending.
+- **Decision:** Approved; use D1–D12 defaults recorded above.
+- **Approver:** Product owner, via explicit delegation to the project agent in ChatGPT.
+- **Approved/revised decision IDs:** D1–D12 approved; D10 and D12 finalized by delegated judgment.
+- **Date:** 2026-11-06.
+- **Scope/version approved:** V1 pre-development scope and I-00–I-12 implementation backlog.
 
-When the owner approves, record the decision IDs and date here, update the README phase status, and only then begin the first authorized implementation task. Approval does not waive the separate instruction to keep CLI/build tooling out of the repository until the plugin is final.
+P6 is complete. Runtime work may proceed in dependency order. CLI/build tooling remains prohibited in this repository until the plugin is final.
