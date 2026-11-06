@@ -1,6 +1,6 @@
 # React Admin UX — Specification
 
-**Status:** P4 specification approved; I-05 Free reports, I-06 admin surfaces, I-07 Pro patterns, and the I-08 cluster service/API are implemented. Cluster/alert React surfaces and runtime verification remain.
+**Status:** P4 specification approved; I-05 Free reports, I-06 admin surfaces, I-07 Pro patterns, and the I-08 cluster service/API are implemented. Cluster/alert React surfaces, complete alert candidate coverage, and runtime verification remain.
 
 ## Product UX principle
 
