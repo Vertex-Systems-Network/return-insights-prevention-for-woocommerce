@@ -18,7 +18,7 @@ Planning estimates in UTC; reviewed 2026-11-06. Progress describes planning arti
 |---|---|---|---|---|---|
 | P0 Repository foundation | Product brief, scope guardrails, AI entry points | Complete | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | P1 Market/settings and platform research | Competitor workflows, config options, platform evidence | Complete | ██████████ 100% | 2026-11-06 | 2026-11-06 |
-| P2 Product scope and options bank | Capture model and deduplicated capability/system inventory | Plan complete; approval pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
+| P2 Product scope and options bank | Capture model and deduplicated capability/system inventory | Approved at P6 | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | P3 Data-flow and engineering blueprint | Data model, attribution, metrics, privacy, performance | Blueprint complete; review/implementation validation pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | P4 React admin UX specification | Screen map, interaction and accessibility | Blueprint complete; visual design/API review pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | P5 Compatibility/release baseline | PHP, WP, WC, WPML, Polylang requirements | Planning baseline complete; implementation/release matrix pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
@@ -43,7 +43,7 @@ Details and official source links: docs/DISTRIBUTION.md. No submission has been 
 
 ## Current gate
 
-P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS_GATE.md. Proceed in I-00–I-12 order from docs/IMPLEMENTATION_BACKLOG.md. Keep CLI/build tooling, Composer/npm manifests, and package managers out of this repository until the plugin is final.
+P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS_GATE.md. I-00/I-01 design work is complete; I-02 plugin foundation is next in docs/IMPLEMENTATION_BACKLOG.md. Keep CLI/build tooling, Composer/npm manifests, and package managers out of this repository until the plugin is final.
 
 ## Plan files
 
