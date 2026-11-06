@@ -148,7 +148,7 @@ The observer uses `woocommerce_refund_created` after WooCommerce persists a refu
 
 ## I-03/I-06 implementation boundary
 
-I-03 implements reason/order/manual-event routes; I-04 adds refund observation; I-06 adds `/sources`, request schemas, strict unknown-field rejection, pagination, and the React screens described above. Manual event writes validate the order-item relationship and derive product/variation IDs server-side; deletion is soft and requires an audit reason. I-07 through I-09 Pro routes and React controls are implemented and inspected statically only. Runtime permission, nonce, migration, quantity edge, HPOS/legacy, timezone, accessibility, and privacy exporter/eraser verification remain unperformed and are release-hardening work in I-11 where applicable. Optimistic conflict handling for simultaneous edits remains future work.
+I-03 implements reason/order/manual-event routes; I-04 adds refund observation; I-06 adds `/sources`, request schemas, strict unknown-field rejection, pagination, and the React screens described above. Manual event writes validate the order-item relationship and derive product/variation IDs server-side; deletion is soft and requires an audit reason. I-07 through I-09 Pro routes and React controls are implemented and inspected statically only. Runtime permission, nonce, migration, quantity edge, HPOS/legacy, timezone, accessibility, and privacy exporter/eraser runtime verification remain unperformed and are release-hardening work in I-11 where applicable. Optimistic conflict handling for simultaneous edits remains future work.
 
 ## I-11 acceptance evidence to collect
 

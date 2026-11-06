@@ -166,22 +166,30 @@ final class RestController {
 	}
 	public static function get_reasons( \WP_REST_Request $request ): \WP_REST_Response {
 		$include_inactive = rest_sanitize_boolean( $request->get_param( 'include_inactive' ) ) && self::can_manage();
-		return rest_ensure_response( ReasonCatalog::all( $include_inactive ) );
+		$reasons = ReasonCatalog::all( $include_inactive );
+		foreach ( $reasons as &$reason ) {
+			$reason['label'] = Multilingual::reason_label( $reason );
+		}
+		unset( $reason );
+		return rest_ensure_response( $reasons );
 	}
 	public static function get_reason( \WP_REST_Request $r ) {
 		$x = ReasonCatalog::find( (string) $r['id'], true );
+		if ( $x ) { $x['label'] = Multilingual::reason_label( $x ); }
 		return $x ? rest_ensure_response( $x ) : new \WP_Error( 'reason_not_found', __( 'Reason not found.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 404 ) );
 	}
 	public static function create_reason( \WP_REST_Request $r ) {
 		$data = $r->get_json_params() ?: array();
 		if ( self::has_unknown_fields( $data, array( 'label', 'group', 'active', 'translations' ) ) ) { return self::unknown_fields_error(); }
 		$x = ReasonCatalog::save( $data );
+		if ( ! is_wp_error( $x ) ) { $x['label'] = Multilingual::reason_label( $x ); }
 		return is_wp_error( $x ) ? $x : new \WP_REST_Response( $x, 201 );
 	}
 	public static function update_reason( \WP_REST_Request $r ) {
 		$data = $r->get_json_params() ?: array();
 		if ( self::has_unknown_fields( $data, array( 'label', 'group', 'active', 'translations' ) ) ) { return self::unknown_fields_error(); }
 		$x = ReasonCatalog::save( $data, (string) $r['id'] );
+		if ( ! is_wp_error( $x ) ) { $x['label'] = Multilingual::reason_label( $x ); }
 		return is_wp_error( $x ) ? $x : rest_ensure_response( $x );
 	}
 	public static function get_order_items( \WP_REST_Request $r ) {
@@ -309,7 +317,7 @@ final class RestController {
 		$locale = get_user_locale();
 		foreach ( $by_reason as &$reason_row ) {
 			$reason = ReasonCatalog::find( (string) $reason_row['reason_id'], true );
-			$reason_row['label'] = $reason ? ( $reason['translations'][ $locale ] ?? $reason['label'] ) : (string) $reason_row['reason_id'];
+			$reason_row['label'] = $reason ? Multilingual::reason_label( $reason, $locale ) : (string) $reason_row['reason_id'];
 			$reason_row['event_count'] = (int) $reason_row['event_count'];
 			$reason_row['sample_size'] = (int) $reason_row['event_count'];
 			$reason_row['quantity_total'] = (float) $reason_row['quantity_total'];
@@ -514,7 +522,7 @@ final class RestController {
 	}
 	private static function serialize_event( array $row ): array {
 		$reason = ReasonCatalog::find( $row['reason_id'], true );
-		return array( 'id' => (int) $row['event_id'], 'event_kind' => $row['event_kind'], 'source_type' => $row['source_type'], 'order_id' => (int) $row['order_id'], 'refund_id' => (int) ( $row['refund_id'] ?? 0 ), 'order_item_id' => (int) $row['order_item_id'], 'attribution_scope' => $row['attribution_scope'], 'mapping_state' => $row['mapping_state'], 'product_id' => (int) $row['product_id'], 'variation_id' => (int) $row['variation_id'], 'reason_id' => $row['reason_id'], 'reason_label' => $reason ? $reason['label'] : __( 'Archived reason', WPE_RI_TEXT_DOMAIN ), 'quantity' => (float) $row['quantity'], 'occurred_at' => gmdate( 'c', strtotime( $row['occurred_at_gmt'] . ' UTC' ) ), 'created_at' => gmdate( 'c', strtotime( $row['created_at_gmt'] . ' UTC' ) ), 'updated_at' => gmdate( 'c', strtotime( $row['updated_at_gmt'] . ' UTC' ) ), 'occurred_date' => get_date_from_gmt( $row['occurred_at_gmt'], 'Y-m-d' ) );
+		return array( 'id' => (int) $row['event_id'], 'event_kind' => $row['event_kind'], 'source_type' => $row['source_type'], 'order_id' => (int) $row['order_id'], 'refund_id' => (int) ( $row['refund_id'] ?? 0 ), 'order_item_id' => (int) $row['order_item_id'], 'attribution_scope' => $row['attribution_scope'], 'mapping_state' => $row['mapping_state'], 'product_id' => (int) $row['product_id'], 'variation_id' => (int) $row['variation_id'], 'reason_id' => $row['reason_id'], 'reason_label' => $reason ? Multilingual::reason_label( $reason ) : __( 'Archived reason', WPE_RI_TEXT_DOMAIN ), 'quantity' => (float) $row['quantity'], 'occurred_at' => gmdate( 'c', strtotime( $row['occurred_at_gmt'] . ' UTC' ) ), 'created_at' => gmdate( 'c', strtotime( $row['created_at_gmt'] . ' UTC' ) ), 'updated_at' => gmdate( 'c', strtotime( $row['updated_at_gmt'] . ' UTC' ) ), 'occurred_date' => get_date_from_gmt( $row['occurred_at_gmt'], 'Y-m-d' ) );
 	}
 	private static function has_unknown_fields( $data, array $allowed ): bool {
 		if ( ! is_array( $data ) ) { return true; }

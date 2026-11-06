@@ -280,7 +280,7 @@ final class PatternService {
 					'product_label' => '',
 					'variation_label' => '',
 					'reason_id' => (string) $reason_id,
-					'reason_label' => $reason ? ( $reason['translations'][ get_user_locale() ] ?? $reason['label'] ) : (string) $reason_id,
+					'reason_label' => $reason ? Multilingual::reason_label( $reason ) : (string) $reason_id,
 					'current' => array(
 						'sold_quantity' => (float) $now['sold_quantity'],
 						'returned_quantity' => (float) ( $now['reasons'][ $reason_id ]['quantity'] ?? 0 ),

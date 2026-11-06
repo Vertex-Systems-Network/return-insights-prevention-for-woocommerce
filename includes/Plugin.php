@@ -71,6 +71,8 @@ final class Plugin {
 			return;
 		}
 		Admin::register();
+		Multilingual::register();
+		Privacy::register();
 		RestController::register();
 		RefundObserver::register();
 		AlertService::register();

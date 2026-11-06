@@ -81,7 +81,7 @@ Free count reports use event time and stable reason ID; I-05 filters by inclusiv
 - On erasure, delete or anonymize order/refund/item links and raw reason text as required; retain only non-identifying aggregates if the merchant's policy allows.
 - Retain canonical event records for 24 months by default, configurable by the merchant. Raw source phrases are disabled by default; if enabled, cap at 500 characters and purge after 90 days.
 - Deactivation preserves data. Uninstall defaults to retaining data and provides a clearly described, explicit, confirmed delete option.
-- WordPress privacy exporter/eraser integration is required before release.
+- WordPress privacy exporter/eraser source integration is implemented in `includes/Privacy.php`: actor-attributed activity is paged through the WordPress exporter, order-linked insights are appended to WooCommerce order exports, actor references are anonymized, and event order/refund/item links are removed when WooCommerce anonymizes an order. Runtime behavior and privacy review remain required before release.
 
 ## Migrations and Free/Pro boundaries
 
