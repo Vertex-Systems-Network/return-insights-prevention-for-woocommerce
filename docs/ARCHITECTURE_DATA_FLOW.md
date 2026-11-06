@@ -58,11 +58,11 @@ Use WooCommerce CRUD APIs and supported hooks for order/refund access. Support H
 
 ## React and REST
 
-React admin application under a dedicated WooCommerce page. REST endpoints require server-side capability checks, validation, sanitization, pagination and explicit schemas. Hiding a control in React is not authorization. Include loading, empty, error, denied, low-sample, stale-data and integration-unavailable states; every chart has a table/summary equivalent.
+React admin uses WordPress bundled `wp.element`, `wp.components`, and `wp.apiFetch` globals via registered script handles; browser-ready JS, no JSX/build pipeline. Application sits under a dedicated WooCommerce page. REST endpoints require server-side capability checks, validation, sanitization, pagination and explicit schemas. Hiding a control in React is not authorization. Include loading, empty, error, denied, low-sample, stale-data and integration-unavailable states; every chart has a table/summary equivalent.
 
 ## Security/privacy
 
-Minimize data and treat free-text refund reasons as potentially identifying. Apply a length limit and merchant-controlled retention. Resolve privacy export/erasure through the linked Woo order without storing customer email. On erasure, remove personal linkage while retaining only non-identifying aggregates where permitted. Deactivation never silently deletes data; provide a clear uninstall retention choice.
+Minimize data and treat free-text refund reasons as potentially identifying. Raw phrase storage is off by default; if enabled, cap at 500 characters and purge after 90 days. Canonical event retention defaults to 24 months and is merchant-configurable. Resolve privacy export/erasure through the linked Woo order without storing customer email. On erasure, remove personal linkage while retaining only non-identifying aggregates where permitted. Deactivation preserves data. Uninstall retains data by default and offers explicit, confirmed deletion.
 
 External AI remains off by default. Any future provider processing needs explicit opt-in, field minimization, disclosure, retention/cost policy and a security/privacy review.
 
