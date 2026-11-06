@@ -22,10 +22,14 @@ Planning estimates in UTC; reviewed 2026-11-06. Progress describes planning arti
 | P3 Data-flow and engineering blueprint | Data model, attribution, metrics, privacy, performance | Blueprint complete; review/implementation validation pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | P4 React admin UX specification | Screen map, interaction and accessibility | Blueprint complete; visual design/API review pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | P5 Compatibility/release baseline | PHP, WP, WC, WPML, Polylang requirements | Planning baseline complete; implementation/release matrix pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
-| P6 Pre-development readiness gate | Resolve decisions and approve implementation scope | Recommendations/contracts ready; owner approval pending | █████████░ 90% | 2026-11-06 | 2026-11-10 |
+| P6 Pre-development readiness gate | Resolve decisions and approve implementation scope | Complete; owner approval recorded | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | P7 Distribution and submission plan | WordPress.org Free + WooCommerce.com Paid tracks | Planning complete; actual submission blocked by release | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 
-**Overall planning artifact completion: 99%**, equally weighted across phases (rounded from 98.75%). P6 owner approval is still required before implementation; this percentage is not implementation authorization. Dates are estimates, not delivery promises. Keep planning progress separate from implementation progress. Update this table and change log whenever the plan changes.
+**Planning artifact completion: 100%** across P0–P7. P6 is approved and implementation is authorized within the scoped backlog. Runtime plugin implementation remains 0%. Dates are estimates, not delivery promises. Keep planning progress separate from implementation progress. Update this table and change log whenever the plan changes.
+
+## Implementation status
+
+P6 approval is recorded. Runtime plugin implementation has not started (**0%**). I-00 technical decisions and I-01 security/privacy design are complete as planning work; I-02 plugin foundation is the next runtime package. Follow `docs/IMPLEMENTATION_BACKLOG.md` in order. The React plan uses WordPress bundled packages without JSX/build tooling, and no CLI is to be added until the plugin is final.
 
 ## Distribution plan
 
@@ -39,7 +43,7 @@ Details and official source links: docs/DISTRIBUTION.md. No submission has been 
 
 ## Current gate
 
-P6 decision register and ordered implementation backlog are ready for owner review. Explicitly approve or revise D1–D12 in docs/P6_READINESS_GATE.md before implementation. Do not add plugin code, CLI tooling, Composer/npm manifests, or build scripts before P6 approval. Keep CLI/build tooling out of this repository until the plugin is final.
+P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS_GATE.md. Proceed in I-00–I-12 order from docs/IMPLEMENTATION_BACKLOG.md. Keep CLI/build tooling, Composer/npm manifests, and package managers out of this repository until the plugin is final.
 
 ## Plan files
 
@@ -52,8 +56,9 @@ P6 decision register and ordered implementation backlog are ready for owner revi
 - docs/REACT_UX.md — React admin navigation, screen specs, states, and REST contract outline.
 - docs/UX_FLOWS.md — merchant journeys and UX acceptance criteria.
 - docs/DISTRIBUTION.md — WordPress.org and Woo Marketplace submission tracks.
-- docs/P6_READINESS_GATE.md — owner decisions and implementation entry criteria.\n- docs/P6_TECHNICAL_CONTRACTS.md — proposed REST contract and security/privacy threat controls.
-- docs/IMPLEMENTATION_BACKLOG.md — dependency-ordered implementation work, blocked by P6 approval.
+- docs/P6_READINESS_GATE.md — owner decisions and implementation entry criteria.
+- docs/P6_TECHNICAL_CONTRACTS.md — approved REST contract and security/privacy threat controls.
+- docs/IMPLEMENTATION_BACKLOG.md — approved dependency-ordered implementation work.
 - docs/AI_BACKLOG.md — agent tasks and provider handoff.
 - AGENTS.md — canonical project instructions.
 - CLAUDE.md, GEMINI.md, .cursor/rules/project.mdc, .github/copilot-instructions.md — provider entry points.
@@ -66,7 +71,7 @@ P6 decision register and ordered implementation backlog are ready for owner revi
 4. React-based, polished, accessible wp-admin interface.
 5. HPOS-safe WooCommerce integration.
 6. WPML and Polylang behavior specified and tested; neither is a hard dependency.
-7. No CLI or implementation tooling before the readiness gate.
+7. P6 is passed; implementation follows the approved backlog. No CLI/build tooling in this repo until the plugin is final.
 8. AI agents read this README and AGENTS.md, make scoped changes, and update the dashboard in the same update.
 
 ## Research snapshot
@@ -84,4 +89,6 @@ P3 architecture specifies indexed custom event storage, source-level idempotency
 - 2026-11-06: Completed P3 logical data model, HPOS-safe ingestion, metric boundaries, privacy lifecycle, and performance plan. Added official design source links; no plugin implementation or CLI tooling added.
 - 2026-11-06: Completed P4 React admin UX blueprint, merchant flow acceptance criteria, accessibility/state requirements, tier boundary, and REST contract outline. Overall planning readiness 86%; no plugin implementation or CLI tooling added.
 - 2026-11-06: Completed P5 compatibility policy with dated WordPress 7.1/7.0 and WooCommerce 11.2/11.1 targets, PHP 8.3+, database floor, optional WPML/Polylang requirements, and release-time recheck rule. Planning artifact completion 88%; no plugin implementation or CLI tooling added.
-- 2026-11-06: Prepared P6 decision register and ordered I-00–I-12 implementation backlog; aligned distribution guidance with the dated compatibility baseline.\n- 2026-11-06: Added proposed REST payload/permission contracts and security/privacy threat controls. P6 planning artifacts are 90% complete and await explicit owner approval of D1–D12; no implementation or CLI tooling added.
+- 2026-11-06: Prepared P6 decision register and ordered I-00–I-12 implementation backlog; aligned distribution guidance with the dated compatibility baseline.
+- 2026-11-06: Added REST payload/permission contracts, privacy/security threat controls, approved no-build React approach, and Free-core/Pro-add-on packaging decision.
+- 2026-11-06: Product owner delegated approval; D1–D12 approved, P6 marked complete, and planning artifact completion reached 100%. Runtime implementation is 0%; CLI/build tooling remains prohibited until the plugin is final.
