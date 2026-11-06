@@ -11,7 +11,7 @@
 | Free | WordPress.org Plugin Directory | Complete, production-ready plugin ZIP; after approval, maintain releases through the directory's distribution process | Structured reason collection and basic reports |
 | Paid Pro | WooCommerce.com Marketplace | Separate Paid submission and review; freemium Free/Paid submissions can be merged on one product page after approval | Advanced product/variation insights, clustering, alerts, corrective-action tracking |
 
-A shared codebase/package architecture is a product decision for P6. Regardless of implementation, the Free package must work independently, the Paid package must not duplicate/conflict with Free, and license expiry must not erase merchant data.
+Approved package architecture: one repository produces a complete Free core plugin ZIP for WordPress.org and a separate Pro add-on ZIP for WooCommerce.com that requires Free. Woo documents Freemium as a fit when an additional plugin supplies upgraded features. Free works independently; Pro reuses Free event storage and stores only Pro-specific records. License expiry never erases data. Final packaging must still meet each marketplace's current review rules.
 
 ## 2. WordPress.org Free submission gate
 
@@ -44,9 +44,9 @@ The dated WordPress 7.1/7.0 and WooCommerce 11.2/11.1 series in docs/COMPATIBILI
 ## 4. Release packaging and versioning
 
 - Maintain one source of truth and produce separate Free and Paid release artifacts.
-- Include compiled React assets in the shipped packages; merchants should not need Node/npm or CLI tooling.
+- Include browser-ready React admin JavaScript using WordPress-bundled packages; no project CLI/build step is planned and merchants need no tooling.
 - Exclude tests, development dependencies, source maps/secrets where inappropriate, and unused files from production ZIPs; retain readable source and build instructions in the development repository.
-- Use coordinated versioning and a compatibility table for Free/Pro pairing. Define behavior when only Free is installed, when Pro is updated before Free, and when a license expires.
+- Use coordinated versioning and a compatibility table for Free/Pro pairing. Pro checks for Free and schema compatibility and fails safely when missing/outdated; Free remains usable. Define update order and license-expiry behavior as specified by the approved package model.
 - Provide a changelog, upgrade/rollback guidance, data migration policy, support route, and release verification record for every public release.
 - Run the required security, activation, API, E2E, PHP compatibility, malware, and validation checks before each Marketplace submission/update, according to then-current vendor requirements.
 
