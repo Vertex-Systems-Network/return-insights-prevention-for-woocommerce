@@ -22,10 +22,11 @@ This improves discovery but cannot guarantee every version auto-loads the file. 
 | AI-04 | Deduplicate feature/system options | Plan complete; approval pending | Canonical IDs map competitor options without duplicating RMA workflows. |
 | AI-05 | Finalize schema, rate math, privacy | In progress | Event schema, source confidence, denominator, retention, HPOS reviewed. |
 | AI-06 | Finalize React flows and REST contract | In progress | Screens/states/accessibility/capabilities approved. |
-| AI-07 | Set runtime compatibility baseline | Planning complete; release tests pending | V1 minimums documented; release claims await test evidence. |
+| AI-07 | Set runtime compatibility baseline | Baseline selected; Marketplace release range alignment pending | V1 minimums documented; two-major support range rechecked at submission. |
 | AI-08 | Threat model capture and AI clustering | Planned | Abuse controls, opt-in, data sent, explainability approved. |
 | AI-09 | Cross-model contradiction review | Not started | ChatGPT, Cursor, Claude, Gemini reviews reconciled into decisions. |
 | AI-10 | Break approved spec into implementation work | Blocked by P6 | Small dependency-ordered tasks; no premature CLI. |
+| AI-11 | Prepare WordPress.org Free and Woo Marketplace Paid submissions | Plan complete; release blocked | Separate packages/listings, accounts, test evidence, and review gates tracked in docs/DISTRIBUTION.md. |
 
 ## Collaboration protocol
 
