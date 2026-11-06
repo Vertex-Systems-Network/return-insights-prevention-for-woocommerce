@@ -332,6 +332,9 @@ final class Pattern_Service {
 		if ( $sold <= 0 ) {
 			return array( 'value' => null, 'status' => 'insufficient_denominator' );
 		}
+		if ( $sold < 20 ) {
+			return array( 'value' => null, 'status' => 'low_sample' );
+		}
 		if ( $returned > $sold ) {
 			return array( 'value' => null, 'status' => 'return_quantity_exceeds_sold' );
 		}
