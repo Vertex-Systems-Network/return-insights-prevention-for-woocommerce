@@ -15,8 +15,8 @@ Each runtime item must be scoped with named files, acceptance evidence, dependen
 | I-02 | Plugin foundation | Naming/slug/constants, activation/deactivation behavior, PHP/WP/WC dependency checks, role capabilities, translation domain, WooCommerce admin entry point, safe uninstall capability cleanup | I-00, I-01 | Foundation files added and statically inspected. Runtime activation/dependency/role checks remain for I-11. I-02 itself created no table; I-03 added the first migration, run after dependency checks at activation or upgrade. |
 | I-03 | Reason catalog and manual capture | Stable reason keys, translated labels, first versioned event-table migration, per-item merchant capture, validation/audit/provenance | I-02 | Implemented: versioned event table/dbDelta migration, canonical reason IDs and editable label translations, per-item Woo order lookup through CRUD API, manual confirmed-return/exchange POST with idempotency, protected event listing/get/edit/soft-delete, and server-derived product/variation IDs. Static source inspection only; runtime permission, migration, and quantity-edge verification remains for I-11. |
 | I-04 | Native refund observation | Supported WooCommerce refund hooks/objects, idempotent ingestion, refund-scope attribution, HPOS + legacy behavior | I-02, I-03 | Implemented: post-save `woocommerce_refund_created` observer reads WooCommerce refund/order objects through CRUD APIs, stores one refund-scope `refund_only` event per refund with a unique source key, maps only exact active catalog labels without persisting raw phrase text, and soft-deletes the linked event when the refund is deleted. Source code inspected; HPOS/legacy and lifecycle runtime checks remain for I-11. |
-| I-05 | Basic reporting (Free) | Counts, date filters, coverage, source breakdown, empty/low-data states | I-03, I-04, I-06 | UI numbers reconcile to event definitions; no unsupported rate shown |
 | I-06 | REST contract and React admin | Permission-protected endpoints, pagination/errors, Overview/Insights/catalog/source screens, accessibility and RTL | I-00, I-01, WordPress-bundled script handles | Screen/API acceptance criteria met, equivalent chart data available; no JSX or CLI/build pipeline |
+| I-05 | Basic reporting (Free) | Counts, date filters, coverage, source breakdown, empty/low-data states | I-03, I-04, I-06 | UI numbers reconcile to event definitions; no unsupported rate shown |
 | I-07 | Pro product/variation insights | Aggregation, eligible denominators, comparable cohorts, sample-aware pattern output | I-04, I-05 | Counts/rates show definitions and coverage; weak/incomplete cohorts suppress rates |
 | I-08 | Pro clustering and alerts | Local explainable grouping; thresholds, deduplication, dismissal and audit | I-07 | Membership is reviewable/reversible; alert evidence and suppression reasons visible |
 | I-09 | Corrective-action tracking | Hypothesis, owner, statuses, dates, measurement windows, before/after view | I-07, I-08 | Status history and comparable pre/post evidence; no causality claims |
@@ -33,6 +33,11 @@ Each runtime item must be scoped with named files, acceptance evidence, dependen
 - [WooCommerce HPOS recipe book](https://developer.woocommerce.com/docs/features/orders/high-performance-order-storage/recipe-book/)
 
 Activation and upgrade run the forward-only schema migration after dependency checks; schema version 2 adds the refund reference/index needed by I-04. Deactivation preserves records. No historic backfill runs.
+
+## I-04 official implementation references
+
+- [WooCommerce refund creation code reference](https://woocommerce.github.io/code-reference/files/woocommerce-includes-wc-order-functions.html) — `wc_create_refund()` persists the refund before firing `woocommerce_refund_created` with the refund ID and arguments.
+- [WooCommerce HPOS documentation](https://developer.woocommerce.com/docs/features/orders/high-performance-order-storage/) — use WooCommerce CRUD objects across HPOS and legacy storage.
 
 ## Execution rules for AI coding tools
 
