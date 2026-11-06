@@ -1,6 +1,6 @@
 # WPEssential Return Insights & Prevention for WooCommerce
 
-> Pre-development planning repository. No working plugin code exists here yet.
+> Early implementation repository. P6 is complete; only the plugin foundation exists. Return capture, insights, and reports are not implemented yet.
 
 ## Product direction
 
@@ -12,7 +12,7 @@ Help WooCommerce merchants understand why items are returned, identify repeat pr
 
 ## Roadmap
 
-Planning estimates in UTC; reviewed 2026-11-06. Progress describes planning artifacts, not plugin code. No implementation phase has started.
+Planning estimates in UTC; reviewed 2026-11-06. P0–P7 track planning artifacts; runtime work packages are tracked separately below.
 
 | Phase | Outcome | Status | Progress | Start | Target end |
 |---|---|---|---|---|---|
@@ -29,7 +29,7 @@ Planning estimates in UTC; reviewed 2026-11-06. Progress describes planning arti
 
 ## Implementation status
 
-P6 approval is recorded. Runtime plugin implementation has not started (**0%**). I-00 technical decisions and I-01 security/privacy design are complete as planning work; I-02 plugin foundation is the next runtime package. Follow `docs/IMPLEMENTATION_BACKLOG.md` in order. The React plan uses WordPress bundled packages without JSX/build tooling, and no CLI is to be added until the plugin is final.
+P6 approval is recorded. I-02 foundation is implemented: plugin bootstrap, dependency guards, role capabilities, WooCommerce admin entry, and uninstall capability cleanup. This is 1 of 11 runtime packages (**9% package progress**). Return event capture, reports, Pro features, and runtime verification have not started. Follow `docs/IMPLEMENTATION_BACKLOG.md` in order. React uses WordPress bundled packages without JSX/build tooling; no CLI is to be added until the plugin is final.
 
 ## Distribution plan
 
@@ -43,7 +43,7 @@ Details and official source links: docs/DISTRIBUTION.md. No submission has been 
 
 ## Current gate
 
-P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS_GATE.md. I-00/I-01 design work is complete; I-02 plugin foundation is next in docs/IMPLEMENTATION_BACKLOG.md. Keep CLI/build tooling, Composer/npm manifests, and package managers out of this repository until the plugin is final.
+P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS_GATE.md. I-02 foundation is in place; I-03 reason catalog/manual capture is next. Keep CLI/build tooling, Composer/npm manifests, and package managers out of this repository until the plugin is final.
 
 ## Plan files
 
@@ -92,3 +92,4 @@ P3 architecture specifies indexed custom event storage, source-level idempotency
 - 2026-11-06: Prepared P6 decision register and ordered I-00–I-12 implementation backlog; aligned distribution guidance with the dated compatibility baseline.
 - 2026-11-06: Added REST payload/permission contracts, privacy/security threat controls, approved no-build React approach, and Free-core/Pro-add-on packaging decision.
 - 2026-11-06: Product owner delegated approval; D1–D12 approved, P6 marked complete, and planning artifact completion reached 100%. Runtime implementation is 0%; CLI/build tooling remains prohibited until the plugin is final.
+- 2026-11-06: Implemented I-02 foundation files: plugin header/bootstrap, dependency checks, per-site activation guard, role capabilities, WooCommerce admin entry, non-destructive deactivation, and uninstall capability cleanup. Runtime work progress is 1/11 packages (9%); no event capture/reporting or CLI added. No runtime verification performed.
