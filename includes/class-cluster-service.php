@@ -4,7 +4,7 @@
  *
  * @package WPEssentialReturnInsights
  */
-namespace WPEssential\\ReturnInsights;
+namespace WPEssential\ReturnInsights;
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -88,12 +88,12 @@ final class Cluster_Service {
 	 *
 	 * @param string      $reason_id Stable catalog reason ID.
 	 * @param string|null $cluster_id Null restores deterministic default.
-	 * @return true|\\WP_Error
+	 * @return true|\WP_Error
 	 */
 	public static function set_override( string $reason_id, ?string $cluster_id ) {
 		$reason = Reason_Catalog::find( $reason_id, true );
 		if ( ! $reason ) {
-			return new \\WP_Error( 'reason_not_found', __( 'Reason not found.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 404 ) );
+			return new \WP_Error( 'reason_not_found', __( 'Reason not found.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 404 ) );
 		}
 
 		$overrides = get_option( self::OPTION, array() );
@@ -106,7 +106,7 @@ final class Cluster_Service {
 		} else {
 			$cluster_id = sanitize_key( $cluster_id );
 			if ( '' === $cluster_id || strlen( $cluster_id ) > 48 ) {
-				return new \\WP_Error( 'invalid_cluster', __( 'Provide a valid cluster key.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) );
+				return new \WP_Error( 'invalid_cluster', __( 'Provide a valid cluster key.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) );
 			}
 			$overrides[ $reason_id ] = $cluster_id;
 		}
