@@ -70,14 +70,20 @@ Keep raw reason separate from normalized category. Clustering must be explainabl
 
 Reason completeness and item mapping; time to review a strong pattern; actions started/completed; comparable post-action rate change with samples; performance/database overhead; merchant adoption and paid conversion. Do not claim prevented returns without evidence.
 
-## Decisions required for P6
+## Approved P6 decisions
 
-- D1 approve or revise the recommended capture model and omit/retain customer form in MVP.
-- D2 finalize event kinds and when a refund can be treated as return evidence.
-- D3 finalize default reason taxonomy and translation rules.
-- D4 select rate denominator, cohort/window, and maturity rules.
-- D5 set minimum sample and alert thresholds.
-- D6 decide deterministic/local clustering vs optional external AI and exact data sent.
-- D7 approve Free/Pro boundaries, exports, retention, and $79/year pricing.
-- D8 prioritize specific integrations after API/demand review.
-- D9 choose storage after volume/query estimates.
+Approved by product-owner delegation on 2026-11-06; full record is in `docs/P6_READINESS_GATE.md`.
+
+- Capture: native refund observation plus authorized manual per-item insight entry; no customer return portal or RMA workflow in V1.
+- Event kinds: confirmed return, refund-only, exchange, warranty/repair, cancellation, unknown. A WooCommerce refund remains refund-only evidence.
+- Seed reasons: fit/size; quality/defect; damage; appearance/color; not as described; wrong item/variation; missing part/accessory; delivery delay; delivery damage; duplicate order; changed mind; ordered by mistake; other; unknown. Stable reason IDs are separate from translated labels.
+- Rates: confirmed returned quantity divided by eligible sold quantity in the same product/variation purchase cohort, with 90-day maturity by default and merchant-selectable 30/60/90/120/180 days. Refund ratios remain separate. Suppress incomplete/immature metrics.
+- Alerts: Pro, in-product only; heuristic defaults require at least 5 confirmed returned units, 80% item mapping, at least 20 eligible sold units in each mature 90-day comparison cohort, and persistence across two weekly refreshes. These are configurable operational thresholds, not significance claims.
+- Clustering: local deterministic grouping, explainable and reversible; external AI off and out of V1.
+- Tiers: Free capture/catalog/coverage/counts/privacy tools; Pro product/variation trends, clustering, alerts/actions. $79/year stays a proposed price pending listing/business review.
+- Retention: canonical events 24 months by default; raw phrases off by default, and 500-character maximum/90-day purge if enabled. Uninstall retains data unless the merchant explicitly confirms deletion.
+- Integrations: no third-party RMA adapters in V1; evaluate individually after demand/API/privacy review.
+- Storage: plugin-owned indexed event/action tables, options for small settings/catalog, bounded Action Scheduler work; physical schema follows benchmarks.
+- Packaging: one repo generates independent Free core and Pro add-on ZIPs; Pro requires Free, shares event data, and stores Pro-only records. Separate WordPress.org and Woo Marketplace submissions.
+- Compatibility: PHP 8.3+, current and prior required WordPress/WooCommerce series at implementation and submission, HPOS/legacy support, WPML/Polylang optional, per-site multisite activation only.
+- Admin/build: React via WordPress bundled `wp.element`, `wp.components`, and `wp.apiFetch`; browser-ready JS without JSX or build tooling. No CLI/build tooling in this repo until plugin final.
