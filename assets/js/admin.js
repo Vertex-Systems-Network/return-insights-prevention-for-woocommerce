@@ -31,6 +31,10 @@
 		const [ reportBusy, setReportBusy ] = useState( false );
 		const [ reportFrom, setReportFrom ] = useState( config.defaultFrom );
 		const [ reportTo, setReportTo ] = useState( config.today );
+		const [ patternData, setPatternData ] = useState( null );
+		const [ patternBusy, setPatternBusy ] = useState( false );
+		const [ patternMaturity, setPatternMaturity ] = useState( '90' );
+		const [ cohortDays, setCohortDays ] = useState( '90' );
 		const [ sourceRows, setSourceRows ] = useState( [] );
 		const [ sourceBusy, setSourceBusy ] = useState( false );
 		const [ orderId, setOrderId ] = useState( '' );
@@ -83,6 +87,23 @@
 				showError( error, config.strings.loadReportError );
 			} finally {
 				setReportBusy( false );
+			}
+		}
+
+		async function loadPatterns( maturity, cohort ) {
+			if ( ! config.proEnabled ) { return; }
+			setPatternBusy( true );
+			setPatternData( null );
+			try {
+				const params = new URLSearchParams();
+				params.set( 'maturity_days', String( maturity || patternMaturity ) );
+				params.set( 'cohort_days', String( cohort || cohortDays ) );
+				const response = await apiFetch( { path: namespace + '/patterns?' + params.toString() } );
+				setPatternData( response );
+			} catch ( error ) {
+				showError( error, config.strings.loadPatternsError );
+			} finally {
+				setPatternBusy( false );
 			}
 		}
 
@@ -389,6 +410,86 @@
 			);
 		}
 
+		function renderPatterns() {
+			const days = [ 30, 60, 90, 120, 180 ].map( function ( day ) {
+				return { value: String( day ), label: config.strings.dayCount.replace( '%d', String( day ) ) };
+			} );
+			const rows = patternData && patternData.patterns ? patternData.patterns : [];
+			function rateText( value, status ) {
+				if ( null !== value && undefined !== value ) { return value + '%'; }
+				if ( status === 'incomplete_coverage' ) { return config.strings.incompleteCoverage; }
+				if ( status === 'insufficient_denominator' ) { return config.strings.insufficientDenominator; }
+				if ( status === 'low_sample' ) { return config.strings.lowSampleRateSuppressed; }
+				if ( status === 'return_quantity_exceeds_sold' ) { return config.strings.returnExceedsSold; }
+				return config.strings.rateUnavailable;
+			}
+			function quantityPair( data ) {
+				return data.returned_quantity + ' / ' + data.sold_quantity;
+			}
+			function qualityText( current, comparison ) {
+				const flags = Array.from( new Set( ( current.quality_flags || [] ).concat( comparison.quality_flags || [] ) ) );
+				return flags.map( function ( flag ) {
+					return flag === 'low_sample' ? config.strings.lowSample : flag === 'incomplete_coverage' ? config.strings.incompleteCoverage : flag;
+				} ).join( ', ' ) || '—';
+			}
+			const tableRows = rows.map( function ( row ) {
+				return {
+					key: row.product_id + '-' + row.variation_id + '-' + row.reason_id,
+					cells: [
+						row.variation_label ? row.product_label + ' — ' + row.variation_label : row.product_label,
+						row.reason_label,
+						quantityPair( row.current ),
+						rateText( row.current.rate_percent, row.current.rate_status ),
+						quantityPair( row.comparison ),
+						rateText( row.comparison.rate_percent, row.comparison.rate_status ),
+						null === row.change_percentage_points ? '—' : ( row.change_percentage_points > 0 ? '+' : '' ) + row.change_percentage_points,
+						qualityText( row.current, row.comparison )
+					]
+				};
+			} );
+			return h( 'section', { className: 'wpe-ri-panel', 'aria-labelledby': 'wpe-ri-patterns-heading' },
+				h( 'div', { className: 'wpe-ri-panel-heading' },
+					h( 'div', null,
+						h( 'p', { className: 'wpe-ri-eyebrow' }, config.strings.patternsTab ),
+						h( 'h2', { id: 'wpe-ri-patterns-heading' }, config.strings.patternsTitle ),
+						h( 'p', { className: 'wpe-ri-muted' }, config.strings.patternsIntro )
+					)
+				),
+				!config.proEnabled ? h( 'div', { className: 'wpe-ri-pro-lock', role: 'note' },
+					h( 'span', { className: 'wpe-ri-pro-lock-badge' }, 'PRO' ),
+					h( 'h3', null, config.strings.proLockedTitle ),
+					h( 'p', null, config.strings.proLockedIntro )
+				) : h( 'div', null,
+					h( 'form', { className: 'wpe-ri-report-filters', onSubmit: function ( event ) {
+						event.preventDefault();
+						loadPatterns( patternMaturity, cohortDays );
+					} },
+						field( config.strings.maturityDays, 'wpe-ri-pattern-maturity', nativeSelect( 'wpe-ri-pattern-maturity', patternMaturity, days, setPatternMaturity, patternBusy ) ),
+						field( config.strings.cohortDays, 'wpe-ri-pattern-cohort', nativeSelect( 'wpe-ri-pattern-cohort', cohortDays, days, setCohortDays, patternBusy ) ),
+						h( Button, { variant: 'primary', type: 'submit', disabled: patternBusy }, config.strings.updatePatterns )
+					),
+					patternBusy ? h( 'div', { className: 'wpe-ri-loading', role: 'status' }, h( Spinner ), h( 'span', null, config.strings.loading ) ) : patternData ? h( 'div', null,
+						h( 'p', { className: 'wpe-ri-report-period' }, config.strings.currentCohort + ': ' + patternData.periods.current.date_from + ' – ' + patternData.periods.current.date_to + ' · ' + config.strings.comparisonCohort + ': ' + patternData.periods.comparison.date_from + ' – ' + patternData.periods.comparison.date_to + ' (' + patternData.periods.timezone + ')' ),
+						h( 'p', { className: 'wpe-ri-report-note' }, config.strings.patternBoundary ),
+						!patternData.coverage.current.complete || !patternData.coverage.comparison.complete ? h( Notice, { status: 'warning', isDismissible: false },
+							patternData.coverage.current.unavailable_reason === 'order_scan_limit' || patternData.coverage.comparison.unavailable_reason === 'order_scan_limit' ? config.strings.orderScanLimit : config.strings.incompleteCoverage
+						) : null,
+						tableRows.length ? h( 'div', { className: 'wpe-ri-table-wrap' },
+							h( 'table', { className: 'wpe-ri-table wpe-ri-pattern-table' },
+								h( 'thead', null, h( 'tr', null, [
+									config.strings.product, config.strings.reason, config.strings.eligibleSold, config.strings.currentRate,
+									config.strings.eligibleSold, config.strings.comparisonRate, config.strings.rateChange, config.strings.status
+								].map( function ( label, index ) { return h( 'th', { key: 'pattern-head-' + index, scope: 'col' }, label ); } ) ) ),
+								h( 'tbody', null, tableRows.map( function ( row ) {
+									return h( 'tr', { key: row.key }, row.cells.map( function ( value, index ) { return h( 'td', { key: row.key + '-' + index }, value ); } ) );
+								} ) )
+							)
+						) : h( 'div', { className: 'wpe-ri-empty' }, h( 'h3', null, !patternData.coverage.current.complete || !patternData.coverage.comparison.complete ? config.strings.noPatternCoverage : config.strings.noPatterns ), h( 'p', null, !patternData.coverage.current.complete || !patternData.coverage.comparison.complete ? config.strings.incompleteCoverage : config.strings.noPatternsHelp ) )
+					) : null
+				)
+			);
+		}
+
 		function renderSources() {
 			const descriptions = {
 				manual: config.strings.manualSource,
@@ -609,7 +710,8 @@
 			{ id: 'history', label: config.strings.historyTab },
 			{ id: 'capture', label: config.strings.captureTab },
 			{ id: 'catalog', label: config.strings.catalogTab },
-			{ id: 'sources', label: config.strings.sourcesTab }
+			{ id: 'sources', label: config.strings.sourcesTab },
+			{ id: 'patterns', label: config.strings.patternsTab }
 		];
 
 		return h( 'div', { className: 'wpe-ri-app' },
@@ -633,11 +735,12 @@
 							if ( item.id === 'catalog' ) { loadReasons(); }
 							if ( item.id === 'overview' ) { loadReport( reportFrom, reportTo ); loadSources(); }
 							if ( item.id === 'sources' ) { loadSources(); }
+							if ( item.id === 'patterns' && config.proEnabled ) { loadPatterns( patternMaturity, cohortDays ); }
 						}
 					}, item.label );
 				} )
 			),
-			tab === 'overview' ? renderOverview() : tab === 'capture' ? renderCapture() : tab === 'history' ? renderHistory() : tab === 'sources' ? renderSources() : renderCatalog(),
+			tab === 'overview' ? renderOverview() : tab === 'capture' ? renderCapture() : tab === 'history' ? renderHistory() : tab === 'sources' ? renderSources() : tab === 'patterns' ? renderPatterns() : renderCatalog(),
 			h( 'footer', { className: 'wpe-ri-footer' }, config.strings.footer )
 		);
 	}
