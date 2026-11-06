@@ -39,7 +39,7 @@ Before applying/submitting:
 - Demonstrate HPOS compatibility, WordPress accessibility standards, current WooCommerce UX patterns, and compatibility with major Woo extensions.
 - Document critical flows and provide reproduction/test instructions. Resolve every submission failure and reviewer request before launch.
 
-The current WordPress 6.9/WooCommerce 10.8 planning floor is not sufficient evidence of Marketplace compliance at a future launch; Marketplace's moving two-major-version rule takes precedence.
+The dated WordPress 7.1/7.0 and WooCommerce 11.2/11.1 series in docs/COMPATIBILITY.md are planning targets, not evidence of Marketplace compliance. Marketplace's moving two-major-version rule takes precedence; refresh the matrix at submission.
 
 ## 4. Release packaging and versioning
 
