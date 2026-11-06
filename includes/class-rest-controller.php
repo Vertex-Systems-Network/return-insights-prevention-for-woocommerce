@@ -140,8 +140,17 @@ final class Rest_Controller {
 		}
 		global $wpdb;
 		$today = current_datetime();
-		$date_to = (string) ( $r->get_param( 'date_to' ) ?: $today->format( 'Y-m-d' ) );
-		$date_from = (string) ( $r->get_param( 'date_from' ) ?: $today->modify( '-29 days' )->format( 'Y-m-d' ) );
+		$date_to_param = (string) $r->get_param( 'date_to' );
+		$date_to = '' !== $date_to_param ? $date_to_param : $today->format( 'Y-m-d' );
+		$date_from_param = (string) $r->get_param( 'date_from' );
+		if ( '' !== $date_from_param ) {
+			$date_from = $date_from_param;
+		} elseif ( '' !== $date_to_param ) {
+			$anchor_date = \DateTimeImmutable::createFromFormat( '!Y-m-d', $date_to_param, wp_timezone() );
+			$date_from = $anchor_date ? $anchor_date->modify( '-29 days' )->format( 'Y-m-d' ) : $today->modify( '-29 days' )->format( 'Y-m-d' );
+		} else {
+			$date_from = $today->modify( '-29 days' )->format( 'Y-m-d' );
+		}
 		if ( $date_from > $date_to ) {
 			return new \WP_Error( 'invalid_report_period', __( 'The start date must be on or before the end date.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) );
 		}
