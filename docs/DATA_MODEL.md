@@ -1,4 +1,3 @@
-
 # Logical Data Model and Lifecycle — P3 Blueprint
 
 **Status:** Proposed logical schema for review; not database code.  
@@ -78,3 +77,13 @@ Free count reports use event time and stable reason ID. Product/variation rates 
 ## Migrations and Free/Pro boundaries
 
 The Free core owns shared event and reason schema. Pro adds only Pro-specific action/alert/curated-cluster data and must not create a second copy of event facts. Both packages use coordinated schema versions and must tolerate supported Free/Pro update order. If Pro is deactivated or expires, preserve data and keep Free event capture/report access intact.
+
+
+## Official design references reviewed 2026-11-06
+
+- [WordPress: Creating Tables with Plugins](https://developer.wordpress.org/plugins/creating-tables-with-plugins/) — options vs post meta/custom tables, dbDelta, schema upgrades.
+- [WooCommerce: HPOS extension recipe book](https://developer.woocommerce.com/docs/features/orders/high-performance-order-storage/recipe-book/) — CRUD/API boundary and HPOS compatibility.
+- [WooCommerce: Order refunds API](https://developer.woocommerce.com/docs/apis/rest-api/v1/order-refunds/) — refund reason and line-item references.
+- [WooCommerce code reference: refund creation hooks](https://woocommerce.github.io/code-reference/files/woocommerce-includes-wc-order-functions.html) — post-save observer boundary.
+- [WordPress: Adding a personal data eraser](https://developer.wordpress.org/plugins/privacy/adding-personal-data-eraser-to-your-plugin/) — erasure integration.
+- [Action Scheduler](https://actionscheduler.org/) and [usage guidance](https://actionscheduler.org/usage/) — bounded, traceable background work.
