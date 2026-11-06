@@ -43,7 +43,7 @@ The dated WordPress 7.1/7.0 and WooCommerce 11.2/11.1 series in docs/COMPATIBILI
 
 ## 4. Release packaging and versioning
 
-- Maintain one source of truth and produce separate Free and Paid release artifacts.
+- Maintain one repository as source of truth and produce separate Free core and Pro add-on release artifacts.
 - Include browser-ready React admin JavaScript using WordPress-bundled packages; no project CLI/build step is planned and merchants need no tooling.
 - Exclude tests, development dependencies, source maps/secrets where inappropriate, and unused files from production ZIPs; retain readable source and build instructions in the development repository.
 - Use coordinated versioning and a compatibility table for Free/Pro pairing. Pro checks for Free and schema compatibility and fails safely when missing/outdated; Free remains usable. Define update order and license-expiry behavior as specified by the approved package model.
@@ -52,7 +52,7 @@ The dated WordPress 7.1/7.0 and WooCommerce 11.2/11.1 series in docs/COMPATIBILI
 
 ## 5. Proposed release sequence
 
-1. Complete P6 product and implementation readiness decisions.
+1. P6 is complete; follow the approved I-00–I-12 implementation sequence.
 2. Build the complete Free and Pro editions and finish the compatibility/security/accessibility matrix.
 3. Prepare WordPress.org Free package and listing; submit and address review feedback.
 4. Apply for Woo Marketplace vendor approval and submit the Paid package separately.
