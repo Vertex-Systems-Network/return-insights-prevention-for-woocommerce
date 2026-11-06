@@ -61,7 +61,7 @@ I-03 implements the event table using the site prefix and dbDelta; I-04 advances
 
 ## I-08 cluster persistence boundary
 
-Cluster defaults are computed deterministically from stable reason IDs. Merchant overrides live separately in a non-autoloaded option and can be reset to the computed default; source reason/event rows are never rewritten. Cluster results preserve member reason IDs/labels and inherit source cohort coverage. Weekly alert state is currently held in a bounded non-autoloaded option with one latest status/action note per alert; append-only audit history and resolution are not implemented.
+Cluster defaults are computed deterministically from stable reason IDs. Merchant overrides live separately in a non-autoloaded option and can be reset to the computed default; source reason/event rows are never rewritten. Cluster results preserve member reason IDs/labels and inherit source cohort coverage. Weekly alert state is currently held in a bounded non-autoloaded option; each alert retains its latest 50 dismiss/restore actions with actor, UTC timestamp, status, and note. Candidate sets above 2,000 rows fail closed. Volume benchmarks and WordPress runtime verification remain.
 
 ## I-07 cohort implementation boundary
 
