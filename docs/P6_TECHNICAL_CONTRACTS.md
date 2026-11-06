@@ -1,10 +1,30 @@
 # P6 Technical Contracts — REST and Security/Privacy
 
-**Status:** Approved contract; I-03 implements catalog, order lookup, and manual-event routes; I-04 adds the native refund observer. Remaining routes and runtime schema verification are pending.  
+**Status:** I-03 catalog/order/manual-event routes, I-04 refund observer, and I-06 REST/React admin surfaces are implemented. Future reporting/pattern routes and runtime verification remain pending.  
 **Reviewed:** 2026-11-06  
-**P6 status:** Approved on 2026-11-06; runtime implementation remains pending.
+**P6 status:** Approved 2026-11-06; I-02/I-03/I-04/I-06 implementation is present. I-11 runtime verification remains pending.
 
-This document defines the approved engineering boundary. Concrete JSON schemas and code are delivered in the corresponding implementation tasks.
+This document records approved constraints and the I-06 REST surface. Listed current routes are implemented unless marked planned; static source review is not runtime verification.
+
+## I-06 implemented routes
+
+All routes use `/wp-json/wpessential/return-insights/v1`. Reads require `view_return_insights`; mutations and order-item lookup require `manage_return_insights`.
+
+| Route | Behavior | Current contract |
+|---|---|---|
+| `GET /reasons` | Read catalog | Optional `include_inactive`; inactive entries are returned only to managers. |
+| `GET /reasons/{id}` | Read one reason | Canonical ID and labels. |
+| `POST /reasons` | Create reason | Label, group, active state, translated labels; unknown fields rejected. |
+| `PATCH /reasons/{id}` | Update reason | Partial reason fields; unknown fields rejected. |
+| `GET /orders/{id}` | Lookup order line items | WooCommerce CRUD order/item/product data; manager capability required. |
+| `GET /events` | List evidence | `page`, `per_page` (default 20, max 100), optional `order_id`; stable newest-first sort and total headers. |
+| `GET /events/{id}` | Read one event | Provenance plus store-local event date. |
+| `POST /events` | Record manual insight | Confirmed return or exchange, order/item, quantity, active reason, local date, idempotency key; server derives product/variation IDs. |
+| `PATCH /events/{id}` | Edit manual event | Event kind, quantity, reason, date. Observed refund records are immutable. |
+| `DELETE /events/{id}` | Soft-delete manual event | Required audit reason; observed refund records are immutable. |
+| `GET /sources` | Coverage summary | Active event count and latest date by source only; not health/error monitoring. |
+
+The UI uses WordPress `wp.element`, `wp.components`, and `wp.apiFetch`; the registered script dependencies are scoped to the WooCommerce admin screen. apiFetch applies same-origin REST root and nonce middleware when enqueued with the bundled script handle. See [apiFetch documentation](https://developer.wordpress.org/block-editor/reference-guides/packages/packages-api-fetch/) and [script dependency documentation](https://developer.wordpress.org/reference/functions/wp_enqueue_script/).
 
 ## REST namespace and shared rules
 
@@ -22,17 +42,19 @@ This document defines the approved engineering boundary. Concrete JSON schemas a
 - Mutation endpoints require idempotency for retryable event writes and use optimistic conflict handling for concurrent edits.
 - License gating is enforced server-side for Pro data/actions; expiry cannot delete or hide merchant-owned event data.
 
-## Approved route contract
+## Planned reporting and Pro route extensions
+
+The following target routes are **not implemented in I-06**; they remain future backlog scope. Actual current endpoints are listed above.
 
 | Route | Methods | Capability | Purpose / schema summary |
 |---|---|---|---|
-| `/summary` | GET | `view_return_insights` | Query: `date_from`, `date_to`, `timezone`, optional `reason_id`, `product_id`, `variation_id`, `event_kind`. Response: metric version, period, event counts, explicitly named refund ratio/confirmed-return rate only when eligible, coverage, sample sizes, freshness. |
-| `/patterns` | GET | `view_return_insights` | Query: shared filters, `page`, `per_page`, `orderby`, `order`. Response: reason/product/variation pattern, evidence count, source scope, comparison context, data-quality flags, pagination. |
+| `/summary` | GET | `view_return_insights` | Planned I-05: date-windowed counts and definitions/coverage; rate fields only after the approved cohort rules are implemented. |
+| `/patterns` | GET | `view_return_insights` | Planned I-07: sample-aware reason/product/variation patterns and quality flags. |
 | `/events` | GET, POST | GET: view; POST: manage | GET returns a paged event list and provenance. POST accepts `event_kind` (`confirmed_return` or `exchange`), `order_id`, `order_item_id`, `quantity`, `reason_id`, site-local date `occurred_at` (`YYYY-MM-DD`), and an idempotency key. I-03 stores no source phrase. Server derives product relationships. |
-| `/events/(?P<id>[a-zA-Z0-9_-]+)` | GET, PATCH, DELETE | GET: view; mutations: manage | Read or correct permitted manual insight records. Delete is a soft/retention-aware action with audit metadata; no mutation of WooCommerce refunds/orders. Immutable source facts remain distinguishable from merchant corrections. |
+| `/events/{id}` | GET, PATCH, DELETE | GET: view; mutations: manage | Implemented route uses numeric event IDs. Reads are view-gated; mutations are manager-gated, and refund observations are immutable. |
 | `/reasons` | GET, POST | GET: view; POST: manage | Read catalog or create a canonical reason. POST accepts a label and group; server generates a stable-safe canonical ID. PATCH can change label, group, translations, and active state without changing ID. Catalog `order` is not yet implemented. |
 | `/reasons/(?P<id>[a-zA-Z0-9_-]+)` | GET, PATCH | GET: view; PATCH: manage | Update labels/translations/active state. Catalog ordering and destructive merge are not implemented; any future merge requires a separate audited flow. A future merge operation requires a separate audited flow. |
-| `/sources` | GET | `view_return_insights` | Source health, last success/error, event counts, mapping/coverage warnings. No arbitrary source reconfiguration through this endpoint. |
+| `/sources` | GET | `view_return_insights` | Implemented basic coverage summary: active record counts and latest event date by source. Source errors, health, and retry status are not provided. |
 | `/actions` | GET, POST | Pro entitlement + manage | List/create corrective actions. POST accepts linked pattern IDs, hypothesis, owner, status, planned review date, and measurement-window definition. |
 | `/actions/(?P<id>[a-zA-Z0-9_-]+)` | GET, PATCH | Pro entitlement; GET view, PATCH manage | Read/update action fields. Status transitions create history; before/after result carries metric version, coverage, sample sizes, and non-causal wording. |
 | `/settings` | GET, PATCH | GET: view; PATCH: manage | Read/update allowlisted settings only. Never expose secrets. Validate retention, source toggles, locale and alert settings against an explicit schema. |
@@ -102,10 +124,12 @@ These are field inventories for review, not JSON Schema or frozen payloads.
 
 The observer uses `woocommerce_refund_created` after WooCommerce persists a refund, loads refund/order objects via `wc_get_order()`, and writes one `refund_only` event at `refund` attribution scope with a unique source key based on site and refund ID. The schema stores `refund_id`; item/product/variation IDs use zero sentinels so the refund reason is not assigned to line items. An exact active catalog label can map to a stable reason ID in memory; unmatched text becomes `unknown`, and raw phrase text is not stored. `woocommerce_refund_deleted` soft-deletes linked events. The observer does not infer physical returns. Runtime hook, HPOS/legacy, concurrency, and deletion checks remain pending.
 
-## I-03 implementation boundary
+## I-03/I-06 implementation boundary
 
-Implemented routes: `GET/POST /reasons`, `GET/PATCH /reasons/{id}`, `GET /orders/{id}`, `GET/POST /events`, `GET/PATCH/DELETE /events/{id}`. Every route has a capability callback. Order lookup returns only order number and line-item/product labels/IDs/ordered quantity; no customer identity is returned. Event writes are manual-only, validate that the order item belongs to the order, derive product/variation IDs server-side, convert the site-local calendar date to UTC, and use a unique source hash for retries. Manual deletion is soft and requires an audit reason. The UI, JSON Schema definitions/unknown-field rejection, strict concurrent-edit handling, runtime verification of the per-item remaining-quantity guard, and privacy exporter/eraser are not implemented yet.
+I-03 implements reason/order/manual-event routes; I-04 adds refund observation; I-06 adds `/sources`, request schemas, strict unknown-field rejection, pagination, and the React screens described above. Manual event writes validate the order-item relationship and derive product/variation IDs server-side; deletion is soft and requires an audit reason. Current screen/API implementation was inspected statically only. Runtime permission, nonce, migration, quantity edge, HPOS/legacy, timezone, accessibility, and privacy exporter/eraser verification remain unperformed and are release-hardening work in I-11 where applicable. Optimistic conflict handling for simultaneous edits remains future work.
 
-## Acceptance evidence to collect during implementation
+## I-11 acceptance evidence to collect
+
+These are planned runtime verification cases, not completed results.
 
 For each route, test anonymous, insufficient-role, allowed-role, invalid input, boundary values, object relationship mismatch, nonce failure, and Pro entitlement states. Exercise duplicate hook delivery, repeated POST idempotency, malformed source phrases, pagination limits, timestamp/timezone boundaries, privacy export/erase, and multisite isolation if multisite is supported. These are planned verification cases; endpoints now exist for the I-03 scope, but no runtime tests or verification have been run.
