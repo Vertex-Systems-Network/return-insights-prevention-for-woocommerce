@@ -33,6 +33,7 @@ require_once WPE_RI_PATH . 'includes/class-admin.php';
 require_once WPE_RI_PATH . 'includes/class-installer.php';
 require_once WPE_RI_PATH . 'includes/class-reason-catalog.php';
 require_once WPE_RI_PATH . 'includes/class-rest-controller.php';
+require_once WPE_RI_PATH . 'includes/class-refund-observer.php';
 require_once WPE_RI_PATH . 'includes/class-plugin.php';
 
 register_activation_hook(
