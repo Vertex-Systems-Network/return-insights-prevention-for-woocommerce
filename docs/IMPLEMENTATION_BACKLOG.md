@@ -1,6 +1,6 @@
 # Implementation Backlog — Approved, Ordered Work
 
-**Status:** I-00/I-01 design packages and I-02 foundation, I-03 catalog/manual-capture API, I-04 refund observation, I-05 Free reports, I-06 REST/React admin, and I-07 Pro pattern implementation are present. I-11 verification and a production Pro entitlement provider remain.  
+**Status:** I-00/I-01 design packages and I-02 foundation, I-03 catalog/manual-capture API, I-04 refund observation, I-05 Free reports, I-06 REST/React admin, and I-07 Pro patterns, I-08 clustering/alerts, and I-09 corrective-action tracking implementations are present. I-10 integration verification, I-11 release verification, and a production Pro entitlement provider remain.
 **Start condition:** P6 approval recorded in `P6_READINESS_GATE.md` on 2026-11-06.  
 **Repository constraint:** Do not add CLI/build tooling to this repository until the plugin is final. The user authorized `composer.json` only for the PSR-4 autoload mapping; add no external dependencies and run no Composer command before final packaging. React uses WordPress-bundled globals without JSX or a build step.
 
@@ -19,7 +19,7 @@ Each runtime item must be scoped with named files, acceptance evidence, dependen
 | I-05 | Basic reporting (Free) | Counts, date filters, reason/source breakdown, item-scoped product/category counts, coverage, empty/low-data states | I-03, I-04, I-06 | Implemented: `GET /summary` provides store-timezone date filtering, event and quantity totals, reason/event-kind/source counts, mapped/unmapped coverage, top 10 item-scoped products/categories, and period metadata. React overview renders date filters, tables, loading/empty/error states. No return rates or causality claims. Static source review only; I-11 runtime, visual, accessibility, and performance checks remain. |
 | I-07 | Pro product/variation insights | Aggregation, eligible denominators, comparable cohorts, sample-aware pattern output | I-04, I-05 | Implemented: `GET /patterns` compares mature cohorts and exact item/reason matches. Completed/refunded order line-item quantities with completion dates provide an MVP proxy; refund-only and exchange events are excluded. Each scan is capped at 500 orders. Incomplete mapping, fewer than 20 sold units, missing denominator, or returns above sales suppress rates. Entitlement defaults fail-closed; provider and runtime verification remain. |
 | I-08 | Pro clustering and alerts | Deterministic local clusters of reason patterns; merchant reversible overrides; Pro in-product alert lifecycle; weekly persistence; deduplication, dismissal, audit, and visible evidence | I-07 | Implementation complete: deterministic cluster service, reversible override/reset endpoints, weekly Pro-gated evaluation, two-week persistence, threshold evidence and persisted suppression reporting, dedupe key, and alert read/status endpoints are present. The React UI reports scan status and suppression causes. Bounded storage: at most 2,000 alert states, 50 actions per alert, at most 2,000 candidate rows per scan, plus one compact latest-scan record; all options are non-autoloaded. Static JS syntax/localization checks pass. Live PHP/WordPress runtime, visual/accessibility and volume verification are assigned to I-11. |
-| I-09 | Corrective-action tracking | Hypothesis, owner, statuses, dates, measurement windows, before/after view | I-07, I-08 | Status history and comparable pre/post evidence; no causality claims |
+| I-09 | Corrective-action tracking | Hypothesis, owner, statuses, dates, measurement windows, before/after view | I-07, I-08 | **Implementation complete:** Pro-gated `/actions` list/create/read/update and `/actions/{id}/evidence`; action/target/history/evidence schema v3; transaction-protected create/update; validated targets/owners/dates/windows; bounded audit/evidence snapshots; baseline required before a non-overlapping follow-up cohort; React create/status/history/evidence controls with non-causal language. Static JS syntax and diff checks pass. PHP/WordPress/database runtime and visual/accessibility checks remain in I-11. No runtime result claimed. |
 | I-10 | Optional multilingual/integration compatibility | WPML/Polylang integration and any approved RMA source adapters | I-03 to I-06, demand/API review | Tested optional integrations; core works when absent/disabled |
 | I-11 | Release hardening | Current compatibility matrix, security/accessibility/performance/privacy checks, migration/rollback, docs, package boundaries | I-02 to I-10 | Evidence recorded for claimed versions and release criteria |
 | I-12 | Submission preparation | WordPress.org Free and WooCommerce.com Paid artifacts/listings, QIT and reviewer responses | I-11 | Separate packages validated and submission checklists complete |
@@ -72,7 +72,7 @@ Each runtime item must be scoped with named files, acceptance evidence, dependen
 - [WordPress submenu API](https://developer.wordpress.org/reference/functions/add_submenu_page/)
 - [WooCommerce HPOS recipe book](https://developer.woocommerce.com/docs/features/orders/high-performance-order-storage/recipe-book/)
 
-Activation and upgrade run the forward-only schema migration after dependency checks; schema version 2 adds the refund reference/index needed by I-04. Deactivation preserves records. No historic backfill runs.
+Activation and upgrade run the forward-only schema migration after dependency checks. Schema v2 added the refund reference/index; schema v3 adds four InnoDB tables for corrective actions, targets, status history, and evidence snapshots. Deactivation preserves records. No historic backfill runs. Runtime migration and rollback verification remain in I-11.
 
 ## I-04 official implementation references
 
@@ -90,3 +90,17 @@ Activation and upgrade run the forward-only schema migration after dependency ch
 7. Do not claim a release compatibility or performance result without recorded evidence.
 8. Update README roadmap/change log with every meaningful repository change.
 9. Report exact files changed, acceptance evidence, open risks, and work not performed.
+
+## I-09 implementation references
+
+- `includes/ActionService.php` stores Pro corrective actions separately from source events. It caps actions at 1,000, targets at 10 per action, status history at 50, and evidence snapshots at 20 per action.
+- Action and target changes plus status history use a database transaction; corrective-action tables are explicitly InnoDB. Before/after snapshots store the metric-definition version, cohort dates, returned/sold quantities, rate when eligible, mapping coverage, and eligible-order count. They carry no causal claim.
+- `/actions` and its detail/evidence routes are server-side entitlement- and capability-gated. The React screen supports creating a hypothesis and targets, updating status, reviewing status history, and capturing baseline then follow-up evidence.
+- Static review is not live acceptance. Composer vendor generation, PHP parsing, database migration/runtime, Pro entitlement, browser UI, accessibility, and supported-version compatibility are pending in I-11.
+
+## I-09 implementation references
+
+- `includes/ActionService.php` stores Pro corrective actions separately from source events. It caps actions at 1,000, targets at 10 per action, status history at 50, and evidence snapshots at 20 per action.
+- Action and target changes plus status history use a database transaction; corrective-action tables are explicitly InnoDB. Before/after snapshots store the metric-definition version, cohort dates, returned/sold quantities, rate when eligible, mapping coverage, and eligible-order count. They carry no causal claim.
+- `/actions` and its detail/evidence routes are server-side entitlement- and capability-gated. The React screen supports creating a hypothesis and targets, updating status, reviewing status history, and capturing baseline then follow-up evidence.
+- Static review is not live acceptance. Composer vendor generation, PHP parsing, database migration/runtime, Pro entitlement, browser UI, accessibility, and supported-version compatibility are pending in I-11.

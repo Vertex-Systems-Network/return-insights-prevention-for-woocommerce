@@ -2,7 +2,7 @@
 
 **Status:** I-03 catalog/order/manual-event routes, I-04 refund observer, I-05 Free summary, I-06 React admin, and I-07 Pro patterns are implemented. Runtime verification and a production Pro entitlement provider remain pending.  
 **Reviewed:** 2026-11-06  
-**P6 status:** Approved 2026-11-06; I-02/I-03/I-04/I-06/I-05 implementation is present. I-11 runtime verification remains pending.
+**P6 status:** Approved 2026-11-06; I-02 through I-09 implementation is present. I-11 runtime verification remains pending.
 
 This document records approved constraints and implemented I-05/I-06/I-07 REST surfaces. Listed current routes are implemented unless marked planned; static source review is not runtime verification.
 
@@ -70,14 +70,15 @@ The following target routes are future work. `/summary` is implemented for I-05;
 
 | Route | Methods | Capability | Purpose / schema summary |
 |---|---|---|---|
-| `/patterns` | GET | `view_return_insights` | Planned I-07: sample-aware reason/product/variation patterns and quality flags. |
+| `/patterns` | GET | Pro entitlement + view | Implemented I-07: sample-aware reason/product/variation patterns and quality flags. Runtime verification remains I-11. |
 | `/events` | GET, POST | GET: view; POST: manage | GET returns a paged event list and provenance. POST accepts `event_kind` (`confirmed_return` or `exchange`), `order_id`, `order_item_id`, `quantity`, `reason_id`, site-local date `occurred_at` (`YYYY-MM-DD`), and an idempotency key. I-03 stores no source phrase. Server derives product relationships. |
 | `/events/{id}` | GET, PATCH, DELETE | GET: view; mutations: manage | Implemented route uses numeric event IDs. Reads are view-gated; mutations are manager-gated, and refund observations are immutable. |
 | `/reasons` | GET, POST | GET: view; POST: manage | Read catalog or create a canonical reason. POST accepts a label and group; server generates a stable-safe canonical ID. PATCH can change label, group, translations, and active state without changing ID. Catalog `order` is not yet implemented. |
 | `/reasons/(?P<id>[a-zA-Z0-9_-]+)` | GET, PATCH | GET: view; PATCH: manage | Update labels/translations/active state. Catalog ordering and destructive merge are not implemented; any future merge requires a separate audited flow. A future merge operation requires a separate audited flow. |
 | `/sources` | GET | `view_return_insights` | Implemented basic coverage summary: active record counts and latest event date by source. Source errors, health, and retry status are not provided. |
-| `/actions` | GET, POST | Pro entitlement + manage | List/create corrective actions. POST accepts linked pattern IDs, hypothesis, owner, status, planned review date, and measurement-window definition. |
-| `/actions/(?P<id>[a-zA-Z0-9_-]+)` | GET, PATCH | Pro entitlement; GET view, PATCH manage | Read/update action fields. Status transitions create history; before/after result carries metric version, coverage, sample sizes, and non-causal wording. |
+| `/actions` | GET, POST | Pro entitlement; GET view, POST manage | List/create corrective actions. POST accepts product/variation/reason targets, hypothesis, owner, planned review date, and measurement window. |
+| `/actions/(?P<id>\d+)` | GET, PATCH | Pro entitlement; GET view, PATCH manage | Read/update action fields. Status transitions create history; targets and action/status writes are transactional. |
+| `/actions/(?P<id>\d+)/evidence` | POST | Pro entitlement + manage | Capture a bounded baseline/follow-up metric snapshot; follow-up requires baseline; includes metric version, cohort dates, quantities, rate when eligible, mapping, eligible-order count, and non-causal interpretation. |
 | `/settings` | GET, PATCH | GET: view; PATCH: manage | Read/update allowlisted settings only. Never expose secrets. Validate retention, source toggles, locale and alert settings against an explicit schema. |
 
 **Approved defaults for implementation:** view vs manage capabilities as above; manual event delete is soft-delete with audit reason; action status sequence proposed → in progress → monitoring → completed/paused; collection responses use `X-WP-Total` and `X-WP-TotalPages`; metric cohort maturity defaults to 90 days; retention is in `DATA_MODEL.md`; Free core plus Pro add-on handshake requires matching major schema version. Refine field-level JSON schemas in I-06 without changing these boundaries.
@@ -147,7 +148,7 @@ The observer uses `woocommerce_refund_created` after WooCommerce persists a refu
 
 ## I-03/I-06 implementation boundary
 
-I-03 implements reason/order/manual-event routes; I-04 adds refund observation; I-06 adds `/sources`, request schemas, strict unknown-field rejection, pagination, and the React screens described above. Manual event writes validate the order-item relationship and derive product/variation IDs server-side; deletion is soft and requires an audit reason. Current screen/API implementation was inspected statically only. Runtime permission, nonce, migration, quantity edge, HPOS/legacy, timezone, accessibility, and privacy exporter/eraser verification remain unperformed and are release-hardening work in I-11 where applicable. Optimistic conflict handling for simultaneous edits remains future work.
+I-03 implements reason/order/manual-event routes; I-04 adds refund observation; I-06 adds `/sources`, request schemas, strict unknown-field rejection, pagination, and the React screens described above. Manual event writes validate the order-item relationship and derive product/variation IDs server-side; deletion is soft and requires an audit reason. I-07 through I-09 Pro routes and React controls are implemented and inspected statically only. Runtime permission, nonce, migration, quantity edge, HPOS/legacy, timezone, accessibility, and privacy exporter/eraser verification remain unperformed and are release-hardening work in I-11 where applicable. Optimistic conflict handling for simultaneous edits remains future work.
 
 ## I-11 acceptance evidence to collect
 

@@ -35,6 +35,10 @@
 		const [ clusterData, setClusterData ] = useState( null );
 		const [ alerts, setAlerts ] = useState( [] );
 		const [ alertScan, setAlertScan ] = useState( null );
+		const [ correctiveActions, setCorrectiveActions ] = useState( [] );
+		const [ actionsBusy, setActionsBusy ] = useState( false );
+		const [ actionSaving, setActionSaving ] = useState( false );
+		const [ actionForm, setActionForm ] = useState( { title: '', hypothesis: '', issue_url: '', product_id: '', variation_id: '', reason_id: '', owner_id: '', planned_review_date: '', measurement_days: '90' } );
 		const [ alertsBusy, setAlertsBusy ] = useState( false );
 		const [ patternBusy, setPatternBusy ] = useState( false );
 		const [ patternMaturity, setPatternMaturity ] = useState( '90' );
@@ -130,6 +134,80 @@
 				await apiFetch( { path: namespace + '/alerts/' + alert.alert_id, method: 'PATCH', data: { status: status, note: status === 'dismissed' ? config.strings.alertDismissAudit : '' } } );
 				loadAlerts();
 			} catch ( error ) { showError( error, config.strings.loadAlertsError ); }
+		}
+
+		async function loadActions() {
+			if ( ! config.proEnabled ) { return; }
+			setActionsBusy( true );
+			try {
+				const response = await apiFetch( { path: namespace + '/actions' } );
+				setCorrectiveActions( response || [] );
+			} catch ( error ) { showError( error, config.strings.loadActionsError ); }
+			finally { setActionsBusy( false ); }
+		}
+
+		async function saveAction( event ) {
+			event.preventDefault();
+			setActionSaving( true );
+			const target = { product_id: parseInt( actionForm.product_id, 10 ) || 0, variation_id: parseInt( actionForm.variation_id, 10 ) || 0, reason_id: actionForm.reason_id };
+			try {
+				await apiFetch( { path: namespace + '/actions', method: 'POST', data: {
+					title: actionForm.title, hypothesis: actionForm.hypothesis, issue_url: actionForm.issue_url, owner_id: parseInt( actionForm.owner_id, 10 ) || 0,
+					planned_review_date: actionForm.planned_review_date, measurement_days: parseInt( actionForm.measurement_days, 10 ) || 90,
+					targets: [ target ]
+				} } );
+				setActionForm( { title: '', hypothesis: '', issue_url: '', product_id: '', variation_id: '', reason_id: '', owner_id: '', planned_review_date: '', measurement_days: '90' } );
+				loadActions();
+			} catch ( error ) { showError( error, config.strings.loadActionsError ); }
+			finally { setActionSaving( false ); }
+		}
+
+		async function changeActionStatus( action, status ) {
+			try {
+				await apiFetch( { path: namespace + '/actions/' + action.action_id, method: 'PATCH', data: { status: status, audit_note: config.strings.actionStatusAudit } } );
+				loadActions();
+			} catch ( error ) { showError( error, config.strings.loadActionsError ); }
+		}
+
+		async function captureActionEvidence( action, phase ) {
+			try {
+				await apiFetch( { path: namespace + '/actions/' + action.action_id + '/evidence', method: 'POST', data: { phase: phase } } );
+				loadActions();
+			} catch ( error ) { showError( error, config.strings.actionEvidenceError ); }
+		}
+
+		function renderActions() {
+			if ( ! config.proEnabled ) { return h( 'section', { className: 'wpe-ri-panel' }, h( 'div', { className: 'wpe-ri-pro-lock', role: 'note' }, h( 'span', { className: 'wpe-ri-pro-lock-badge' }, 'PRO' ), h( 'h3', null, config.strings.proLockedTitle ), h( 'p', null, config.strings.proLockedIntro ) ) ); }
+			const statuses = [ 'proposed', 'in_progress', 'monitoring', 'completed', 'paused' ];
+			const statusLabel = { proposed: config.strings.actionProposed, in_progress: config.strings.actionInProgress, monitoring: config.strings.actionMonitoring, completed: config.strings.actionCompleted, paused: config.strings.actionPaused };
+			return h( 'section', { className: 'wpe-ri-panel', 'aria-labelledby': 'wpe-ri-actions-heading' }, [
+				h( 'div', { className: 'wpe-ri-panel-heading' }, [ h( 'div', null, [ h( 'h2', { id: 'wpe-ri-actions-heading' }, config.strings.actionsTitle ), h( 'p', { className: 'wpe-ri-muted' }, config.strings.actionsIntro ) ] ), h( Button, { onClick: loadActions, disabled: actionsBusy }, config.strings.refreshActions ) ] ),
+				config.canManage ? h( 'form', { className: 'wpe-ri-form-grid', onSubmit: saveAction }, [
+					field( config.strings.actionTitle, 'wpe-ri-action-title', h( 'input', { id: 'wpe-ri-action-title', maxLength: 160, required: true, value: actionForm.title, onChange: function ( e ) { setActionForm( Object.assign( {}, actionForm, { title: e.target.value } ) ); } } ) ),
+					field( config.strings.actionHypothesis, 'wpe-ri-action-hypothesis', h( 'textarea', { id: 'wpe-ri-action-hypothesis', maxLength: 4000, required: true, value: actionForm.hypothesis, onChange: function ( e ) { setActionForm( Object.assign( {}, actionForm, { hypothesis: e.target.value } ) ); } } ) ),
+					field( config.strings.actionIssueUrl, 'wpe-ri-action-issue-url', h( 'input', { id: 'wpe-ri-action-issue-url', type: 'url', maxLength: 255, value: actionForm.issue_url, onChange: function ( e ) { setActionForm( Object.assign( {}, actionForm, { issue_url: e.target.value } ) ); } } ) ),
+					field( config.strings.actionProductId, 'wpe-ri-action-product', h( 'input', { id: 'wpe-ri-action-product', type: 'number', min: 0, value: actionForm.product_id, onChange: function ( e ) { setActionForm( Object.assign( {}, actionForm, { product_id: e.target.value } ) ); } } ), config.strings.actionTargetHelp ),
+					field( config.strings.actionVariationId, 'wpe-ri-action-variation', h( 'input', { id: 'wpe-ri-action-variation', type: 'number', min: 0, value: actionForm.variation_id, onChange: function ( e ) { setActionForm( Object.assign( {}, actionForm, { variation_id: e.target.value } ) ); } } ) ),
+					field( config.strings.actionReason, 'wpe-ri-action-reason', nativeSelect( 'wpe-ri-action-reason', actionForm.reason_id, [ { value: '', label: config.strings.noReasonTarget } ].concat( reasons.map( function ( reason ) { return { value: reason.id, label: reason.label }; } ) ), function ( value ) { setActionForm( Object.assign( {}, actionForm, { reason_id: value } ) ); } ) ),
+					field( config.strings.actionOwnerId, 'wpe-ri-action-owner', h( 'input', { id: 'wpe-ri-action-owner', type: 'number', min: 0, value: actionForm.owner_id, onChange: function ( e ) { setActionForm( Object.assign( {}, actionForm, { owner_id: e.target.value } ) ); } } ) ),
+					field( config.strings.actionReviewDate, 'wpe-ri-action-review', h( 'input', { id: 'wpe-ri-action-review', type: 'date', value: actionForm.planned_review_date, onChange: function ( e ) { setActionForm( Object.assign( {}, actionForm, { planned_review_date: e.target.value } ) ); } } ) ),
+					field( config.strings.actionMeasurementDays, 'wpe-ri-action-window', nativeSelect( 'wpe-ri-action-window', actionForm.measurement_days, [ 30, 60, 90, 120, 180 ].map( function ( days ) { return { value: String( days ), label: config.strings.dayCount.replace( '%d', String( days ) ) }; } ), function ( value ) { setActionForm( Object.assign( {}, actionForm, { measurement_days: value } ) ); } ) ),
+					h( 'div', { className: 'wpe-ri-form-actions' }, h( Button, { variant: 'primary', type: 'submit', disabled: actionSaving || ( !actionForm.product_id && !actionForm.reason_id ) }, actionSaving ? h( Spinner ) : config.strings.createAction ) )
+				] ) : h( Notice, { status: 'info', isDismissible: false }, config.strings.readOnlyNotice ),
+				actionsBusy ? h( 'div', { className: 'wpe-ri-loading', role: 'status' }, h( Spinner ), h( 'span', null, config.strings.loading ) ) : correctiveActions.length ? h( 'div', { className: 'wpe-ri-action-list' }, correctiveActions.map( function ( action ) {
+					const latest = {};
+					( action.evidence || [] ).slice().reverse().forEach( function ( evidence ) { latest[ evidence.phase ] = evidence; } );
+					return h( 'article', { className: 'wpe-ri-panel', key: action.action_id }, [
+						h( 'div', { className: 'wpe-ri-panel-heading' }, [ h( 'div', null, [ h( 'h3', null, action.title ), h( 'p', { className: 'wpe-ri-muted' }, action.hypothesis ) ] ), config.canManage ? nativeSelect( 'wpe-ri-action-status-' + action.action_id, action.status, statuses.map( function ( status ) { return { value: status, label: statusLabel[ status ] }; } ), function ( status ) { changeActionStatus( action, status ); } ) : h( 'span', null, statusLabel[ action.status ] || action.status ) ] ),
+						(action.issue_url ? h( 'p', null, config.strings.actionIssueLink + ': ', h( 'a', { href: action.issue_url, target: '_blank', rel: 'noopener noreferrer' }, action.issue_url ) ) : null),
+						h( 'p', null, config.strings.actionTargets + ': ' + ( action.targets || [] ).map( function ( target ) { return [ target.product_id ? '#' + target.product_id : '', target.variation_id ? ' / #' + target.variation_id : '', target.reason_id || '' ].join( '' ); } ).join( ', ' ) ),
+						h( 'p', { className: 'wpe-ri-muted' }, [ config.strings.actionOwner + ': ' + ( action.owner_id || '—' ), config.strings.actionReview + ': ' + ( action.planned_review_date || '—' ), config.strings.actionWindow + ': ' + config.strings.dayCount.replace( '%d', String( action.measurement_days ) ) ].join( ' · ' ) ),
+						h( 'p', { className: 'wpe-ri-muted' }, config.strings.actionNonCausal ),
+						h( 'div', { className: 'wpe-ri-form-actions' }, [ config.canManage ? h( Button, { onClick: function () { captureActionEvidence( action, 'baseline' ); }, disabled: !!latest.baseline || !!latest.followup }, config.strings.captureBaseline ) : null, config.canManage ? h( Button, { onClick: function () { captureActionEvidence( action, 'followup' ); }, disabled: !latest.baseline }, config.strings.captureFollowup ) : null, latest.baseline ? h( 'span', null, config.strings.baselineEvidence + ': ' + latest.baseline.returned_quantity + ' / ' + latest.baseline.sold_quantity + ( null === latest.baseline.rate_percent ? '' : ' · ' + latest.baseline.rate_percent + '%' ) + ' · ' + latest.baseline.period_from + '–' + latest.baseline.period_to + ' · ' + ( null === latest.baseline.mapping_percent ? config.strings.actionMappingUnavailable : latest.baseline.mapping_percent + '% mapped' ) + ' · ' + latest.baseline.eligible_orders + ' ' + config.strings.actionEligibleOrders ) : null, latest.followup ? h( 'span', null, config.strings.followupEvidence + ': ' + latest.followup.returned_quantity + ' / ' + latest.followup.sold_quantity + ( null === latest.followup.rate_percent ? '' : ' · ' + latest.followup.rate_percent + '%' ) + ' · ' + latest.followup.period_from + '–' + latest.followup.period_to + ' · ' + ( null === latest.followup.mapping_percent ? config.strings.actionMappingUnavailable : latest.followup.mapping_percent + '% mapped' ) + ' · ' + latest.followup.eligible_orders + ' ' + config.strings.actionEligibleOrders ) : null ] ),
+						h( 'div', { className: 'wpe-ri-action-history' }, [ h( 'h4', null, config.strings.actionHistory ), h( 'ul', null, ( action.history || [] ).map( function ( entry, index ) { return h( 'li', { key: index }, ( entry.previous_status ? statusLabel[ entry.previous_status ] + ' → ' : '' ) + statusLabel[ entry.new_status ] + ' · ' + entry.changed_at_gmt + ' · user #' + entry.actor_id + ( entry.note ? ' · ' + entry.note : '' ) ); } ) ) ] )
+					] );
+			} ) ) : h( 'div', { className: 'wpe-ri-empty' }, h( 'h3', null, config.strings.noActions ) )
+			] );
 		}
 
 		function renderClusters() {
@@ -796,7 +874,8 @@
 			{ id: 'catalog', label: config.strings.catalogTab },
 			{ id: 'sources', label: config.strings.sourcesTab },
 			{ id: 'patterns', label: config.strings.patternsTab },
-			{ id: 'alerts', label: config.strings.alertsTab }
+			{ id: 'alerts', label: config.strings.alertsTab },
+			{ id: 'actions', label: config.strings.actionsTab }
 		];
 
 		return h( 'div', { className: 'wpe-ri-app' },
@@ -822,11 +901,12 @@
 							if ( item.id === 'sources' ) { loadSources(); }
 							if ( item.id === 'patterns' && config.proEnabled ) { loadPatterns( patternMaturity, cohortDays ); }
 							if ( item.id === 'alerts' ) { loadAlerts(); }
+							if ( item.id === 'actions' && config.proEnabled ) { loadActions(); loadReasons(); }
 						}
 					}, item.label );
 				} )
 			),
-			tab === 'overview' ? renderOverview() : tab === 'capture' ? renderCapture() : tab === 'history' ? renderHistory() : tab === 'sources' ? renderSources() : tab === 'patterns' ? h( wp.element.Fragment, null, renderPatterns(), renderClusters() ) : tab === 'alerts' ? renderAlerts() : renderCatalog(),
+			tab === 'overview' ? renderOverview() : tab === 'capture' ? renderCapture() : tab === 'history' ? renderHistory() : tab === 'sources' ? renderSources() : tab === 'patterns' ? h( wp.element.Fragment, null, renderPatterns(), renderClusters() ) : tab === 'alerts' ? renderAlerts() : tab === 'actions' ? renderActions() : renderCatalog(),
 			h( 'footer', { className: 'wpe-ri-footer' }, config.strings.footer )
 		);
 	}

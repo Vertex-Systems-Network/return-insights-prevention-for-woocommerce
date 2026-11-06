@@ -16,7 +16,7 @@ final class Installer {
 	/**
 	 * Current schema version.
 	 */
-	public const DB_VERSION = '2';
+	public const DB_VERSION = '3';
 
 	/**
 	 * Schema version option.
@@ -48,6 +48,10 @@ final class Installer {
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
 		$table_name      = self::events_table();
+		$actions_table   = ActionService::table();
+		$targets_table   = ActionService::targets_table();
+		$history_table   = ActionService::history_table();
+		$evidence_table  = ActionService::evidence_table();
 		$charset_collate = $wpdb->get_charset_collate();
 
 		$sql = "CREATE TABLE {$table_name} (
@@ -84,6 +88,68 @@ final class Installer {
 		) {$charset_collate};";
 
 		dbDelta( $sql );
+
+		dbDelta( "CREATE TABLE {$actions_table} (
+			action_id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			action_uuid char(36) NOT NULL,
+			title varchar(160) NOT NULL,
+			hypothesis text NOT NULL,
+			issue_url varchar(255) NOT NULL DEFAULT '',
+			owner_id bigint(20) unsigned NOT NULL DEFAULT 0,
+			status varchar(24) NOT NULL DEFAULT 'proposed',
+			measurement_days smallint(5) unsigned NOT NULL DEFAULT 90,
+			planned_review_date date NULL,
+			created_at_gmt datetime NOT NULL,
+			updated_at_gmt datetime NOT NULL,
+			created_by bigint(20) unsigned NOT NULL DEFAULT 0,
+			updated_by bigint(20) unsigned NOT NULL DEFAULT 0,
+			PRIMARY KEY  (action_id),
+			UNIQUE KEY action_uuid (action_uuid),
+			KEY status_review_date (status,planned_review_date),
+			KEY owner_status (owner_id,status),
+			KEY updated_at (updated_at_gmt)
+		) {$charset_collate} ENGINE=InnoDB;" );
+
+		dbDelta( "CREATE TABLE {$targets_table} (
+			target_id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			action_id bigint(20) unsigned NOT NULL,
+			product_id bigint(20) unsigned NOT NULL DEFAULT 0,
+			variation_id bigint(20) unsigned NOT NULL DEFAULT 0,
+			reason_id varchar(64) NOT NULL DEFAULT '',
+			PRIMARY KEY  (target_id),
+			KEY action_id (action_id),
+			KEY product_variation_reason (product_id,variation_id,reason_id)
+		) {$charset_collate} ENGINE=InnoDB;" );
+
+		dbDelta( "CREATE TABLE {$history_table} (
+			history_id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			action_id bigint(20) unsigned NOT NULL,
+			previous_status varchar(24) NOT NULL DEFAULT '',
+			new_status varchar(24) NOT NULL,
+			note varchar(200) NOT NULL DEFAULT '',
+			actor_id bigint(20) unsigned NOT NULL DEFAULT 0,
+			changed_at_gmt datetime NOT NULL,
+			PRIMARY KEY  (history_id),
+			KEY action_changed (action_id,changed_at_gmt)
+		) {$charset_collate} ENGINE=InnoDB;" );
+
+		dbDelta( "CREATE TABLE {$evidence_table} (
+			evidence_id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			action_id bigint(20) unsigned NOT NULL,
+			phase varchar(16) NOT NULL,
+			metric_definition_version varchar(64) NOT NULL,
+			period_from date NOT NULL,
+			period_to date NOT NULL,
+			returned_quantity decimal(12,4) NOT NULL,
+			sold_quantity decimal(12,4) NOT NULL,
+			rate_percent decimal(7,2) NULL,
+			mapping_percent decimal(5,2) NULL,
+			eligible_orders int(10) unsigned NOT NULL DEFAULT 0,
+			captured_at_gmt datetime NOT NULL,
+			captured_by bigint(20) unsigned NOT NULL DEFAULT 0,
+			PRIMARY KEY  (evidence_id),
+			KEY action_phase_capture (action_id,phase,captured_at_gmt)
+		) {$charset_collate} ENGINE=InnoDB;" );
 
 		if ( ! empty( $wpdb->last_error ) ) {
 			return false;

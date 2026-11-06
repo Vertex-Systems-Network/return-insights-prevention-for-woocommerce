@@ -71,6 +71,18 @@ final class RestController {
 			'permission_callback' => array( self::class, 'can_manage_clusters' ),
 			'args' => array( 'cluster_id' => array( 'type' => 'string', 'required' => true, 'maxLength' => 48 ) ),
 		) );
+		register_rest_route( self::NS, '/actions', array(
+			array( 'methods' => 'GET', 'callback' => array( self::class, 'get_actions' ), 'permission_callback' => array( self::class, 'can_view_actions' ) ),
+			array( 'methods' => 'POST', 'callback' => array( self::class, 'create_action' ), 'permission_callback' => array( self::class, 'can_manage_actions' ) ),
+		) );
+		register_rest_route( self::NS, '/actions/(?P<id>\d+)', array(
+			array( 'methods' => 'GET', 'callback' => array( self::class, 'get_action' ), 'permission_callback' => array( self::class, 'can_view_actions' ) ),
+			array( 'methods' => 'PATCH', 'callback' => array( self::class, 'update_action' ), 'permission_callback' => array( self::class, 'can_manage_actions' ) ),
+		) );
+		register_rest_route( self::NS, '/actions/(?P<id>\d+)/evidence', array(
+			'methods' => 'POST', 'callback' => array( self::class, 'capture_action_evidence' ), 'permission_callback' => array( self::class, 'can_manage_actions' ),
+			'args' => array( 'phase' => array( 'type' => 'string', 'required' => true, 'enum' => array( 'baseline', 'followup' ) ) ),
+		) );
 		register_rest_route( self::NS, '/summary', array(
 			'methods' => 'GET',
 			'callback' => array( self::class, 'get_summary' ),
@@ -132,11 +144,21 @@ final class RestController {
 	public static function can_manage(): bool { return current_user_can( Capabilities::MANAGE ); }
 	public static function can_manage_alerts() {
 		if ( ! self::can_manage() ) { return false; }
-		return PatternService::is_entitled() ? true : new \\WP_Error( 'pro_required', __( 'Alerts require the Pro add-on.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 403 ) );
+		return PatternService::is_entitled() ? true : new \WP_Error( 'pro_required', __( 'Alerts require the Pro add-on.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 403 ) );
+	}
+
+	public static function can_view_actions() {
+		if ( ! PatternService::is_entitled() ) { return new \WP_Error( 'pro_required', __( 'Corrective actions require the Pro add-on.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 403 ) ); }
+		return self::can_view();
+	}
+
+	public static function can_manage_actions() {
+		if ( ! PatternService::is_entitled() ) { return new \WP_Error( 'pro_required', __( 'Corrective actions require the Pro add-on.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 403 ) ); }
+		return self::can_manage();
 	}
 	public static function can_manage_clusters() {
 		if ( ! self::can_manage() ) { return false; }
-		return PatternService::is_entitled() ? true : new \\WP_Error( 'pro_required', __( 'Reason clustering requires the Pro add-on.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 403 ) );
+		return PatternService::is_entitled() ? true : new \WP_Error( 'pro_required', __( 'Reason clustering requires the Pro add-on.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 403 ) );
 	}
 	public static function can_view_patterns() {
 		if ( ! self::can_view() ) { return false; }
@@ -175,6 +197,35 @@ final class RestController {
 	}
 
 	public static function get_alerts() { return rest_ensure_response( array( 'alerts' => AlertService::all(), 'scan' => AlertService::last_scan() ) ); }
+
+	public static function get_actions() { $actions = ActionService::all(); return is_wp_error( $actions ) ? $actions : rest_ensure_response( $actions ); }
+
+	public static function get_action( \WP_REST_Request $r ) {
+		$result = ActionService::get( absint( $r['id'] ) );
+		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
+	}
+
+	public static function create_action( \WP_REST_Request $r ) {
+		$data = $r->get_json_params() ?: array();
+		$allowed = array( 'title', 'hypothesis', 'issue_url', 'owner_id', 'measurement_days', 'planned_review_date', 'targets' );
+		if ( self::has_unknown_fields( $data, $allowed ) ) { return self::unknown_fields_error(); }
+		$result = ActionService::create( $data );
+		return is_wp_error( $result ) ? $result : new \WP_REST_Response( $result, 201 );
+	}
+
+	public static function update_action( \WP_REST_Request $r ) {
+		$data = $r->get_json_params() ?: array();
+		$allowed = array( 'title', 'hypothesis', 'issue_url', 'owner_id', 'measurement_days', 'planned_review_date', 'targets', 'status', 'audit_note' );
+		if ( self::has_unknown_fields( $data, $allowed ) ) { return self::unknown_fields_error(); }
+		$result = ActionService::update( absint( $r['id'] ), $data );
+		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
+	}
+
+	public static function capture_action_evidence( \WP_REST_Request $r ) {
+		if ( self::has_unknown_fields( $r->get_json_params() ?: array(), array( 'phase' ) ) ) { return self::unknown_fields_error(); }
+		$result = ActionService::capture_evidence( absint( $r['id'] ), sanitize_key( (string) $r->get_param( 'phase' ) ) );
+		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
+	}
 
 	public static function update_alert( \WP_REST_Request $r ) {
 		if ( self::has_unknown_fields( $r->get_json_params(), array( 'status', 'note' ) ) ) { return self::unknown_fields_error(); }
@@ -436,7 +487,8 @@ final class RestController {
 		$reason = ReasonCatalog::find( $row['reason_id'], true );
 		return array( 'id' => (int) $row['event_id'], 'event_kind' => $row['event_kind'], 'source_type' => $row['source_type'], 'order_id' => (int) $row['order_id'], 'refund_id' => (int) ( $row['refund_id'] ?? 0 ), 'order_item_id' => (int) $row['order_item_id'], 'attribution_scope' => $row['attribution_scope'], 'mapping_state' => $row['mapping_state'], 'product_id' => (int) $row['product_id'], 'variation_id' => (int) $row['variation_id'], 'reason_id' => $row['reason_id'], 'reason_label' => $reason ? $reason['label'] : __( 'Archived reason', WPE_RI_TEXT_DOMAIN ), 'quantity' => (float) $row['quantity'], 'occurred_at' => gmdate( 'c', strtotime( $row['occurred_at_gmt'] . ' UTC' ) ), 'created_at' => gmdate( 'c', strtotime( $row['created_at_gmt'] . ' UTC' ) ), 'updated_at' => gmdate( 'c', strtotime( $row['updated_at_gmt'] . ' UTC' ) ), 'occurred_date' => get_date_from_gmt( $row['occurred_at_gmt'], 'Y-m-d' ) );
 	}
-	private static function has_unknown_fields( array $data, array $allowed ): bool {
+	private static function has_unknown_fields( $data, array $allowed ): bool {
+		if ( ! is_array( $data ) ) { return true; }
 		return (bool) array_diff( array_keys( $data ), $allowed );
 	}
 

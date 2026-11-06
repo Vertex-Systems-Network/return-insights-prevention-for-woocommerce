@@ -1,6 +1,6 @@
 # Logical Data Model and Lifecycle — P3 Blueprint
 
-**Status:** Approved logical model; I-03 event table, I-04 schema v2 refund linkage, I-05 Free count reports, and I-07 cohort aggregation implemented. Runtime validation remains.  
+**Status:** Approved logical model; I-03 event table, I-04 schema v2 refund linkage, I-05 Free count reports, I-07 cohort aggregation, and I-09 corrective-action schema v3 implemented. Runtime validation remains.
 **Reviewed:** 2026-11-06.
 
 ## Storage decision
@@ -48,7 +48,7 @@ Plan for:
 - Unique dedupe key for alert state.
 - Foreign-key-like application references from actions/clusters to event/reason/product IDs; do not assume WooCommerce tables share the plugin's lifecycle or storage engine.
 
-I-03 implements the event table using the site prefix and dbDelta; I-04 advances it to schema version 2 with a refund ID column/index. The table has unique event UUID/source key and indexes on item-kind-deletion, order-time, refund ID, reason-time, and product-variation-time. Runtime migration/benchmark verification remains in I-11. WooCommerce order/item data is read through public CRUD APIs; no direct WooCommerce order-table SQL.
+I-03 implements the event table using the site prefix and dbDelta; I-04 advances it to schema v2 with a refund ID column/index. I-09 advances to schema v3 with four InnoDB tables for actions, targets, status history, and evidence snapshots. Event-table keys include unique event UUID/source key and indexes on item-kind-deletion, order-time, refund ID, reason-time, and product-variation-time. Runtime migration/benchmark verification remains in I-11. WooCommerce order/item data is read through public CRUD APIs; no direct WooCommerce order-table SQL.
 
 ## Source synchronization
 
@@ -100,4 +100,4 @@ The Free core owns shared event and reason schema. Pro adds only Pro-specific ac
 
 ## I-03 physical schema implemented
 
-`includes/Installer.php` defines schema version 2 and the `{$wpdb->prefix}wpessential_return_insights_events` table. The migration stores event UUID, unique source idempotency hash, source type/record key, kind, order/refund/item/product/variation IDs, stable reason key, decimal quantity, item attribution, mapping state, UTC timestamps, actor IDs, soft-delete timestamp, and deletion audit note. It deliberately has no free-text phrase/customer fields. I-03 manual entry converts the merchant's site-local `YYYY-MM-DD` date to UTC. I-04 refund events retain the WooCommerce refund creation timestamp and refund-level attribution. Runtime migration behavior and supported database versions still require I-11 verification.
+`includes/Installer.php` defines schema version 3 and the site-prefixed event table plus four action tables. The event table stores event UUID, unique source idempotency hash, source type/record key, kind, order/refund/item/product/variation IDs, stable reason key, decimal quantity, item attribution, mapping state, UTC timestamps, actor IDs, soft-delete timestamp, and deletion audit note; it deliberately has no free-text phrase/customer fields. Action tables store action metadata, product/variation/reason targets, bounded status audit entries, and before/after metric snapshots without customer data. Action writes are transaction-protected; runtime migration behavior and supported database versions still require I-11 verification.

@@ -73,11 +73,11 @@ All data access goes through namespaced REST endpoints. The server enforces auth
 | `/insights/v1/actions` | Pro read/create/update actions | Status history, windows, linked pattern |
 | `/insights/v1/settings` | Read/update permitted settings | Schema/version, validation, capability gates |
 
-The implemented namespace is `/wp-json/wpessential/return-insights/v1`. I-06 provides `/reasons`, `/reasons/{id}`, `/orders/{id}`, `/events`, `/events/{id}`, and `/sources`; I-05 adds `/summary`. Method schemas and behavior are documented in `docs/P6_TECHNICAL_CONTRACTS.md`. Future `/patterns`, `/actions`, and `/settings` routes remain planned, not implemented.
+The implemented namespace is `/wp-json/wpessential/return-insights/v1`. I-06 provides `/reasons`, `/reasons/{id}`, `/orders/{id}`, `/events`, `/events/{id}`, and `/sources`; I-05 adds `/summary`; I-07/I-08 add `/patterns`, `/clusters`, and `/alerts`; I-09 adds `/actions`, `/actions/{id}`, and `/actions/{id}/evidence`. Method schemas and behavior are documented in `docs/P6_TECHNICAL_CONTRACTS.md`. Settings and optional source adapters remain planned.
 
 ## I-06 implementation boundary
 
-The current UI provides date-filtered evidence totals, reason/event-kind/source tables, mapped/unmapped reason coverage, and top item-scoped product/category count tables. It does not calculate return rates, sales-denominator metrics, trends, product variation comparisons, or corrective actions. Product/category tables exclude refund-scope records because line-item attribution is not known; category membership can overlap. I-07/I-09 own deeper Pro insights and action tracking. Event lists use server pagination (20 by default, API max 100) and can filter by order ID. Refund observations remain read-only and distinct from confirmed physical returns. The UI uses WordPress-bundled `wp.element`, `wp.components`, and `wp.apiFetch`, without JSX/build tooling.
+The current UI provides date-filtered evidence totals, reason/event-kind/source tables, mapped/unmapped reason coverage, and top item-scoped product/category count tables. Pro UI adds mature-cohort rates/patterns, reason clusters, alerts, and corrective actions with status history and baseline/follow-up snapshots. Product/category tables exclude refund-scope records because line-item attribution is not known; category membership can overlap. Event lists use server pagination (20 by default, API max 100) and can filter by order ID. Refund observations remain read-only and distinct from confirmed physical returns. The UI uses WordPress-bundled `wp.element`, `wp.components`, and `wp.apiFetch`, without JSX/build tooling.
 
 ## Tier boundary
 
