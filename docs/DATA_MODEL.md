@@ -1,11 +1,11 @@
 # Logical Data Model and Lifecycle — P3 Blueprint
 
-**Status:** Proposed logical schema for review; not database code.  
+**Status:** Approved logical model; not database code.  
 **Reviewed:** 2026-11-06.
 
 ## Storage decision
 
-Use plugin-owned custom tables for growing event/action records and keep small settings/reason catalogs in non-autoloaded WordPress options, subject to P6 review. The event data is relational and analytics-heavy: it must filter/group by time, reason, product, variation, event kind, and source. WordPress recommends post meta when it is practical; this event workload is the reason to evaluate indexed tables and benchmark rather than defaulting to meta queries.
+Use plugin-owned custom tables for growing event/action records and keep small settings/reason catalogs in non-autoloaded WordPress options. Benchmark indexes and volume before freezing physical schema. The event data is relational and analytics-heavy: it must filter/group by time, reason, product, variation, event kind, and source. WordPress recommends post meta when it is practical; this event workload is the reason to evaluate indexed tables and benchmark rather than defaulting to meta queries.
 
 Use the site-specific WordPress table prefix. Include a schema-version option and forward-only, resumable migrations. Use WordPress table creation/update conventions such as dbDelta; do not require site owners to run SQL or commands.
 
@@ -48,7 +48,7 @@ Plan for:
 - Unique dedupe key for alert state.
 - Foreign-key-like application references from actions/clusters to event/reason/product IDs; do not assume WooCommerce tables share the plugin's lifecycle or storage engine.
 
-Exact SQL types/index order follow representative performance benchmarks and supported MySQL/MariaDB versions.
+Exact SQL types/index order follow representative performance benchmarks and supported MySQL/MariaDB versions. P6 approved custom indexed tables; no direct WooCommerce order-table SQL.
 
 ## Source synchronization
 
@@ -70,8 +70,8 @@ Free count reports use event time and stable reason ID. Product/variation rates 
 
 - Resolve customer-related export/erasure through WooCommerce order references and supported order APIs; do not persist customer email solely for lookup.
 - On erasure, delete or anonymize order/refund/item links and raw reason text as required; retain only non-identifying aggregates if the merchant's policy allows.
-- Apply a configurable raw-text/event retention policy. The exact default remains a P6 decision.
-- Deactivation preserves data. Uninstall provides a clear retain/delete choice; destructive deletion is explicit.
+- Retain canonical event records for 24 months by default, configurable by the merchant. Raw source phrases are disabled by default; if enabled, cap at 500 characters and purge after 90 days.
+- Deactivation preserves data. Uninstall defaults to retaining data and provides a clearly described, explicit, confirmed delete option.
 - WordPress privacy exporter/eraser integration is required before release.
 
 ## Migrations and Free/Pro boundaries
