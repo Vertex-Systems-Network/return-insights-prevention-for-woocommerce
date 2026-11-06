@@ -51,7 +51,7 @@ Details and official source links: docs/DISTRIBUTION.md. No submission has been 
 | I-06 REST + React admin | Implemented; I-11 verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | I-05 Free reports | Implemented; I-11 verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | I-07 Pro product/variation patterns | Implemented; entitlement provider + I-11 verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
-| I-08 Pro clustering and alerts | In progress; cluster and alert backend/REST plus React review UI implemented; bounded complete scan and runtime checks pending | ████████░░ 75% | 2026-11-06 | 2026-11-10 |
+| I-08 Pro clustering and alerts | In progress; cluster/alert backend + React review UI implemented; suppression states and runtime checks pending | ████████░░ 75% | 2026-11-06 | 2026-11-10 |
 
 Package progress means implementation scope is present; it does not mean runtime/release acceptance is verified. See `docs/IMPLEMENTATION_BACKLOG.md` for detailed evidence.
 
