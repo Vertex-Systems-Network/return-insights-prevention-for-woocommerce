@@ -1,6 +1,6 @@
 # P6 Technical Contracts — REST and Security/Privacy
 
-**Status:** Approved design contract; no endpoints or code implemented.  
+**Status:** Approved contract; I-03 implements catalog, order lookup, and manual-event routes. Remaining routes and runtime schema verification are pending.  
 **Reviewed:** 2026-11-06  
 **P6 status:** Approved on 2026-11-06; runtime implementation remains pending.
 
@@ -28,9 +28,9 @@ This document defines the approved engineering boundary. Concrete JSON schemas a
 |---|---|---|---|
 | `/summary` | GET | `view_return_insights` | Query: `date_from`, `date_to`, `timezone`, optional `reason_id`, `product_id`, `variation_id`, `event_kind`. Response: metric version, period, event counts, explicitly named refund ratio/confirmed-return rate only when eligible, coverage, sample sizes, freshness. |
 | `/patterns` | GET | `view_return_insights` | Query: shared filters, `page`, `per_page`, `orderby`, `order`. Response: reason/product/variation pattern, evidence count, source scope, comparison context, data-quality flags, pagination. |
-| `/events` | GET, POST | GET: view; POST: manage | GET returns a paged event list and provenance. POST accepts `event_kind`, `order_id`, `order_item_id`, `quantity`, `reason_id`, optional bounded `source_phrase`, `occurred_at`, and an idempotency key. Server derives/validates product relationships. |
+| `/events` | GET, POST | GET: view; POST: manage | GET returns a paged event list and provenance. POST accepts `event_kind` (`confirmed_return` or `exchange`), `order_id`, `order_item_id`, `quantity`, `reason_id`, site-local date `occurred_at` (`YYYY-MM-DD`), and an idempotency key. I-03 stores no source phrase. Server derives product relationships. |
 | `/events/(?P<id>[a-zA-Z0-9_-]+)` | GET, PATCH, DELETE | GET: view; mutations: manage | Read or correct permitted manual insight records. Delete is a soft/retention-aware action with audit metadata; no mutation of WooCommerce refunds/orders. Immutable source facts remain distinguishable from merchant corrections. |
-| `/reasons` | GET, POST | GET: view; POST: manage | Read catalog or create a canonical reason. POST accepts stable-safe label, group, localized labels, active state, and order. Server generates canonical ID; labels cannot overwrite identity. |
+| `/reasons` | GET, POST | GET: view; POST: manage | Read catalog or create a canonical reason. POST accepts a label and group; server generates a stable-safe canonical ID. PATCH can change label, group, translations, and active state without changing ID. Catalog `order` is not yet implemented. |
 | `/reasons/(?P<id>[a-zA-Z0-9_-]+)` | GET, PATCH | GET: view; PATCH: manage | Update labels/order/active state. No destructive merge of history. A future merge operation requires a separate audited flow. |
 | `/sources` | GET | `view_return_insights` | Source health, last success/error, event counts, mapping/coverage warnings. No arbitrary source reconfiguration through this endpoint. |
 | `/actions` | GET, POST | Pro entitlement + manage | List/create corrective actions. POST accepts linked pattern IDs, hypothesis, owner, status, planned review date, and measurement-window definition. |
@@ -97,6 +97,10 @@ These are field inventories for review, not JSON Schema or frozen payloads.
 - [WordPress personal-data eraser](https://developer.wordpress.org/plugins/privacy/adding-personal-data-eraser-to-your-plugin/).
 - [WooCommerce HPOS recipe book](https://developer.woocommerce.com/docs/features/orders/high-performance-order-storage/recipe-book/).
 - [WordPress JavaScript without a build process](https://developer.wordpress.org/block-editor/getting-started/fundamentals/javascript-in-the-block-editor/) — access packages through the `wp` global when opting out of a build process.
+
+## I-03 implementation boundary
+
+Implemented routes: `GET/POST /reasons`, `GET/PATCH /reasons/{id}`, `GET /orders/{id}`, `GET/POST /events`, `GET/PATCH/DELETE /events/{id}`. Every route has a capability callback. Order lookup returns only order number and line-item/product labels/IDs/ordered quantity; no customer identity is returned. Event writes are manual-only, validate that the order item belongs to the order, derive product/variation IDs server-side, convert the site-local calendar date to UTC, and use a unique source hash for retries. Manual deletion is soft and requires an audit reason. The UI, JSON Schema definitions/unknown-field rejection, strict concurrent-edit handling, explicit remaining-quantity guard, runtime checks, and privacy exporter/eraser are not implemented yet.
 
 ## Acceptance evidence to collect during implementation
 
