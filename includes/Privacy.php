@@ -152,10 +152,6 @@ final class Privacy {
 		if ( ! $user ) {
 			return array( 'items_removed' => false, 'items_retained' => false, 'messages' => array(), 'done' => true );
 		}
-		if ( 1 !== max( 1, $page ) ) {
-			return array( 'items_removed' => false, 'items_retained' => false, 'messages' => array(), 'done' => true );
-		}
-
 		global $wpdb;
 		$user_id = absint( $user->ID );
 		$events = Installer::events_table();
