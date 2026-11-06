@@ -169,7 +169,7 @@ final class Rest_Controller {
 		);
 
 		if ( ! empty( $wpdb->last_error ) ) {
-			return new \\WP_Error( 'report_query_failed', __( 'The report could not be loaded. Please try again later.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+			return new \WP_Error( 'report_query_failed', __( 'The report could not be loaded. Please try again later.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
 		}
 
 		$locale = get_user_locale();
