@@ -27,7 +27,10 @@
 		const [ notice, setNotice ] = useState( null );
 		const [ reasons, setReasons ] = useState( [] );
 		const [ events, setEvents ] = useState( [] );
-		const [ summaryTotal, setSummaryTotal ] = useState( 0 );
+		const [ report, setReport ] = useState( null );
+		const [ reportBusy, setReportBusy ] = useState( false );
+		const [ reportFrom, setReportFrom ] = useState( config.defaultFrom );
+		const [ reportTo, setReportTo ] = useState( config.today );
 		const [ sourceRows, setSourceRows ] = useState( [] );
 		const [ sourceBusy, setSourceBusy ] = useState( false );
 		const [ orderId, setOrderId ] = useState( '' );
@@ -67,12 +70,19 @@
 			}
 		}
 
-		async function loadSummary() {
+		async function loadReport( from, to ) {
+			setReportBusy( true );
+			setReport( null );
 			try {
-				const response = await apiFetch( { path: namespace + '/events?per_page=1', parse: false } );
-				setSummaryTotal( Number( response.headers.get( 'X-WP-Total' ) || 0 ) );
+				const params = new URLSearchParams();
+				if ( from ) { params.set( 'date_from', from ); }
+				if ( to ) { params.set( 'date_to', to ); }
+				const response = await apiFetch( { path: namespace + '/summary?' + params.toString() } );
+				setReport( response );
 			} catch ( error ) {
-				showError( error, config.strings.loadEventsError );
+				showError( error, config.strings.loadReportError );
+			} finally {
+				setReportBusy( false );
 			}
 		}
 
@@ -113,7 +123,7 @@
 		useEffect( function () {
 			loadReasons();
 			loadEvents( 1, '' );
-			loadSummary();
+			loadReport( reportFrom, reportTo );
 			loadSources();
 		}, [] );
 
@@ -189,7 +199,7 @@
 					setNotice( { status: 'success', message: config.strings.eventSaved } );
 				}
 				await loadEvents( 1, historyOrderId );
-				await loadSummary();
+				await loadReport( reportFrom, reportTo );
 				await loadSources();
 				resetCapture();
 			} catch ( error ) {
@@ -220,7 +230,7 @@
 				setDeleteTarget( null );
 				setDeleteNote( '' );
 				await loadEvents( page, historyOrderId );
-				await loadSummary();
+				await loadReport( reportFrom, reportTo );
 				await loadSources();
 			} catch ( error ) {
 				showError( error, config.strings.deleteError );
@@ -308,11 +318,40 @@
 		}
 
 
+		function renderReportTable( title, headers, rows, keyName ) {
+			return h( 'section', { className: 'wpe-ri-report-section' },
+				h( 'h3', null, title ),
+				rows.length ? h( 'div', { className: 'wpe-ri-table-wrap' },
+					h( 'table', { className: 'wpe-ri-table' },
+						h( 'thead', null, h( 'tr', null, headers.map( function ( label, index ) { return h( 'th', { key: 'head-' + index, scope: 'col' }, label ); } ) ) ),
+						h( 'tbody', null, rows.map( function ( row ) {
+							return h( 'tr', { key: row[ keyName ] }, row.cells.map( function ( value, index ) { return h( 'td', { key: row[ keyName ] + '-' + index }, value ); } ) );
+						} ) )
+					)
+				) : h( 'p', { className: 'wpe-ri-muted' }, config.strings.noReportRows )
+			);
+		}
+
 		function renderOverview() {
-			const sourceCount = function ( type ) {
-				const match = sourceRows.find( function ( row ) { return row.source_type === type; } );
-				return match ? match.event_count : 0;
-			};
+			const total = report && report.totals ? report.totals.event_count : 0;
+			const quantityTotal = report && report.totals ? report.totals.quantity_total : 0;
+			const coverage = report && report.mapping_coverage ? report.mapping_coverage : null;
+			const coverageText = coverage && coverage.percent !== null ? coverage.percent + '%' : '—';
+			const reasonRows = report && report.by_reason ? report.by_reason.map( function ( row ) {
+				return { reason_id: row.reason_id, cells: [ row.label, row.sample_size, row.quantity_total ] };
+			} ) : [];
+			const kindRows = report && report.by_event_kind ? report.by_event_kind.map( function ( row ) {
+				return { event_kind: row.event_kind, cells: [ config.strings.eventKinds[ row.event_kind ] || row.event_kind, row.event_count, row.quantity_total ] };
+			} ) : [];
+			const productRows = report && report.by_product ? report.by_product.map( function ( row ) {
+				return { product_key: row.product_id + '-' + row.variation_id, cells: [ row.label, row.event_count, row.quantity_total ] };
+			} ) : [];
+			const categoryRows = report && report.by_category ? report.by_category.map( function ( row ) {
+				return { term_id: row.term_id, cells: [ row.name, row.event_count, row.quantity_total ] };
+			} ) : [];
+			const sourceRowsForReport = report && report.by_source ? report.by_source.map( function ( row ) {
+				return { source_type: row.source_type, cells: [ row.source_type === 'manual' ? config.strings.manualSourceTitle : config.strings.refundSourceTitle, row.event_count ] };
+			} ) : [];
 			return h( 'section', { className: 'wpe-ri-panel', 'aria-labelledby': 'wpe-ri-overview-heading' },
 				h( 'div', { className: 'wpe-ri-panel-heading' },
 					h( 'div', null,
@@ -320,17 +359,29 @@
 						h( 'h2', { id: 'wpe-ri-overview-heading' }, config.strings.overviewTitle ),
 						h( 'p', { className: 'wpe-ri-muted' }, config.strings.overviewIntro )
 					),
-					h( Button, { variant: 'secondary', onClick: function () { loadSummary(); loadSources(); } }, config.strings.refresh )
+					h( Button, { variant: 'secondary', onClick: function () { loadReport( reportFrom, reportTo ); loadSources(); }, disabled: reportBusy }, config.strings.refresh )
 				),
-				h( 'div', { className: 'wpe-ri-stat-grid' },
-					h( 'article', { className: 'wpe-ri-stat-card' }, h( 'span', { className: 'wpe-ri-stat-label' }, config.strings.totalInsights ), h( 'strong', null, summaryTotal ), h( 'small', null, config.strings.recordCountNote ) ),
-					h( 'article', { className: 'wpe-ri-stat-card' }, h( 'span', { className: 'wpe-ri-stat-label' }, config.strings.manualInsights ), h( 'strong', null, sourceCount( 'manual' ) ), h( 'small', null, config.strings.manualSource ) ),
-					h( 'article', { className: 'wpe-ri-stat-card' }, h( 'span', { className: 'wpe-ri-stat-label' }, config.strings.refundObservations ), h( 'strong', null, sourceCount( 'woocommerce_refund' ) ), h( 'small', null, config.strings.refundSource ) )
+				h( 'form', { className: 'wpe-ri-report-filters', onSubmit: function ( event ) { event.preventDefault(); loadReport( reportFrom, reportTo ); } },
+					field( config.strings.reportFrom, 'wpe-ri-report-from', h( 'input', { id: 'wpe-ri-report-from', type: 'date', value: reportFrom, max: reportTo, onChange: function ( event ) { setReportFrom( event.target.value ); } } ) ),
+					field( config.strings.reportTo, 'wpe-ri-report-to', h( 'input', { id: 'wpe-ri-report-to', type: 'date', value: reportTo, min: reportFrom, max: config.today, onChange: function ( event ) { setReportTo( event.target.value ); } } ) ),
+					h( Button, { variant: 'primary', type: 'submit', disabled: reportBusy || !reportFrom || !reportTo }, config.strings.runReport )
 				),
-				h( 'div', { className: 'wpe-ri-callout' },
-					h( 'span', { className: 'wpe-ri-callout-mark', 'aria-hidden': true }, 'i' ),
-					h( 'div', null, h( 'strong', null, config.strings.reportsComing ), h( 'p', null, config.strings.recordCountNote ) )
-				),
+				reportBusy ? h( 'div', { className: 'wpe-ri-loading', role: 'status' }, h( Spinner ), h( 'span', null, config.strings.loading ) ) : report ? h( 'div', null,
+					h( 'p', { className: 'wpe-ri-report-period' }, config.strings.periodLabel + ': ' + report.period.date_from + ' – ' + report.period.date_to + ' (' + report.period.timezone + ')' ),
+					h( 'div', { className: 'wpe-ri-stat-grid' },
+						h( 'article', { className: 'wpe-ri-stat-card' }, h( 'span', { className: 'wpe-ri-stat-label' }, config.strings.totalInsights ), h( 'strong', null, total ), h( 'small', null, config.strings.eventCountHelp ) ),
+						h( 'article', { className: 'wpe-ri-stat-card' }, h( 'span', { className: 'wpe-ri-stat-label' }, config.strings.totalQuantity ), h( 'strong', null, quantityTotal ), h( 'small', null, config.strings.quantityHelp ) ),
+						h( 'article', { className: 'wpe-ri-stat-card' }, h( 'span', { className: 'wpe-ri-stat-label' }, config.strings.mappingCoverage ), h( 'strong', null, coverageText ), h( 'small', null, coverage ? coverage.mapped_events + ' / ' + coverage.total_events + ' ' + config.strings.mappedEvents : config.strings.noMappingData ) )
+					),
+					h( 'p', { className: 'wpe-ri-report-note' }, config.strings.reportBoundary ),
+					total ? h( 'div', { className: 'wpe-ri-report-grid' },
+						renderReportTable( config.strings.reasonBreakdown, [ config.strings.reason, config.strings.sampleSize, config.strings.quantity ], reasonRows, 'reason_id' ),
+						renderReportTable( config.strings.eventKindBreakdown, [ config.strings.type, config.strings.eventCount, config.strings.quantity ], kindRows, 'event_kind' ),
+						renderReportTable( config.strings.sourceBreakdown, [ config.strings.captureSource, config.strings.eventCount ], sourceRowsForReport, 'source_type' ),
+						renderReportTable( config.strings.productBreakdown, [ config.strings.product, config.strings.eventCount, config.strings.quantity ], productRows, 'product_key' ),
+						renderReportTable( config.strings.categoryBreakdown, [ config.strings.category, config.strings.eventCount, config.strings.quantity ], categoryRows, 'term_id' )
+					) : h( 'div', { className: 'wpe-ri-empty' }, h( 'h3', null, config.strings.noReportData ), h( 'p', null, config.strings.noReportDataHelp ) )
+				) : null,
 				h( 'div', { className: 'wpe-ri-overview-actions' },
 					h( Button, { variant: 'primary', onClick: function () { setTab( 'capture' ); } }, config.strings.insightStart ),
 					h( Button, { variant: 'secondary', onClick: function () { setTab( 'history' ); loadEvents( 1, '' ); } }, config.strings.historyTab )
@@ -580,7 +631,7 @@
 							setTab( item.id );
 							if ( item.id === 'history' ) { loadEvents( 1, historyOrderId ); }
 							if ( item.id === 'catalog' ) { loadReasons(); }
-							if ( item.id === 'overview' ) { loadSummary(); loadSources(); }
+							if ( item.id === 'overview' ) { loadReport( reportFrom, reportTo ); loadSources(); }
 							if ( item.id === 'sources' ) { loadSources(); }
 						}
 					}, item.label );
