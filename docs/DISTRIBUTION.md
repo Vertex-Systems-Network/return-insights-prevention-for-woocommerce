@@ -45,7 +45,7 @@ The dated WordPress 7.1/7.0 and WooCommerce 11.2/11.1 series in docs/COMPATIBILI
 
 - Maintain one repository as source of truth and produce separate Free core and Pro add-on release artifacts.
 - Include browser-ready React admin JavaScript using WordPress-bundled packages; no project CLI/build step is planned and merchants need no tooling.
-- Before release ZIP creation, generate the Composer autoloader from the root `composer.json` and include the resulting `vendor/autoload.php` and Composer runtime files in both plugin artifacts. The source-checkout fallback in `includes/autoload.php` is for development only; verify the generated-loader path in I-11. Do not run Composer packaging commands before the plugin is final.
+- Before release ZIP creation, generate the Composer autoloader from the root `composer.json` and include the resulting `vendor/autoload.php` and Composer runtime files in both plugin artifacts. There is no custom fallback; verify the generated Composer loader in I-11. Do not run Composer packaging commands before the plugin is final.
 - Exclude tests, development dependencies, source maps/secrets where inappropriate, and unused files from production ZIPs; retain readable source and manual release instructions in the development repository; no CLI/build tooling is included until the plugin is final.
 - Use coordinated versioning and a compatibility table for Free/Pro pairing. Pro checks for Free and schema compatibility and fails safely when missing/outdated; Free remains usable. Define update order and license-expiry behavior as specified by the approved package model.
 - Provide a changelog, upgrade/rollback guidance, data migration policy, support route, and release verification record for every public release.

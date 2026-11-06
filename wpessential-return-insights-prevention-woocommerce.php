@@ -28,7 +28,7 @@ define( 'WPE_RI_MIN_WP_VERSION', '7.0' );
 define( 'WPE_RI_MIN_PHP_VERSION', '8.3' );
 define( 'WPE_RI_MIN_WC_VERSION', '11.1' );
 
-require_once WPE_RI_PATH . 'includes/autoload.php';
+require_once WPE_RI_PATH . 'vendor/autoload.php';
 
 register_activation_hook(
 	__FILE__,

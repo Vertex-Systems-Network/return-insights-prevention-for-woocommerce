@@ -29,7 +29,16 @@ Planning estimates in UTC; reviewed 2026-11-06. P0–P7 track planning artifacts
 
 ## Implementation status
 
-P6 approval is recorded. I-02 foundation, I-03 catalog/manual-capture API, I-04 refund observation, I-05 Free reports, I-06 REST/React admin, I-07 Pro product/variation cohort insights, and I-08 Pro clustering/alerts implementation are present (7/11, **64%**). PHP classes use Composer PSR-4 mapping `WPEssential\ReturnInsights\` to `src/`. A native fallback keeps source checkouts usable until Composer packaging is run for release. Free reports provide date-filtered event/reason/quantity/source counts and item-scoped product/category totals. Pro patterns compare mature purchase cohorts, use exact item-level confirmed-return attribution, and suppress rates for incomplete mapping, fewer than 20 sold units, missing denominators, and returns above sold quantity. Runtime, visual, accessibility, compatibility, and commercial entitlement verification remain for I-11. React uses WordPress bundled packages without JSX/build tooling; no CLI is to be added until the plugin is final.
+P6 approval is recorded. I-02 foundation, I-03 catalog/manual-capture API, I-04 refund observation, I-05 Free reports, I-06 REST/React admin, I-07 Pro product/variation cohort insights, and I-08 Pro clustering/alerts implementation are present (7/11, **64%**). PHP classes use Composer PSR-4 mapping `WPEssential\ReturnInsights\` to `includes/`. The custom fallback loader has been removed; the generated Composer `vendor/autoload.php` is required at runtime. Free reports provide date-filtered event/reason/quantity/source counts and item-scoped product/category totals. Pro patterns compare mature purchase cohorts, use exact item-level confirmed-return attribution, and suppress rates for incomplete mapping, fewer than 20 sold units, missing denominators, and returns above sold quantity. Runtime, visual, accessibility, compatibility, and commercial entitlement verification remain for I-11. React uses WordPress bundled packages without JSX/build tooling; no CLI is to be added until the plugin is final.
+
+## Composer autoload task status
+
+| Task | Status | Progress | Evidence / remaining work |
+|---|---|---:|---|
+| Move plugin classes from `src/` to `includes/` | Complete | 100% | Ten PSR-4 class files now use case-matched names in `includes/`. |
+| Map `WPEssential\ReturnInsights\` to `includes/` | Complete | 100% | `composer.json` declares the namespace prefix and directory. |
+| Load `vendor/autoload.php` directly | Code updated | 100% | Plugin bootstrap and uninstall handler directly require Composer's generated loader; no project SPL loader remains. |
+| Generate Composer vendor files and verify runtime | Pending | 0% | Composer and PHP executables are unavailable here; generate vendor during final packaging, then verify plugin activation and uninstall loading. |
 
 ## Distribution plan
 
@@ -74,6 +83,7 @@ P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS
 - docs/P6_TECHNICAL_CONTRACTS.md — approved REST contract and security/privacy threat controls.
 - docs/IMPLEMENTATION_BACKLOG.md — approved dependency-ordered implementation work.
 - docs/AI_BACKLOG.md — agent tasks and provider handoff.
+- composer.json — Composer PSR-4 namespace map (`WPEssential\ReturnInsights\` → `includes/`); generated vendor files are required in release ZIPs.
 - AGENTS.md — canonical project instructions.
 - CLAUDE.md, GEMINI.md, .cursor/rules/project.mdc, .github/copilot-instructions.md — provider entry points.
 
@@ -87,7 +97,7 @@ P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS
 6. WPML and Polylang behavior specified and tested; neither is a hard dependency.
 7. P6 is passed; implementation follows the approved backlog. No CLI/build tooling in this repo until the plugin is final.
 8. AI agents read this README and AGENTS.md, make scoped changes, and update the dashboard in the same update.
-9. PHP classes follow Composer PSR-4: `WPEssential\ReturnInsights\` maps to `/src/` in `composer.json`; `includes/autoload.php` prefers the generated Composer loader and keeps a fallback for source checkouts. Do not add third-party dependencies or run Composer commands before final packaging.
+9. PHP classes follow Composer PSR-4: `WPEssential\ReturnInsights\` maps to `/includes/` in `composer.json`; plugin bootstrap and uninstall directly require generated `vendor/autoload.php`. Do not add third-party dependencies or run Composer commands before final packaging.
 
 ## Research snapshot
 
@@ -99,7 +109,7 @@ P3 architecture specifies indexed custom event storage, source-level idempotency
 
 ## Change log
 
-- 2026-11-06: Added Composer PSR-4 mapping `WPEssential\ReturnInsights\` → `src/`, using the generated vendor loader when present and retaining a source-checkout fallback. Existing PSR-4 class/file renames and bootstrap/uninstall wiring remain in place. No third-party dependencies added; Composer commands are reserved for final packaging. Runtime package totals remain 7/11 (64%); Composer-generated loading remains to be verified during I-11/release packaging.
+- 2026-11-06: Moved all ten PSR-4 classes into `includes/`, mapped Composer's namespace prefix to that directory, and removed the custom autoloader. Plugin bootstrap and uninstall directly require `vendor/autoload.php`. No third-party dependencies added. Composer/PHP are unavailable in this workspace, so vendor generation and runtime verification remain pending for final packaging. Runtime package totals remain 7/11 (64%).
 - 2026-11-06: Completed I-08 implementation: weekly scan status and suppression reasons are returned through REST and displayed in Alerts; below-80% mapping blocks evaluation and candidate-level sample/coverage gates are counted. Bounded storage is documented and I-08 is 100% at implementation scope; live runtime verification is assigned to I-11. Runtime work packages: 7/11 (64%).
 - 2026-11-06: Completed product scope/options plan and proposed WooCommerce refund observation plus per-item admin capture.
 - 2026-11-06: Added separate WordPress.org Free and WooCommerce.com Paid submission plan.

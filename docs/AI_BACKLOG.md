@@ -37,7 +37,7 @@ This improves discovery but cannot guarantee every version auto-loads the file. 
 6. A second model checks contradictions and duplicate features, not unrelated prose.
 7. Final review checks plan scope, privacy/security, compatibility, and progress evidence.
 8. Never provide credentials, production customer data, or private store records as test context.
-9. PHP classes follow Composer PSR-4 (`WPEssential\ReturnInsights\` → `/src/`) through `composer.json`; `includes/autoload.php` prefers generated Composer autoload and retains a source-checkout fallback. Keep class/file casing aligned; no Composer command before final packaging.
+9. PHP classes follow Composer PSR-4 (`WPEssential\ReturnInsights\` → `/includes/`) through `composer.json`; plugin bootstrap and uninstall directly require generated `vendor/autoload.php`. Keep class/file casing aligned; no Composer command before final packaging.
 
 ## Reusable task prompt
 
