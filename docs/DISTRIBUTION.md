@@ -1,7 +1,7 @@
 
 # Distribution and Marketplace Submission Plan
 
-**Planning status:** Distribution routes and release gates are documented. No listing or submission has been created.  
+**Planning status:** Distribution routes and release gates are documented; P6 package model approved. No listing or submission has been created.  
 **Sources reviewed:** Official WordPress.org and WooCommerce Marketplace docs, 2026-11-06.
 
 ## 1. Two editions, two submission tracks
@@ -11,7 +11,7 @@
 | Free | WordPress.org Plugin Directory | Complete, production-ready plugin ZIP; after approval, maintain releases through the directory's distribution process | Structured reason collection and basic reports |
 | Paid Pro | WooCommerce.com Marketplace | Separate Paid submission and review; freemium Free/Paid submissions can be merged on one product page after approval | Advanced product/variation insights, clustering, alerts, corrective-action tracking |
 
-Approved package architecture: one repository produces a complete Free core plugin ZIP for WordPress.org and a separate Pro add-on ZIP for WooCommerce.com that requires Free. Woo documents Freemium as a fit when an additional plugin supplies upgraded features. Free works independently; Pro reuses Free event storage and stores only Pro-specific records. License expiry never erases data. Final packaging must still meet each marketplace's current review rules.
+Approved package architecture: one repository produces a complete Free core plugin ZIP for WordPress.org and a separate Pro add-on ZIP for WooCommerce.com that requires Free. Woo's Freemium guidance specifically recognizes an additional plugin for upgraded features. Free works independently; Pro reuses Free event storage and stores only Pro-specific records. License expiry never erases data. Final packaging must still meet each marketplace's current review rules.
 
 ## 2. WordPress.org Free submission gate
 
