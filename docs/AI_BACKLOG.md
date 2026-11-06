@@ -1,4 +1,3 @@
-
 # AI Backlog and Agent Handoff Plan
 
 ## How an AI tool discovers the project
@@ -17,11 +16,11 @@ This improves discovery but cannot guarantee every version auto-loads the file. 
 | ID | Work package | Status | Acceptance evidence |
 |---|---|---|---|
 | AI-01 | Maintain README roadmap after changes | Active rule | Same update changes status, progress, dates, change log. |
-| AI-02 | Audit competitor APIs, live UI, and plan limits | In progress | Zorem/Recoup options reviewed from official sources; remaining API/changelog/full plan audit recorded with evidence. |
+| AI-02 | Audit competitor APIs, live UI, and plan limits | In progress | Zorem/Recoup options reviewed from official sources; remaining API/changelog/full plan audit with evidence. |
 | AI-03 | Finalize capture/event definitions | Draft ready; approval pending | Refund evidence vs confirmed return, manual per-item capture, event scope documented. |
 | AI-04 | Deduplicate feature/system options | Plan complete; approval pending | Canonical IDs map competitor options without duplicating RMA workflows. |
 | AI-05 | Specify schema, rate math, privacy, performance | Blueprint complete; review pending | Logical event model, idempotency, HPOS boundary, privacy flow, and bounded aggregation documented in P3 files. |
-| AI-06 | Finalize React flows and REST contract | In progress | Screens/states/accessibility/capabilities approved. |
+| AI-06 | Finalize React flows and REST contract | UX blueprint complete; API validation pending | Navigation, tier boundaries, state design, accessibility, REST route families, and merchant journeys documented in `docs/REACT_UX.md` and `docs/UX_FLOWS.md`; no implementation claimed. |
 | AI-07 | Set runtime compatibility baseline | Baseline selected; Marketplace release range alignment pending | V1 minimums documented; two-major support range rechecked at submission. |
 | AI-08 | Threat model capture and AI clustering | Planned | Abuse controls, opt-in, data sent, explainability approved. |
 | AI-09 | Cross-model contradiction review | Not started | ChatGPT, Cursor, Claude, Gemini reviews reconciled into decisions. |
