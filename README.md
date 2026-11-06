@@ -25,11 +25,11 @@ Planning estimates in UTC; reviewed 2026-11-06. P0–P7 track planning artifacts
 | P6 Pre-development readiness gate | Resolve decisions and approve implementation scope | Complete; owner approval recorded | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | P7 Distribution and submission plan | WordPress.org Free + WooCommerce.com Paid tracks | Planning complete; actual submission blocked by release | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 
-**Planning artifact completion: 100%** across P0–P7. P6 is approved and implementation is authorized within the scoped backlog. Runtime work packages: 5/11 implemented (**45%**). Dates are estimates, not delivery promises. Keep planning progress separate from implementation progress. Update this table and change log whenever the plan changes.
+**Planning artifact completion: 100%** across P0–P7. P6 is approved and implementation is authorized within the scoped backlog. Runtime work packages: 6/11 implemented (**55%**). Dates are estimates, not delivery promises. Keep planning progress separate from implementation progress. Update this table and change log whenever the plan changes.
 
 ## Implementation status
 
-P6 approval is recorded. I-02 foundation, I-03 catalog/manual-capture API, I-04 refund observation, I-06 REST/React admin, and I-05 Free reports are implemented (5/11, **45%**). Free reports provide last-30-days-by-default, date-filtered event/reason/quantity/source counts, mapping coverage, top 20 reason groups, and top 10 item-scoped product/category counts with empty-period handling. They do not calculate return rates, prove causation, or infer physical returns from refunds. Runtime, visual, accessibility, and compatibility verification remain for I-11. React uses WordPress bundled packages without JSX/build tooling; no CLI is to be added until the plugin is final.
+P6 approval is recorded. I-02 foundation, I-03 catalog/manual-capture API, I-04 refund observation, I-05 Free reports, I-06 REST/React admin, and I-07 Pro product/variation cohort insights are implemented (6/11, **55%**). Free reports provide date-filtered event/reason/quantity/source counts and item-scoped product/category totals. Pro patterns compare mature purchase cohorts, use exact item-level confirmed-return attribution, and suppress rates for incomplete mapping, fewer than 20 sold units, missing denominators, and returns above sold quantity. Runtime, visual, accessibility, compatibility, and commercial entitlement verification remain for I-11. React uses WordPress bundled packages without JSX/build tooling; no CLI is to be added until the plugin is final.
 
 ## Distribution plan
 
@@ -50,12 +50,13 @@ Details and official source links: docs/DISTRIBUTION.md. No submission has been 
 | I-04 Refund observation | Complete | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | I-06 REST + React admin | Implemented; I-11 verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | I-05 Free reports | Implemented; I-11 verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
+| I-07 Pro product/variation patterns | Implemented; entitlement provider + I-11 verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 
 Package progress means implementation scope is present; it does not mean runtime/release acceptance is verified. See `docs/IMPLEMENTATION_BACKLOG.md` for detailed evidence.
 
 ## Current gate
 
-P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS_GATE.md. I-02, I-03, I-04, I-05, and I-06 are implemented. I-07 Pro product/variation insights are next. Keep CLI/build tooling, Composer/npm manifests, and package managers out of this repository until the plugin is final.
+P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS_GATE.md. I-02, I-03, I-04, I-05, I-06, and I-07 are implemented. I-08 Pro clustering and alerts are next. Keep CLI/build tooling, Composer/npm manifests, and package managers out of this repository until the plugin is final.
 
 ## Plan files
 
@@ -108,3 +109,4 @@ P3 architecture specifies indexed custom event storage, source-level idempotency
 - 2026-11-06: Implemented I-03 reason catalog and manual-capture REST/data layer: initial dbDelta schema migration, canonical reason keys, custom reasons, protected reason/order/event routes, per-item validation, manual event idempotency, edit and audited soft-delete. Runtime work progress was 2/11 packages (18%). React capture UI, route runtime checks, and broader permission/accessibility verification remain; no CLI/build tools or tests were added.
 - 2026-11-06: Implemented I-04 native refund observation with the WooCommerce post-save refund hook, CRUD object reads, schema v2 refund linkage, idempotent refund-scope event upsert, exact catalog-label mapping without retaining free text, and soft deletion on refund deletion. No physical-return inference, CLI/build tooling, or runtime tests were added.
 - 2026-11-06: Implemented I-06 REST schemas and no-build React admin surfaces for overview counts, event history, manual item capture/edit/audited removal, reason catalog, and source counts/latest dates. No runtime tests, CLI, or build tooling were added.
+- 2026-11-06: Implemented I-07 mature product/variation cohorts, bounded WooCommerce CRUD order reads, exact item/reason attribution, low-sample and incomplete-data rate suppression, fail-closed Pro entitlement, and the React patterns screen. Static source inspection only; runtime verification and a production entitlement provider remain.
