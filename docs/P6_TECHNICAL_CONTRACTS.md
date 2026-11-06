@@ -24,6 +24,8 @@ All routes use `/wp-json/wpessential/return-insights/v1`. Reads require `view_re
 | `DELETE /events/{id}` | Soft-delete manual event | Required audit reason; observed refund records are immutable. |
 | `GET /sources` | Coverage summary | Active event count and latest date by source only; not health/error monitoring. |
 | `GET /summary` | Free evidence report | Optional `date_from`/`date_to` (`YYYY-MM-DD`) in the store timezone; defaults to the last 30 days. Returns event and summed quantity totals, mapping coverage, reason/event-kind/source groups, top 10 item-scoped products/categories, and period/timezone. No sales denominator, return rate, or causal interpretation. Category memberships overlap. |
+| `GET /alerts` | Pro alert list | Returns active/dismissed alert evidence; requires view capability and Pro entitlement. Weekly evaluation is internal WordPress Cron. |
+| `PATCH /alerts/{id}` | Dismiss/restore alert | Requires manager capability and Pro entitlement; dismissal requires a short audit note. |
 | `GET /clusters` | Pro reason clusters | Uses the same `maturity_days` and `cohort_days` choices as `/patterns`; returns deterministic product/variation clusters with original reason membership and cohort coverage. |
 | `PATCH /clusters/{reason_id}` | Correct cluster assignment | Requires `manage_return_insights`; accepts `cluster_id` to assign or an empty string to reset to the deterministic grouping. |
 | `GET /patterns` | Pro product/variation patterns | `maturity_days` and `cohort_days` each accept 30/60/90/120/180 (default 90). Requires read capability and Pro entitlement; entitlement filter defaults false. Returns two mature equal-length cohort windows, coverage, pattern rates/status, sample quality, and definition version. |
