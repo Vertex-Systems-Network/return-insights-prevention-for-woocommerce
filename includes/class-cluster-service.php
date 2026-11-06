@@ -22,7 +22,7 @@ final class Cluster_Service {
 	 * @param array $patterns Pattern rows from Pattern_Service.
 	 * @return array
 	 */
-	public static function build( array $patterns ): array {
+	public static function build( array $patterns, array $coverage = array() ): array {
 		$clusters = array();
 		$overrides = get_option( self::OPTION, array() );
 		if ( ! is_array( $overrides ) ) {
@@ -66,9 +66,12 @@ final class Cluster_Service {
 			foreach ( array( 'current', 'comparison' ) as $period ) {
 				$sold = $cluster[ $period ]['sold_quantity'];
 				$returned = $cluster[ $period ]['returned_quantity'];
-				if ( $sold >= 20 && $returned <= $sold ) {
+				$complete = ! isset( $coverage[ $period ]['complete'] ) || (bool) $coverage[ $period ]['complete'];
+				if ( $complete && $sold >= 20 && $returned <= $sold ) {
 					$cluster[ $period ]['rate_percent'] = round( 100 * $returned / $sold, 2 );
 					$cluster[ $period ]['rate_status'] = 'available';
+				} elseif ( ! $complete ) {
+					$cluster[ $period ]['rate_status'] = 'incomplete_coverage';
 				} elseif ( $sold < 20 ) {
 					$cluster[ $period ]['rate_status'] = 'low_sample';
 				} else {
