@@ -32,7 +32,7 @@ The product loop is: **capture a reason → identify a repeated pattern → choo
 3. **Do not ship a customer RMA portal in MVP.** Consider a reason-only customer form or specific RMA adapters after demand and integration APIs are audited.
 4. Preserve source type and attribution scope. If one refund reason covers multiple line items, keep the reason at refund scope unless the merchant explicitly maps it to items. Do not silently duplicate it across variations.
 
-This model provides reason capture without building another return-management workflow. Approval of this proposal remains part of P6.
+This model provides reason capture without building another return-management workflow. The product owner approved it at P6 on 2026-11-06.
 
 ## Proposed tiers
 
