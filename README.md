@@ -22,10 +22,10 @@ Planning estimates in UTC; reviewed 2026-11-06. Progress describes planning arti
 | P3 Data-flow and engineering blueprint | Data model, attribution, metrics, privacy, performance | Blueprint complete; review/implementation validation pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | P4 React admin UX specification | Screen map, interaction and accessibility | Blueprint complete; visual design/API review pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | P5 Compatibility/release baseline | PHP, WP, WC, WPML, Polylang requirements | Planning baseline complete; implementation/release matrix pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
-| P6 Pre-development readiness gate | Resolve decisions and approve implementation scope | Recommendation package ready; owner approval pending | ████████░░ 80% | 2026-11-06 | 2026-11-10 |
+| P6 Pre-development readiness gate | Resolve decisions and approve implementation scope | Recommendations/contracts ready; owner approval pending | █████████░ 90% | 2026-11-06 | 2026-11-10 |
 | P7 Distribution and submission plan | WordPress.org Free + WooCommerce.com Paid tracks | Planning complete; actual submission blocked by release | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 
-**Overall planning artifact completion: 98%**, equally weighted across phases (rounded from 97.5%). P6 owner approval is still required before implementation; this percentage is not implementation authorization. Dates are estimates, not delivery promises. Keep planning progress separate from implementation progress. Update this table and change log whenever the plan changes.
+**Overall planning artifact completion: 99%**, equally weighted across phases (rounded from 98.75%). P6 owner approval is still required before implementation; this percentage is not implementation authorization. Dates are estimates, not delivery promises. Keep planning progress separate from implementation progress. Update this table and change log whenever the plan changes.
 
 ## Distribution plan
 
@@ -52,7 +52,7 @@ P6 decision register and ordered implementation backlog are ready for owner revi
 - docs/REACT_UX.md — React admin navigation, screen specs, states, and REST contract outline.
 - docs/UX_FLOWS.md — merchant journeys and UX acceptance criteria.
 - docs/DISTRIBUTION.md — WordPress.org and Woo Marketplace submission tracks.
-- docs/P6_READINESS_GATE.md — owner decisions and implementation entry criteria.
+- docs/P6_READINESS_GATE.md — owner decisions and implementation entry criteria.\n- docs/P6_TECHNICAL_CONTRACTS.md — proposed REST contract and security/privacy threat controls.
 - docs/IMPLEMENTATION_BACKLOG.md — dependency-ordered implementation work, blocked by P6 approval.
 - docs/AI_BACKLOG.md — agent tasks and provider handoff.
 - AGENTS.md — canonical project instructions.
@@ -84,4 +84,4 @@ P3 architecture specifies indexed custom event storage, source-level idempotency
 - 2026-11-06: Completed P3 logical data model, HPOS-safe ingestion, metric boundaries, privacy lifecycle, and performance plan. Added official design source links; no plugin implementation or CLI tooling added.
 - 2026-11-06: Completed P4 React admin UX blueprint, merchant flow acceptance criteria, accessibility/state requirements, tier boundary, and REST contract outline. Overall planning readiness 86%; no plugin implementation or CLI tooling added.
 - 2026-11-06: Completed P5 compatibility policy with dated WordPress 7.1/7.0 and WooCommerce 11.2/11.1 targets, PHP 8.3+, database floor, optional WPML/Polylang requirements, and release-time recheck rule. Planning artifact completion 88%; no plugin implementation or CLI tooling added.
-- 2026-11-06: Prepared P6 decision register and ordered I-00–I-12 implementation backlog; aligned distribution guidance with the dated compatibility baseline. P6 is 80% complete and awaits explicit owner approval of D1–D12; no implementation or CLI tooling added.
+- 2026-11-06: Prepared P6 decision register and ordered I-00–I-12 implementation backlog; aligned distribution guidance with the dated compatibility baseline.\n- 2026-11-06: Added proposed REST payload/permission contracts and security/privacy threat controls. P6 planning artifacts are 90% complete and await explicit owner approval of D1–D12; no implementation or CLI tooling added.
