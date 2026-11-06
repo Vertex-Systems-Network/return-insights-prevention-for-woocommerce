@@ -102,11 +102,15 @@ final class Rest_Controller {
 		return $x ? rest_ensure_response( $x ) : new \WP_Error( 'reason_not_found', __( 'Reason not found.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 404 ) );
 	}
 	public static function create_reason( \WP_REST_Request $r ) {
-		$x = Reason_Catalog::save( $r->get_json_params() ?: array() );
+		$data = $r->get_json_params() ?: array();
+		if ( self::has_unknown_fields( $data, array( 'label', 'group', 'active', 'translations' ) ) ) { return self::unknown_fields_error(); }
+		$x = Reason_Catalog::save( $data );
 		return is_wp_error( $x ) ? $x : new \WP_REST_Response( $x, 201 );
 	}
 	public static function update_reason( \WP_REST_Request $r ) {
-		$x = Reason_Catalog::save( $r->get_json_params() ?: array(), (string) $r['id'] );
+		$data = $r->get_json_params() ?: array();
+		if ( self::has_unknown_fields( $data, array( 'label', 'group', 'active', 'translations' ) ) ) { return self::unknown_fields_error(); }
+		$x = Reason_Catalog::save( $data, (string) $r['id'] );
 		return is_wp_error( $x ) ? $x : rest_ensure_response( $x );
 	}
 	public static function get_order_items( \WP_REST_Request $r ) {
@@ -139,6 +143,8 @@ final class Rest_Controller {
 	}
 
 	public static function get_events( \WP_REST_Request $r ) {
+		if ( self::has_unknown_fields( $r->get_query_params(), array( 'page', 'per_page', 'order_id' ) ) ) { return self::unknown_fields_error(); }
+
 		global $wpdb;
 		$page = max( 1, absint( $r->get_param( 'page' ) ) );
 		$per = min( 100, max( 1, absint( $r->get_param( 'per_page' ) ?: 20 ) ) );
@@ -158,7 +164,9 @@ final class Rest_Controller {
 	}
 	public static function create_event( \WP_REST_Request $r ) {
 		global $wpdb;
-		$d = $r->get_json_params() ?: array(); $v = self::validate_event( $d );
+		$d = $r->get_json_params() ?: array();
+		if ( self::has_unknown_fields( $d, array( 'event_kind', 'order_id', 'order_item_id', 'quantity', 'reason_id', 'occurred_at', 'idempotency_key' ) ) ) { return self::unknown_fields_error(); }
+		$v = self::validate_event( $d );
 		if ( is_wp_error( $v ) ) { return $v; }
 		$key = sanitize_text_field( $d['idempotency_key'] ?? '' );
 		if ( ! preg_match( '/^[A-Za-z0-9_-]{16,100}$/', $key ) ) { return new \WP_Error( 'invalid_idempotency_key', __( 'A 16–100 character idempotency key is required.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) ); }
@@ -183,6 +191,7 @@ final class Rest_Controller {
 		if ( ! $row ) { return self::missing_event(); }
 		if ( 'manual' !== $row['source_type'] ) { return new \WP_Error( 'immutable_source', __( 'Observed source records cannot be edited here.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 409 ) ); }
 		$d = $r->get_json_params() ?: array();
+		if ( self::has_unknown_fields( $d, array( 'event_kind', 'quantity', 'reason_id', 'occurred_at' ) ) ) { return self::unknown_fields_error(); }
 		$v = self::validate_event( array_merge( $d, array( 'order_id' => $row['order_id'], 'order_item_id' => $row['order_item_id'] ) ), $id );
 		if ( is_wp_error( $v ) ) { return $v; }
 		$wpdb->update( Installer::events_table(), array( 'event_kind' => $v['kind'], 'quantity' => $v['quantity'], 'reason_id' => $v['reason']['id'], 'occurred_at_gmt' => $v['date'], 'updated_at_gmt' => gmdate( 'Y-m-d H:i:s' ), 'updated_by' => get_current_user_id() ), array( 'event_id' => $id ) );
@@ -193,7 +202,9 @@ final class Rest_Controller {
 		$id = absint( $r['id'] ); $row = self::find_event( $id );
 		if ( ! $row ) { return self::missing_event(); }
 		if ( 'manual' !== $row['source_type'] ) { return new \WP_Error( 'immutable_source', __( 'Observed source records cannot be deleted here.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 409 ) ); }
-		$note = sanitize_text_field( (string) ( $r->get_param( 'audit_reason' ) ?? '' ) );
+		$data = $r->get_json_params() ?: array();
+		if ( self::has_unknown_fields( $data, array( 'audit_reason' ) ) ) { return self::unknown_fields_error(); }
+		$note = sanitize_text_field( (string) ( $data['audit_reason'] ?? '' ) );
 		if ( '' === $note || strlen( $note ) > 200 ) { return new \WP_Error( 'audit_reason_required', __( 'Provide an audit reason up to 200 characters.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) ); }
 		$wpdb->update( Installer::events_table(), array( 'deleted_at_gmt' => gmdate( 'Y-m-d H:i:s' ), 'deletion_note' => $note, 'updated_at_gmt' => gmdate( 'Y-m-d H:i:s' ), 'updated_by' => get_current_user_id() ), array( 'event_id' => $id ) );
 		return new \WP_REST_Response( null, 204 );
@@ -231,5 +242,13 @@ final class Rest_Controller {
 		$reason = Reason_Catalog::find( $row['reason_id'], true );
 		return array( 'id' => (int) $row['event_id'], 'event_kind' => $row['event_kind'], 'source_type' => $row['source_type'], 'order_id' => (int) $row['order_id'], 'refund_id' => (int) ( $row['refund_id'] ?? 0 ), 'order_item_id' => (int) $row['order_item_id'], 'attribution_scope' => $row['attribution_scope'], 'mapping_state' => $row['mapping_state'], 'product_id' => (int) $row['product_id'], 'variation_id' => (int) $row['variation_id'], 'reason_id' => $row['reason_id'], 'reason_label' => $reason ? $reason['label'] : __( 'Archived reason', WPE_RI_TEXT_DOMAIN ), 'quantity' => (float) $row['quantity'], 'occurred_at' => gmdate( 'c', strtotime( $row['occurred_at_gmt'] . ' UTC' ) ), 'created_at' => gmdate( 'c', strtotime( $row['created_at_gmt'] . ' UTC' ) ), 'updated_at' => gmdate( 'c', strtotime( $row['updated_at_gmt'] . ' UTC' ) ), 'occurred_date' => get_date_from_gmt( $row['occurred_at_gmt'], 'Y-m-d' ) );
 	}
+	private static function has_unknown_fields( array $data, array $allowed ): bool {
+		return (bool) array_diff( array_keys( $data ), $allowed );
+	}
+
+	private static function unknown_fields_error(): \\WP_Error {
+		return new \\WP_Error( 'unknown_fields', __( 'The request contains unsupported fields.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) );
+	}
+
 	private static function missing_event(): \WP_Error { return new \WP_Error( 'event_not_found', __( 'Insight event not found.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 404 ) ); }
 }
