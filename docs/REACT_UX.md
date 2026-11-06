@@ -1,6 +1,6 @@
 # React Admin UX — Specification
 
-**Status:** P4 UX approved at P6; no UI is implemented. Visual QA/accessibility validation remain implementation tasks.
+**Status:** P4 specification approved; I-06 base admin surfaces are implemented. Visual QA, usability, and accessibility verification remain for I-11.
 
 ## Product UX principle
 
@@ -73,7 +73,11 @@ All data access goes through namespaced REST endpoints. The server enforces auth
 | `/insights/v1/actions` | Pro read/create/update actions | Status history, windows, linked pattern |
 | `/insights/v1/settings` | Read/update permitted settings | Schema/version, validation, capability gates |
 
-These are proposed route names, not a frozen API. HTTP methods, JSON schemas, error codes, and pagination are finalized in I-06 within the approved route/capability boundaries in `docs/P6_TECHNICAL_CONTRACTS.md`.
+The implemented namespace is `/wp-json/wpessential/return-insights/v1`. I-06 currently provides `/reasons`, `/reasons/{id}`, `/orders/{id}`, `/events`, `/events/{id}`, and `/sources`; method schemas and behavior are documented in `docs/P6_TECHNICAL_CONTRACTS.md`. Future `/summary`, `/patterns`, `/actions`, and `/settings` routes remain planned, not implemented.
+
+## I-06 implementation boundary
+
+The current UI displays event totals and source counts/latest event dates. It does not calculate rates, date-window comparisons, product/variation patterns, charts, or corrective actions. I-05 adds basic reporting; I-07/I-09 own deeper Pro insights and action tracking. Event lists use server pagination (20 by default, API max 100) and can filter by order ID. Refund observations remain read-only and distinct from confirmed physical returns. The UI uses WordPress-bundled `wp.element`, `wp.components`, and `wp.apiFetch`, without JSX/build tooling.
 
 ## Tier boundary
 
