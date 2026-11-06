@@ -68,7 +68,7 @@ final class Capabilities {
 			return;
 		}
 
-		foreach ( $roles->roles as $role_name => $role_data ) {
+		foreach ( array_keys( $roles->roles ) as $role_name ) {
 			$role = $roles->get_role( $role_name );
 			if ( ! $role ) {
 				continue;
