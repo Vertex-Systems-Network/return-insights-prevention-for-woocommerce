@@ -119,12 +119,14 @@ final class Alert_Service {
 			return new \WP_Error( 'alert_audit_note_required', __( 'Provide a dismissal note up to 200 characters.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) );
 		}
 		$state[ $id ]['status'] = $status;
-		$state[ $id ]['audit'] = array(
+		$audit_history = isset( $state[ $id ]['audit_history'] ) && is_array( $state[ $id ]['audit_history'] ) ? $state[ $id ]['audit_history'] : array();
+		$audit_history[] = array(
 			'status' => $status,
 			'note' => sanitize_text_field( $note ),
 			'actor_id' => get_current_user_id(),
 			'at_gmt' => gmdate( 'Y-m-d H:i:s' ),
 		);
+		$state[ $id ]['audit_history'] = array_slice( $audit_history, -50 );
 		update_option( self::OPTION, $state, false );
 		return $state[ $id ];
 	}
