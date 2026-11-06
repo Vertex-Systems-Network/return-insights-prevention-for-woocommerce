@@ -61,7 +61,7 @@ final class Rest_Controller {
 		register_rest_route( self::NS, '/clusters/(?P<reason_id>[a-z0-9_-]+)', array(
 			'methods' => 'PATCH',
 			'callback' => array( self::class, 'update_cluster' ),
-			'permission_callback' => array( self::class, 'can_manage' ),
+			'permission_callback' => array( self::class, 'can_manage_clusters' ),
 			'args' => array( 'cluster_id' => array( 'type' => 'string', 'required' => true, 'maxLength' => 48 ) ),
 		) );
 		register_rest_route( self::NS, '/summary', array(
@@ -123,6 +123,10 @@ final class Rest_Controller {
 	}
 	public static function can_view(): bool { return current_user_can( Capabilities::VIEW ); }
 	public static function can_manage(): bool { return current_user_can( Capabilities::MANAGE ); }
+	public static function can_manage_clusters() {
+		if ( ! self::can_manage() ) { return false; }
+		return Pattern_Service::is_entitled() ? true : new \\WP_Error( 'pro_required', __( 'Reason clustering requires the Pro add-on.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 403 ) );
+	}
 	public static function can_view_patterns() {
 		if ( ! self::can_view() ) { return false; }
 		return Pattern_Service::is_entitled() ? true : new \WP_Error( 'pro_required', __( 'Product and variation insights require the Pro add-on.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 403 ) );
