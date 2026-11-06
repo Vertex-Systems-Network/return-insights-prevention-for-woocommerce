@@ -1,5 +1,5 @@
 
-# Deduplicated Options Bank — Draft
+# Deduplicated Options Bank — Approved V1 Baseline
 
 Each outcome has one canonical ID and owner. UI labels, integrations, and reports map to these IDs; do not add duplicate options under new names.
 
@@ -17,7 +17,7 @@ Each outcome has one canonical ID and owner. UI labels, integrations, and report
 | CAP-08 | Evidence-threshold alerts | Pro | Suppress low-sample and duplicate alerts. |
 | CAP-09 | Corrective-action tracking | Pro | Affected items, hypothesis, owner, status, dates, measurement window. |
 | CAP-10 | Before/after action report | Pro | Comparable windows/samples; association, not causation. |
-| CAP-11 | Export | Gate | Decide fields, privacy, tier; no PII by default. |
+| CAP-11 | Export | Free | Merchant data export; omit customer identity and full order payload by default. |
 | CAP-12 | Optional source adapters | Gate | Stable APIs/hooks only; no replacement of source workflow. |
 | CAP-13 | Correction and deduplication | Free | Authorized edits; idempotent imports. |
 | CAP-14 | Retention/export/erasure | Free | Merchant-controlled lifecycle; WordPress privacy integration. |
@@ -51,13 +51,13 @@ OBS IDs are research observations, not new plugin features. They prevent a famil
 |---|---|---|---|
 | SET-01 | Capture-source enablement | Free | Explicit toggles; no hidden collection. |
 | SET-02 | Reason catalog | Free | Stable identity separate from translated display text. |
-| SET-03 | Event kinds | Gate | Distinguish physical return/refund/exchange/warranty/cancel/unknown. |
-| SET-04 | Rate definition | Gate | Document denominator, cohort/window, maturity; no implicit metric changes. |
-| SET-05 | Minimum sample | Pro | Surface threshold in report/alert. |
-| SET-06 | Alert channel/frequency | Pro | In-product/email proposal; deduplicate and rate-limit. |
-| SET-07 | Clustering mode | Pro | Local/deterministic first; external AI needs opt-in decision. |
-| SET-08 | Retention | Free | Set safe default and merchant override. |
-| SET-09 | Import mapping/idempotency | Gate | Per-adapter IDs and field mapping. |
+| SET-03 | Event kinds | Free | Approved canonical kinds: confirmed return, refund-only, exchange, warranty/repair, cancellation, unknown. |
+| SET-04 | Rate definition | Pro | Confirmed returned quantity / eligible sold quantity, same cohort; 90-day maturity default, selectable 30/60/90/120/180 days. Refund ratio remains distinct. |
+| SET-05 | Minimum sample | Pro | Alert heuristic defaults: 5 confirmed return units, 80% item mapping, 20 eligible sold units per cohort, persistence across two weekly refreshes. Explain and allow configuration. |
+| SET-06 | Alert channel/frequency | Pro | In-product only in V1; deduplicate, rate-limit, show evidence. Email deferred. |
+| SET-07 | Clustering mode | Pro | Local deterministic and explainable in V1; no external AI data processing. |
+| SET-08 | Retention | Free | Canonical events 24 months default; raw phrases disabled by default, max 500 characters and 90-day purge if enabled. Merchant may configure. |
+| SET-09 | Import mapping/idempotency | Free | Native refund source and manual entry only in V1; unique source keys prevent duplicates. |
 | SET-10 | Roles/capabilities | Free | Least privilege. |
 | SET-11 | Attribution scope/confidence | Free | Preserve refund-level vs per-item source; do not silently infer. |
 
