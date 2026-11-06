@@ -359,7 +359,7 @@
 							h( 'div', { className: 'wpe-ri-source-copy' },
 								h( 'h3', null, row.source_type === 'manual' ? config.strings.manualSourceTitle : config.strings.refundSourceTitle ),
 								h( 'p', null, descriptions[ row.source_type ] || config.strings.otherSource ),
-								h( 'small', null, config.strings.lastSeen + ': ' + ( row.latest_event_at ? new Date( row.latest_event_at ).toLocaleString() : '—' ) )
+								h( 'small', null, config.strings.lastSeen + ': ' + ( row.latest_event_date || '—' ) )
 							),
 							h( 'div', { className: 'wpe-ri-source-count' }, h( 'strong', null, row.event_count ), h( 'span', null, config.strings.recordCount )
 							)
