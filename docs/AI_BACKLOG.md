@@ -22,9 +22,9 @@ This improves discovery but cannot guarantee every version auto-loads the file. 
 | AI-05 | Specify schema, rate math, privacy, performance | Blueprint complete; review pending | Logical event model, idempotency, HPOS boundary, privacy flow, and bounded aggregation documented in P3 files. |
 | AI-06 | Finalize React flows and REST contract | UX blueprint complete; API validation pending | Navigation, tier boundaries, state design, accessibility, REST route families, and merchant journeys documented in `docs/REACT_UX.md` and `docs/UX_FLOWS.md`; no implementation claimed. |
 | AI-07 | Set runtime compatibility baseline | Planning baseline complete; implementation/release matrix pending | PHP/WP/WC floors and optional WPML/Polylang behavior documented; rolling two-major targets dated and official evidence linked in `docs/COMPATIBILITY.md`. Actual runtime verification remains a release task. |
-| AI-08 | Threat model capture and AI clustering | Planned | Abuse controls, opt-in, data sent, explainability approved. |
+| AI-08 | Threat model capture and AI clustering | Baseline constraints in P6; detailed threat review pending | External AI excluded from V1 by default; detailed threat/privacy review is I-01 in `docs/IMPLEMENTATION_BACKLOG.md`. |
 | AI-09 | Cross-model contradiction review | Not started | ChatGPT, Cursor, Claude, Gemini reviews reconciled into decisions. |
-| AI-10 | Break approved spec into implementation work | Blocked by P6 | Small dependency-ordered tasks; no premature CLI. |
+| AI-10 | Break approved spec into implementation work | Draft ordered; blocked by explicit P6 owner approval | I-00–I-12 dependency order in `docs/IMPLEMENTATION_BACKLOG.md`; no runtime code or CLI added. |
 | AI-11 | Prepare WordPress.org Free and Woo Marketplace Paid submissions | Plan complete; release blocked | Separate packages/listings, accounts, test evidence, and review gates tracked in docs/DISTRIBUTION.md. |
 
 ## Collaboration protocol
