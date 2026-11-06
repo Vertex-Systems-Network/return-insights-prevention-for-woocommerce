@@ -23,6 +23,7 @@ final class Rest_Controller {
 			array( 'methods' => 'PATCH', 'callback' => array( self::class, 'update_reason' ), 'permission_callback' => array( self::class, 'can_manage' ) ),
 		) );
 		register_rest_route( self::NS, '/orders/(?P<id>\d+)', array( 'methods' => 'GET', 'callback' => array( self::class, 'get_order_items' ), 'permission_callback' => array( self::class, 'can_manage' ) ) );
+		register_rest_route( self::NS, '/sources', array( 'methods' => 'GET', 'callback' => array( self::class, 'get_sources' ), 'permission_callback' => array( self::class, 'can_view' ) ) );
 		register_rest_route( self::NS, '/events', array(
 			array( 'methods' => 'GET', 'callback' => array( self::class, 'get_events' ), 'permission_callback' => array( self::class, 'can_view' ) ),
 			array( 'methods' => 'POST', 'callback' => array( self::class, 'create_event' ), 'permission_callback' => array( self::class, 'can_manage' ) ),
@@ -62,6 +63,23 @@ final class Rest_Controller {
 		}
 		return rest_ensure_response( array( 'order_id' => $order->get_id(), 'order_number' => $order->get_order_number(), 'items' => $items ) );
 	}
+	public static function get_sources(): \\WP_REST_Response {
+		global $wpdb;
+		$table = Installer::events_table();
+		$rows = $wpdb->get_results( "SELECT source_type, COUNT(*) AS event_count, MAX(occurred_at_gmt) AS latest_event_at FROM {$table} WHERE deleted_at_gmt IS NULL GROUP BY source_type ORDER BY source_type ASC", ARRAY_A );
+		$sources = array_map(
+			static function ( array $row ): array {
+				return array(
+					'source_type' => $row['source_type'],
+					'event_count' => (int) $row['event_count'],
+					'latest_event_at' => $row['latest_event_at'] ? gmdate( 'c', strtotime( $row['latest_event_at'] . ' UTC' ) ) : null,
+				);
+			},
+			$rows ?: array()
+		);
+		return rest_ensure_response( array( 'sources' => $sources ) );
+	}
+
 	public static function get_events( \WP_REST_Request $r ) {
 		global $wpdb;
 		$page = max( 1, absint( $r->get_param( 'page' ) ) );
