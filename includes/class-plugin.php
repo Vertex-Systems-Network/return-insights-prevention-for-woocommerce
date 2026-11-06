@@ -37,6 +37,10 @@ final class Plugin {
 			);
 		}
 
+		if ( ! Installer::install() ) {
+			wp_die( esc_html__( 'The Return Insights data table could not be created.', WPE_RI_TEXT_DOMAIN ), esc_html__( 'Database setup failed', WPE_RI_TEXT_DOMAIN ), array( 'back_link' => true ) );
+		}
+
 		Capabilities::grant();
 	}
 
@@ -62,7 +66,9 @@ final class Plugin {
 			return;
 		}
 
+		Installer::maybe_upgrade();
 		Admin::register();
+		Rest_Controller::register();
 	}
 
 	/**
