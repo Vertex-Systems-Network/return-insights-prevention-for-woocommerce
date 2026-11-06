@@ -4,4 +4,4 @@ description: WPEssential Return Insights project rules
 alwaysApply: true
 ---
 
-Read README.md and AGENTS.md before acting. This repository is planning-only: no plugin implementation, CLI, Composer/npm manifest, or build tooling before P6 is explicitly approved. Use canonical IDs in docs/OPTIONS_BANK.md; avoid duplicate capabilities. Verify changing facts from official sources. Update README roadmap and change log with each meaningful change.
+Read README.md and AGENTS.md before acting. P6 was approved on 2026-11-06; follow one scoped item in docs/IMPLEMENTATION_BACKLOG.md. Runtime code is allowed within scope. No CLI/build tooling, Composer/npm manifests, or package managers in this repo until the plugin is final. Use canonical IDs in docs/OPTIONS_BANK.md; avoid duplicate capabilities. Verify changing facts from official sources. Update README roadmap and change log with each meaningful change.
