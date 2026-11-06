@@ -22,10 +22,21 @@ Planning estimates in UTC; reviewed 2026-11-06. Progress describes planning arti
 | P2 Product scope and options bank | Capture model and deduplicated capability/system inventory | Plan complete; approval pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | P3 Data-flow and engineering blueprint | Source attribution, metrics, privacy, storage boundaries | Draft ready for review | █████████░ 90% | 2026-11-06 | 2026-11-07 |
 | P4 React admin UX specification | Screen map, interaction and accessibility | In progress | ██████░░░░ 60% | 2026-11-06 | 2026-11-09 |
-| P5 Compatibility/release baseline | PHP, WP, WC, WPML, Polylang requirements | Planning complete; release tests pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
+| P5 Compatibility/release baseline | PHP, WP, WC, WPML, Polylang requirements | Baseline chosen; Marketplace range alignment pending | █████████░ 90% | 2026-11-06 | 2026-11-07 |
 | P6 Pre-development readiness gate | Resolve decisions and approve implementation scope | Not started | ░░░░░░░░░░ 0% | 2026-11-09 | 2026-11-10 |
+| P7 Distribution and submission plan | WordPress.org Free + WooCommerce.com Paid tracks | Planning complete; actual submission blocked by release | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 
-**Overall planning readiness: 79%**, equally weighted across phases. Dates are estimates, not delivery promises. Keep planning progress separate from implementation progress. Update this table and the change log whenever the plan changes.
+**Overall planning readiness: 80%**, equally weighted across phases. Dates are estimates, not delivery promises. Keep planning progress separate from implementation progress. Update this table and change log whenever the plan changes.
+
+## Distribution plan
+
+- **Free edition:** submit a complete, production-ready package to the WordPress.org Plugin Directory.
+- **Paid Pro edition:** submit separately to the WooCommerce.com Marketplace.
+- For a freemium product, Woo currently requires separate Free and Paid submissions; they may be combined on one product page after approval.
+- Woo Marketplace submission also requires an approved vendor account, product/business details, test instructions, compatibility with the two latest major WordPress and WooCommerce releases, HPOS, accessibility, and required Quality Insights Toolkit checks.
+- Re-evaluate version targets, licensing, listing name, pricing, vendor terms, and packages at release. The current runtime baseline is not a guarantee of future marketplace approval.
+
+Details and official source links: docs/DISTRIBUTION.md. No submission has been made.
 
 ## Current gate
 
@@ -39,6 +50,7 @@ Before implementation, review and approve the recommended capture model, metric 
 - docs/ARCHITECTURE_DATA_FLOW.md — data lifecycle and boundaries.
 - docs/COMPATIBILITY.md — platform baselines and WPML/Polylang.
 - docs/REACT_UX.md — React admin navigation and design bar.
+- docs/DISTRIBUTION.md — WordPress.org and Woo Marketplace submission tracks.
 - docs/AI_BACKLOG.md — agent tasks and provider handoff.
 - AGENTS.md — canonical project instructions.
 - CLAUDE.md, GEMINI.md, .cursor/rules/project.mdc, .github/copilot-instructions.md — provider entry points.
@@ -56,12 +68,11 @@ Before implementation, review and approve the recommended capture model, metric 
 
 ## Research snapshot
 
-Selected V1 planning baseline: WordPress 6.9+, WooCommerce 10.8+, PHP 8.3+, MySQL 8.0+ or MariaDB 10.6+, HTTPS. WPML and Polylang are optional integrations. Release claims still require test evidence; see docs/COMPATIBILITY.md.
+Selected V1 planning baseline: WordPress 6.9+, WooCommerce 10.8+, PHP 8.3+, MySQL 8.0+ or MariaDB 10.6+, HTTPS. Woo Marketplace's current two-major-version support rule can change this target at submission; see docs/COMPATIBILITY.md. WPML and Polylang are optional integrations.
 
 Recommended MVP capture model: observe native WooCommerce refund records and allow per-item admin insight entry for non-refund returns. A refund is not proof that an item physically returned, and an order-level reason must not be guessed onto every line item. See docs/PRODUCT_SPEC.md and docs/ARCHITECTURE_DATA_FLOW.md.
 
-Competitor research confirms reason capture, eligibility controls, notifications, analytics, and return-processing AI tools in-market. These operational controls remain out of scope; see docs/MARKET_RESEARCH.md and docs/OPTIONS_BANK.md.
-
 ## Change log
 
-- 2026-11-06: Completed product scope/options plan and specified the proposed WooCommerce refund observation plus per-item admin capture model. Refined data attribution and measurement boundaries. No plugin implementation or CLI tooling added.
+- 2026-11-06: Completed product scope/options plan and proposed WooCommerce refund observation plus per-item admin capture. Refined data attribution and measurement boundaries.
+- 2026-11-06: Added separate WordPress.org Free and WooCommerce.com Paid submission plan, with current freemium review and compatibility requirements. No plugin implementation or CLI tooling added.
