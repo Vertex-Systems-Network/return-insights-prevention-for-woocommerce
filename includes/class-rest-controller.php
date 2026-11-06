@@ -48,8 +48,8 @@ final class Rest_Controller {
 			'callback' => array( self::class, 'get_summary' ),
 			'permission_callback' => array( self::class, 'can_view' ),
 			'args' => array(
-				'date_from' => array( 'type' => 'string', 'pattern' => '^\\d{4}-\\d{2}-\\d{2}
-				'date_to' => array( 'type' => 'string', 'pattern' => '^\\d{4}-\\d{2}-\\d{2}
+				'date_from' => array( 'type' => 'string', 'pattern' => '^\d{4}-\d{2}-\d{2}$' ),
+				'date_to' => array( 'type' => 'string', 'pattern' => '^\d{4}-\d{2}-\d{2}$' ),
 			),
 		) );
 		register_rest_route( self::NS, '/sources', array( 'methods' => 'GET', 'callback' => array( self::class, 'get_sources' ), 'permission_callback' => array( self::class, 'can_view' ) ) );
@@ -367,7 +367,7 @@ final class Rest_Controller {
 	private static function missing_event(): \WP_Error { return new \WP_Error( 'event_not_found', __( 'Insight event not found.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 404 ) ); }
 }
  ),
-				'date_to' => array( 'type' => 'string', 'format' => 'date' ),
+				'date_to' => array( 'type' => 'string', 'pattern' => '^\d{4}-\d{2}-\d{2}$' ),
 			),
 		) );
 		register_rest_route( self::NS, '/sources', array( 'methods' => 'GET', 'callback' => array( self::class, 'get_sources' ), 'permission_callback' => array( self::class, 'can_view' ) ) );
@@ -1000,7 +1000,7 @@ final class Rest_Controller {
 	private static function missing_event(): \WP_Error { return new \WP_Error( 'event_not_found', __( 'Insight event not found.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 404 ) ); }
 }
  ),
-				'date_to' => array( 'type' => 'string', 'format' => 'date' ),
+				'date_to' => array( 'type' => 'string', 'pattern' => '^\d{4}-\d{2}-\d{2}$' ),
 			),
 		) );
 		register_rest_route( self::NS, '/sources', array( 'methods' => 'GET', 'callback' => array( self::class, 'get_sources' ), 'permission_callback' => array( self::class, 'can_view' ) ) );
