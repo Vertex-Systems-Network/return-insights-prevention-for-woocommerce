@@ -25,11 +25,11 @@ Planning estimates in UTC; reviewed 2026-11-06. P0–P7 track planning artifacts
 | P6 Pre-development readiness gate | Resolve decisions and approve implementation scope | Complete; owner approval recorded | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | P7 Distribution and submission plan | WordPress.org Free + WooCommerce.com Paid tracks | Planning complete; actual submission blocked by release | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 
-**Planning artifact completion: 100%** across P0–P7. P6 is approved and implementation is authorized within the scoped backlog. Runtime work packages: 6/11 implemented (**55%**). Dates are estimates, not delivery promises. Keep planning progress separate from implementation progress. Update this table and change log whenever the plan changes.
+**Planning artifact completion: 100%** across P0–P7. P6 is approved and implementation is authorized within the scoped backlog. Runtime work packages: 7/11 implemented (**64%**). Dates are estimates, not delivery promises. Keep planning progress separate from implementation progress. Update this table and change log whenever the plan changes.
 
 ## Implementation status
 
-P6 approval is recorded. I-02 foundation, I-03 catalog/manual-capture API, I-04 refund observation, I-05 Free reports, I-06 REST/React admin, and I-07 Pro product/variation cohort insights are implemented (6/11, **55%**). Free reports provide date-filtered event/reason/quantity/source counts and item-scoped product/category totals. Pro patterns compare mature purchase cohorts, use exact item-level confirmed-return attribution, and suppress rates for incomplete mapping, fewer than 20 sold units, missing denominators, and returns above sold quantity. Runtime, visual, accessibility, compatibility, and commercial entitlement verification remain for I-11. React uses WordPress bundled packages without JSX/build tooling; no CLI is to be added until the plugin is final.
+P6 approval is recorded. I-02 foundation, I-03 catalog/manual-capture API, I-04 refund observation, I-05 Free reports, I-06 REST/React admin, I-07 Pro product/variation cohort insights, and I-08 Pro clustering/alerts implementation are present (7/11, **64%**). Free reports provide date-filtered event/reason/quantity/source counts and item-scoped product/category totals. Pro patterns compare mature purchase cohorts, use exact item-level confirmed-return attribution, and suppress rates for incomplete mapping, fewer than 20 sold units, missing denominators, and returns above sold quantity. Runtime, visual, accessibility, compatibility, and commercial entitlement verification remain for I-11. React uses WordPress bundled packages without JSX/build tooling; no CLI is to be added until the plugin is final.
 
 ## Distribution plan
 
@@ -51,13 +51,13 @@ Details and official source links: docs/DISTRIBUTION.md. No submission has been 
 | I-06 REST + React admin | Implemented; I-11 verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | I-05 Free reports | Implemented; I-11 verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | I-07 Pro product/variation patterns | Implemented; entitlement provider + I-11 verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
-| I-08 Pro clustering and alerts | Implementation present; weekly scan status and suppressed-candidate reasons visible; runtime/storage verification pending | █████████░ 90% | 2026-11-06 | 2026-11-10 |
+| I-08 Pro clustering and alerts | Implementation complete; I-11 runtime verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 
 Package progress means implementation scope is present; it does not mean runtime/release acceptance is verified. See `docs/IMPLEMENTATION_BACKLOG.md` for detailed evidence.
 
 ## Current gate
 
-P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS_GATE.md. I-02, I-03, I-04, I-05, I-06, and I-07 are implemented. I-08 implementation is 90%: deterministic clusters, reversible assignments, weekly Pro evaluation, bounded full candidate scan (up to 2,000 rows, fail-closed above limit), ≥80% mapping threshold, per-candidate sample/rate gates, stable deduplication, bounded 50-entry action history, and React cluster/alert review UI are present. The alerts screen now reports last scan status and counts/causes for withheld candidates; coverage below threshold is surfaced with measured mapping. PHP/WordPress runtime verification and bounded option-storage review remain. Test-site installation was blocked by browser security policy, so no live-site result is claimed. Keep CLI/build tooling, Composer/npm manifests, and package managers out of this repository until the plugin is final.
+P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS_GATE.md. I-02 through I-08 implementation packages are present (7/11, 64%); I-08 is complete at implementation scope. It includes deterministic clusters, reversible assignments, weekly Pro evaluation, a full candidate scan capped at 2,000 rows with fail-closed overflow, ≥80% mapping threshold, per-candidate sample/rate gates, stable deduplication, bounded 2,000-alert storage and 50-entry action history, persisted scan status, and React cluster/alert review UI. The Alerts screen surfaces coverage blocks and withheld-candidate reasons. Runtime, visual, accessibility, compatibility, and entitlement-provider verification remain tracked in I-11. Test-site installation was blocked by browser security policy, so no live-site result is claimed. Keep CLI/build tooling, Composer/npm manifests, and package managers out of this repository until the plugin is final.
 
 ## Plan files
 
@@ -98,7 +98,7 @@ P3 architecture specifies indexed custom event storage, source-level idempotency
 
 ## Change log
 
-- 2026-11-06: I-08 now returns persisted weekly scan status and suppression reasons to the Alerts UI. Scans blocked below 80% mapping and candidate-level sample/coverage suppressions are visible; I-08 progress is 90%, with runtime/storage verification open.
+- 2026-11-06: Completed I-08 implementation: weekly scan status and suppression reasons are returned through REST and displayed in Alerts; below-80% mapping blocks evaluation and candidate-level sample/coverage gates are counted. Bounded storage is documented and I-08 is 100% at implementation scope; live runtime verification is assigned to I-11. Runtime work packages: 7/11 (64%).
 - 2026-11-06: Completed product scope/options plan and proposed WooCommerce refund observation plus per-item admin capture.
 - 2026-11-06: Added separate WordPress.org Free and WooCommerce.com Paid submission plan.
 - 2026-11-06: Completed P3 logical data model, HPOS-safe ingestion, metric boundaries, privacy lifecycle, and performance plan. Added official design source links; no plugin implementation or CLI tooling added.
