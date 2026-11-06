@@ -1,6 +1,6 @@
 # UX Flows and Acceptance Criteria
 
-**Status:** P4 planning artifact complete; I-06 implements overview/capture/history/catalog/source flows and I-05 adds date-filtered Free reports. Usability and runtime validation remain.
+**Status:** P4 planning artifact complete; I-05 adds Free reports, I-06 implements overview/capture/history/catalog/source flows, and I-07 implements entitlement-gated Pro pattern review. Usability and runtime validation remain.
 
 This file converts the React admin direction into reviewable merchant journeys. Metric and data decisions in the product and architecture specifications remain authoritative.
 
@@ -52,7 +52,22 @@ This file converts the React admin direction into reviewable merchant journeys. 
 - Low samples, incomplete coverage, and unknown mappings are visible.
 - Recommendations use review/hypothesis wording and do not claim causation.
 
-## Flow 4: Create and measure a corrective action (Pro)
+## Flow 4: Review mature product/variation patterns (Pro)
+
+1. Merchant opens the Patterns section when Pro entitlement is available.
+2. Merchant selects maturity and comparison windows from 30/60/90/120/180 days.
+3. The view compares the current and preceding mature cohorts by product/variation and reason.
+4. The merchant reviews sold and confirmed-return quantities, eligible rates, rate changes, and data-quality notices.
+5. Low-volume or incomplete patterns explain why a rate is unavailable; the UI does not estimate missing values.
+
+**Acceptance criteria**
+
+- The endpoint requires `view_return_insights` and an entitlement provider; the Free core defaults to locked.
+- Only exact item-mapped confirmed returns count; refund observations and exchanges are excluded.
+- Incomplete mapping, fewer than 20 sold units, missing denominator, or returned quantity above sold quantity suppresses rates.
+- Recommendations remain review prompts and do not claim causation.
+
+## Flow 5: Create and measure a corrective action (Pro)
 
 1. Merchant starts an action from a pattern.
 2. Merchant writes a proposed change, assigns an owner, selects a status, and sets a review date/window.
@@ -68,7 +83,7 @@ This file converts the React admin direction into reviewable merchant journeys. 
 - Copy describes changes as associated with the action, not proven to be caused by it.
 - Action history is retained according to the approved retention policy.
 
-## Flow 5: Resolve a capture or data-quality issue
+## Flow 6: Resolve a capture or data-quality issue
 
 1. Merchant opens Capture sources or an event warning.
 2. The screen identifies the affected source, last successful observation, and actionable mapping/error detail.
