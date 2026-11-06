@@ -16,7 +16,7 @@ final class Installer {
 	/**
 	 * Current schema version.
 	 */
-	public const DB_VERSION = '1';
+	public const DB_VERSION = '2';
 
 	/**
 	 * Schema version option.
@@ -58,6 +58,7 @@ final class Installer {
 			source_record_id varchar(100) NOT NULL,
 			event_kind varchar(32) NOT NULL,
 			order_id bigint(20) unsigned NOT NULL,
+			refund_id bigint(20) unsigned NOT NULL DEFAULT 0,
 			order_item_id bigint(20) unsigned NOT NULL,
 			product_id bigint(20) unsigned NOT NULL,
 			variation_id bigint(20) unsigned NOT NULL DEFAULT 0,
@@ -77,6 +78,7 @@ final class Installer {
 			UNIQUE KEY source_key (source_key),
 			KEY order_item_kind_deleted (order_item_id,event_kind,deleted_at_gmt),
 			KEY order_id_occurred (order_id,occurred_at_gmt),
+			KEY refund_id (refund_id),
 			KEY reason_occurred (reason_id,occurred_at_gmt),
 			KEY product_variation_occurred (product_id,variation_id,occurred_at_gmt)
 		) {$charset_collate};";
