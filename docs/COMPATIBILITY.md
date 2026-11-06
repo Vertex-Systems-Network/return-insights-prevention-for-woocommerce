@@ -9,17 +9,19 @@
 | Requirement | Planned V1 minimum | Basis / caveat |
 |---|---|---|
 | WordPress | 6.9+ | Current WooCommerce 10.8+ server guidance. |
-| WooCommerce | 10.8+ | Planning floor aligned to current server-requirements guidance; recheck at release. |
+| WooCommerce | 10.8+ | Planning floor aligned to current server-requirements guidance; recheck current stable before release. |
 | PHP | 8.3+ | Current WordPress and WooCommerce recommendations. |
-| Database | MySQL 8.0+ or MariaDB 10.6+ | WooCommerce 10.8+ guidance; WordPress recommends MariaDB 10.11+, which is also supported by this floor. |
+| Database | MySQL 8.0+ or MariaDB 10.6+ | WooCommerce 10.8+ guidance; WordPress recommends MariaDB 10.11+, also supported by this floor. |
 | HTTPS | Required for supported production setup | Official WordPress/WooCommerce guidance. |
 | WordPress memory | 256 MB+ recommended | WooCommerce host recommendation; not a plugin activation gate. |
 | Order storage | HPOS and legacy storage supported | Use WooCommerce CRUD APIs; never assume legacy tables. |
 | React admin | WordPress-bundled React/component packages; assets shipped built | Merchants do not need Node/npm/CLI. Build tool is a development concern after P6 approval. |
-| WPML | Optional integration target; WPML/WooCommerce Multilingual not a hard dependency | Test latest supported versions at release; no certification claim without evidence. |
-| Polylang | Optional integration target; Polylang for WooCommerce not a hard dependency | Test latest supported versions at release; no certification claim without evidence. |
+| WPML | Optional integration target; not a hard dependency | Test latest supported versions at release; no certification claim without evidence. |
+| Polylang | Optional integration target; not a hard dependency | Test latest supported versions at release; no certification claim without evidence. |
 
-These are the planned V1 support requirements, not a claim that code already passes them. At release, record exact tested versions and set plugin metadata from the verified support matrix. Recheck current vendor requirements before each major release.
+## Marketplace submission compatibility rule
+
+WooCommerce Marketplace's current submission guidance requires support for the **two latest major releases of both WordPress and WooCommerce**. This moving rule takes precedence over the planning minimums above. At submission time, recalculate the supported/tested matrix, set plugin metadata, and record evidence for each required version. Do not treat the current 6.9+/10.8+ baseline as a guarantee of future Marketplace approval.
 
 ## Required compatibility behavior
 
@@ -46,7 +48,8 @@ Use WordPress translation APIs and one stable text domain for shipped UI. Keep i
 - [WPML language configuration files](https://wpml.org/documentation/support/language-configuration-files/)
 - [Polylang developer guidance](https://polylang.pro/documentation/support/developers/developpers-how-to/)
 - [Polylang WooCommerce settings and strings](https://polylang.pro/documentation/support/guides/translating-woocommerce-urls-and-strings/)
+- [Woo Marketplace submission guidelines](https://developer.woocommerce.com/docs/woo-marketplace/submitting-your-product)
 
 ## Release verification gate
 
-Before public release, run and document the compatibility matrix across declared PHP, WordPress, WooCommerce, HPOS, WPML, and Polylang cases. Keep a compatibility claim only where automated or documented manual verification exists. Standard gettext use alone is not certification.
+Before public release, run and document the compatibility matrix across declared PHP, WordPress, WooCommerce, HPOS, WPML, and Polylang cases. Keep a claim only where automated or documented manual verification exists. Standard gettext use alone is not certification.
