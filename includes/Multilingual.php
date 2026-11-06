@@ -33,32 +33,34 @@ final class Multilingual {
 			if ( function_exists( 'pll_register_string' ) ) {
 				pll_register_string( $name, $label, self::GROUP, false );
 			}
-			if ( has_action( 'wpml_register_single_string' ) ) {
+			if ( false !== has_action( 'wpml_register_single_string' ) ) {
 				do_action( 'wpml_register_single_string', self::CONTEXT, $name, $label );
 			}
 		}
 	}
 
-	/** Resolve an optional engine translation after explicit locale overrides. */
+	/** Resolve an integration translation, then prefer an explicit locale override. */
 	public static function reason_label( array $reason, ?string $locale = null ): string {
-		$label = (string) ( $reason['label'] ?? '' );
+		$source_label = (string) ( $reason['label'] ?? '' );
+		$label = $source_label;
 		$locale = $locale ?: get_user_locale();
-		$translations = isset( $reason['translations'] ) && is_array( $reason['translations'] ) ? $reason['translations'] : array();
-		if ( isset( $translations[ $locale ] ) && is_scalar( $translations[ $locale ] ) ) {
-			$label = (string) $translations[ $locale ];
-		}
-
 		$name = 'reason_' . sanitize_key( (string) ( $reason['id'] ?? '' ) );
-		if ( has_filter( 'wpml_translate_single_string' ) ) {
-			$translated = apply_filters( 'wpml_translate_single_string', $label, self::CONTEXT, $name );
+		if ( false !== has_filter( 'wpml_translate_single_string' ) ) {
+			$translated = apply_filters( 'wpml_translate_single_string', $source_label, self::CONTEXT, $name );
 			if ( is_string( $translated ) && '' !== $translated ) {
 				$label = $translated;
 			}
 		} elseif ( function_exists( 'pll__' ) ) {
-			$translated = pll__( $label );
+			$translated = pll__( $source_label );
 			if ( is_string( $translated ) && '' !== $translated ) {
 				$label = $translated;
 			}
+		}
+
+		// Merchant-defined locale labels are the most specific source of truth.
+		$translations = isset( $reason['translations'] ) && is_array( $reason['translations'] ) ? $reason['translations'] : array();
+		if ( isset( $translations[ $locale ] ) && is_scalar( $translations[ $locale ] ) && '' !== (string) $translations[ $locale ] ) {
+			$label = (string) $translations[ $locale ];
 		}
 
 		return $label;
