@@ -1,10 +1,10 @@
 # P6 Technical Contracts — REST and Security/Privacy
 
-**Status:** I-03 catalog/order/manual-event routes, I-04 refund observer, I-06 React admin, and I-05 Free report summary are implemented. Pro pattern routes and runtime verification remain pending.  
+**Status:** I-03 catalog/order/manual-event routes, I-04 refund observer, I-05 Free summary, I-06 React admin, and I-07 Pro patterns are implemented. Runtime verification and a production Pro entitlement provider remain pending.  
 **Reviewed:** 2026-11-06  
 **P6 status:** Approved 2026-11-06; I-02/I-03/I-04/I-06/I-05 implementation is present. I-11 runtime verification remains pending.
 
-This document records approved constraints and implemented I-05/I-06 REST surfaces. Listed current routes are implemented unless marked planned; static source review is not runtime verification.
+This document records approved constraints and implemented I-05/I-06/I-07 REST surfaces. Listed current routes are implemented unless marked planned; static source review is not runtime verification.
 
 ## Implemented REST routes
 
@@ -24,8 +24,15 @@ All routes use `/wp-json/wpessential/return-insights/v1`. Reads require `view_re
 | `DELETE /events/{id}` | Soft-delete manual event | Required audit reason; observed refund records are immutable. |
 | `GET /sources` | Coverage summary | Active event count and latest date by source only; not health/error monitoring. |
 | `GET /summary` | Free evidence report | Optional `date_from`/`date_to` (`YYYY-MM-DD`) in the store timezone; defaults to the last 30 days. Returns event and summed quantity totals, mapping coverage, reason/event-kind/source groups, top 10 item-scoped products/categories, and period/timezone. No sales denominator, return rate, or causal interpretation. Category memberships overlap. |
+| `GET /patterns` | Pro product/variation patterns | `maturity_days` and `cohort_days` each accept 30/60/90/120/180 (default 90). Requires read capability and Pro entitlement; entitlement filter defaults false. Returns two mature equal-length cohort windows, coverage, pattern rates/status, sample quality, and definition version. |
 
 The UI uses WordPress `wp.element`, `wp.components`, and `wp.apiFetch`; the registered script dependencies are scoped to the WooCommerce admin screen. apiFetch applies same-origin REST root and nonce middleware when enqueued with the bundled script handle. See [apiFetch documentation](https://developer.wordpress.org/block-editor/reference-guides/packages/packages-api-fetch/) and [script dependency documentation](https://developer.wordpress.org/reference/functions/wp_enqueue_script/).
+
+## I-07 pattern semantics
+
+The endpoint compares two adjacent, equally sized purchase-date cohorts; both are fully older than the selected maturity window. Site-local date boundaries are used. Eligible quantity currently uses completed/refunded orders with a completion timestamp and native line-item quantity as an MVP proxy; partial fulfillment is not modeled. Only exact active manual `confirmed_return` events mapped to the same order item/product/variation contribute to returned quantity. Refund-only evidence and exchanges are excluded.
+
+Order reads use `wc_get_orders()`/Woo CRUD with 50 orders per page and a hard 500-order cap per cohort. An over-limit or failed/incomplete item mapping yields unavailable rates, never partial rates. Rates are suppressed for fewer than 20 sold units, missing denominator, incomplete coverage, or returned quantity above sold quantity. The 20-unit rule is a minimum sample gate, not statistical confidence. These are descriptive rates, not causal explanations. `wpessential_return_insights_pro_entitled` grants no entitlement by default; a future commercial add-on must implement and validate the entitlement provider.
 
 ## I-05 reporting semantics
 
