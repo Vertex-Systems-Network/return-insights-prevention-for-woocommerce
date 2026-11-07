@@ -2,7 +2,7 @@
 
 **Review date:** 2026-11-06  
 **I-10 status:** Approved V1 integration implementation complete; WPML/Polylang runtime matrix is an I-11 verification gate.  
-**I-11 status:** Static audit updated 2026-11-07; release/runtime gate remains blocked.
+**I-11 status:** Static audit and package gates updated 2026-11-07; staging runtime gate remains blocked.
 
 **Latest verification pass:** Re-ran available repository checks on 2026-11-06. Composer JSON/PSR-4 mapping, no-custom-SPL-loader scan, browser-ready JavaScript syntax, whitespace, and merge-marker scans pass. GitHub reports no combined CI statuses for the reviewed commit. These checks do not replace PHP parsing or WordPress/WooCommerce runtime verification.
 
@@ -38,17 +38,19 @@ This pass checked PSR-4/bootstrap boundaries, the v1→v3 migration path by sour
 | Composer PSR-4 path | Pass | Manifest maps `WPEssential\\ReturnInsights\\` to `includes/` |
 | Custom SPL loader | Pass | No `spl_autoload_register`/`spl_autoload_call` in plugin PHP |
 | GitHub commit CI status | No statuses reported | Reviewed commit has no combined CI statuses available |
-| PHP parse/lint | Blocked | PHP executable unavailable |
-| Composer autoloader generation | Blocked | Composer executable unavailable; release vendor files are not generated |
+| PHP parse/lint | Pass | GitHub Actions run `42375227945` runs `php -l` on every PHP source before packaging; the earlier artifact did not include this gate. |
+| Composer autoloader generation | Pass for test artifact | GitHub Actions generated the PSR-4 loader in staging and package validation checked required autoload files; marketplace/release checks remain separate. |
 | WordPress/WooCommerce activation, migration, API and CRUD runtime | Blocked | No local PHP/database/WP/WC runtime; no live-site result claimed |
 | HPOS and legacy order storage | Not verified | Needs runtime fixtures on both modes |
 | WPML/Polylang active/absent cases | Not verified | Adapter source paths reviewed; compatible versions need runtime matrix |
-| Authorized staging-site availability | Inspected; integration test unavailable | WordPress 7.1.4 / WooCommerce 11.2.2 present; WPML, Polylang, and Return Insights plugin absent from installed plugin list |
+| Authorized staging-site availability | Fatal log matched; recovery/retest pending | `includes/RestController.php:538` matched a stray code fragment after the class close; fixed build passed lint and packaging, but the staging site must be recovered and retested. |
 | Visual, keyboard, RTL, contrast and screen-reader review | Not verified | Needs rendered wp-admin with supported WP/WC versions |
 | Security/privacy release criteria | Source implementation present; runtime check pending | WordPress privacy exporter/eraser covers user-attributed activity and order-linked insights. Order lookup/update database failures now emit a WooCommerce error log entry with no user/order identifiers. Exercise export, erasure, and failure paths in runtime. |
 | Pro licensing/entitlement | Incomplete | Free core defaults Pro to fail-closed; commercial entitlement provider remains unimplemented |
 
 ## Gate decision
+
+**Staging incident (2026-11-07):** The reported fatal path `wpessential-return-insights-prevention-woocommerce/includes/RestController.php:538` matched the repository source. A dangling 53-line route fragment after the class-closing brace caused a PHP parse error. The fragment has been removed. GitHub Actions now runs `php -l` for every PHP file before building; run `42375227945` passed lint, Composer autoload generation, ZIP validation, and artifact upload. This identifies the Return Insights build as the source of that fatal path; it does not implicate Order Rescue Hub. Site recovery and retesting the corrected artifact remain open.
 
 I-10 implementation is complete for the approved V1 scope: guarded WPML/Polylang reason-label adapters are implemented and no RMA adapter is in scope without approved demand/API/privacy review. WPML/Polylang absent/active runtime scenarios remain unverified and are tracked in I-11. I-11 cannot be marked complete until PHP parsing, generated Composer loader, activation/migration upgrade, API permission and CRUD flows, HPOS/legacy behavior, privacy exporter/eraser runtime behavior, rendered accessibility checks, and release compatibility evidence are recorded. No CLI/build tooling or third-party dependency was added to the repository for this pass.
 
