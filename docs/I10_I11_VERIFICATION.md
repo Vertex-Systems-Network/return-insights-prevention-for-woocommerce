@@ -1,7 +1,7 @@
 # I-10 Integration and I-11 Release Verification
 
 **Review date:** 2026-11-06  
-**I-10 status:** Integration code implemented; WPML/Polylang runtime matrix remains unverified.  
+**I-10 status:** Approved V1 integration implementation complete; WPML/Polylang runtime matrix is an I-11 verification gate.  
 **I-11 status:** Static audit completed for this pass; release/runtime gate remains blocked.
 
 **Latest verification pass:** Re-ran available repository checks on 2026-11-06. Composer JSON/PSR-4 mapping, no-custom-SPL-loader scan, browser-ready JavaScript syntax, whitespace, and merge-marker scans pass. GitHub reports no combined CI statuses for the reviewed commit. These checks do not replace PHP parsing or WordPress/WooCommerce runtime verification.
@@ -50,7 +50,7 @@ This pass checked PSR-4/bootstrap boundaries, the v1→v3 migration path by sour
 
 ## Gate decision
 
-I-10 cannot be marked accepted until WPML and Polylang absent/active cases are exercised on supported WordPress/WooCommerce versions. I-11 cannot be marked complete until PHP parsing, generated Composer loader, activation/migration upgrade, API permission and CRUD flows, HPOS/legacy behavior, privacy exporter/eraser runtime behavior, rendered accessibility checks, and release compatibility evidence are recorded. No CLI/build tooling or third-party dependency was added to the repository for this pass.
+I-10 implementation is complete for the approved V1 scope: guarded WPML/Polylang reason-label adapters are implemented and no RMA adapter is in scope without approved demand/API/privacy review. WPML/Polylang absent/active runtime scenarios remain unverified and are tracked in I-11. I-11 cannot be marked complete until PHP parsing, generated Composer loader, activation/migration upgrade, API permission and CRUD flows, HPOS/legacy behavior, privacy exporter/eraser runtime behavior, rendered accessibility checks, and release compatibility evidence are recorded. No CLI/build tooling or third-party dependency was added to the repository for this pass.
 
 ## Official integration references
 
