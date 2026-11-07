@@ -46,7 +46,7 @@ This pass checked PSR-4/bootstrap boundaries, the v1→v3 migration path by sour
 | Staging REST smoke: Overview, History, Capture Sources, Reason Catalog | Pass after fix | Overview returned selected-period summary/empty state; History/Sources returned intended empty states; Catalog loaded canonical reason rows. No synthetic records were created. |
 | Staging Pro UI gates | Partial pass | Product Trends showed the Pro upgrade notice; Alerts and Corrective Actions remained behind the shared Pro notice. The commercial entitlement provider is absent, so Pro REST permission/data behavior is not verified. |
 | Read-only WooCommerce order item lookup | Pass, limited | Capture screen lookup of existing staging order #49 returned 1 line item with ordered quantity via WooCommerce CRUD. No capture was saved; WooCommerce System Status later confirmed HPOS active, while legacy-mode behavior remains unverified. |
-| Visual, keyboard, RTL, contrast and screen-reader review | Not verified | Needs rendered wp-admin with supported WP/WC versions |
+| Keyboard smoke check | Partial pass | Tab reached skip links and the first plugin tab; Enter opened Overview and its report rendered. Full focus-order review remains. |\n| Visual, RTL, contrast and screen-reader review | Not verified | Needs full rendered review across supported WP/WC versions |
 | Security/privacy release criteria | Source implementation present; runtime check pending | WordPress privacy exporter/eraser covers user-attributed activity and order-linked insights. Order lookup/update database failures now emit a WooCommerce error log entry with no user/order identifiers. Exercise export, erasure, and failure paths in runtime. |
 | Pro licensing/entitlement | Incomplete | Free core defaults Pro to fail-closed; commercial entitlement provider remains unimplemented |
 
@@ -86,3 +86,6 @@ I-10 implementation is complete for the approved V1 scope: guarded WPML/Polylang
 
 
 **Runtime environment note (2026-11-07):** Although the URL is under `/el-test/`, WooCommerce System Status reports environment type `production`. Treat this as a potentially production-marked site; the checks after observing this stayed read-only. Confirm the host's environment designation before running write, refund, privacy-erasure, or storage-mode switch tests.
+
+
+**Keyboard smoke check (2026-11-07):** With the staging admin loaded, Tab moved through the WordPress skip-to-main/toolbar links. Activating skip-to-main placed focus on the plugin Overview button; pressing Enter opened the Overview and its REST data rendered. This does not constitute a full accessibility audit.
