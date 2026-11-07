@@ -1,14 +1,14 @@
 # I-10 Integration and I-11 Release Verification
 
-**Review date:** 2026-11-06  
+**Review date:** 2026-11-07  
 **I-10 status:** Approved V1 integration implementation complete; WPML/Polylang runtime matrix is an I-11 verification gate.  
-**I-11 status:** Static audit and package gates updated 2026-11-07; staging runtime gate remains blocked.
+**I-11 status:** Initial staging smoke checks pass after a REST query-validation fix; the broader runtime/release gate remains open.
 
 **Latest verification pass:** Re-ran available repository checks on 2026-11-06. Composer JSON/PSR-4 mapping, no-custom-SPL-loader scan, browser-ready JavaScript syntax, whitespace, and merge-marker scans pass. GitHub reports no combined CI statuses for the reviewed commit. These checks do not replace PHP parsing or WordPress/WooCommerce runtime verification.
 
 **Integration correction (2026-11-07):** Corrected reason-label precedence so WPML/Polylang translate the registered source label first, then an explicit merchant locale override wins. Hook detection now distinguishes `false` from a valid priority of `0`. This is source-level correction only; no active WPML/Polylang site was available to test the path.
 
-**Authorized staging-site inspection (2026-11-07):** Read-only Plugins screen showed WordPress 7.1.4 and WooCommerce 11.2.2, with four installed plugins. Neither WPML nor Polylang nor this Return Insights plugin was installed. The site is a real WP/WC environment, but it cannot provide runtime evidence for this integration until those plugins are made available there.
+**Authorized staging smoke check (2026-11-07):** On `https://wpessential.org/el-test/`, WordPress 7.1.4 and WooCommerce 11.2.2 were observed. The user installed/activated Return Insights; the admin shell and Reason Catalog loaded. Overview and History first returned `unknown_fields` because strict GET-query validation rejected WordPress apiFetch's `_locale=user` transport parameter. A query-only validator now ignores `_locale` while JSON body validators remain strict. Corrected artifact run `42377569578` passed and was installed over the existing 0.1.0 package. Post-fix Overview returned the selected-period zero counts and empty-period message, History returned the intended no-records empty state, and Capture Sources returned its no-records empty state. This is a limited staging smoke check, not full I-11 acceptance. WPML/Polylang remain unavailable for active-plugin checks.
 
 ## I-10: WPML and Polylang
 
@@ -37,22 +37,22 @@ This pass checked PSR-4/bootstrap boundaries, the v1→v3 migration path by sour
 | Patch whitespace/conflict-marker check | Pass | `git diff --check`; merge-marker search |
 | Composer PSR-4 path | Pass | Manifest maps `WPEssential\\ReturnInsights\\` to `includes/` |
 | Custom SPL loader | Pass | No `spl_autoload_register`/`spl_autoload_call` in plugin PHP |
-| GitHub commit CI status | No statuses reported | Reviewed commit has no combined CI statuses available |
+| Build workflow | Pass | Run `42377569578` passed all-PHP lint, Composer PSR-4 autoload generation, package validation, and artifact upload; artifact `13575829765`, SHA-256 `a692cc44d3ec245c948eb97e39c901c836e1f9ec2087fcf18065800f0fc20642` for outer artifact archive. |
 | PHP parse/lint | Pass | GitHub Actions run `42375227945` runs `php -l` on every PHP source before packaging; the earlier artifact did not include this gate. |
 | Composer autoloader generation | Pass for test artifact | GitHub Actions generated the PSR-4 loader in staging and package validation checked required autoload files; marketplace/release checks remain separate. |
-| WordPress/WooCommerce activation, migration, API and CRUD runtime | Blocked | No local PHP/database/WP/WC runtime; no live-site result claimed |
+| WordPress/WooCommerce activation + admin shell | Pass, limited | Updated 0.1.0 package replaced successfully on staging; admin UI rendered on WP 7.1.4/WC 11.2.2; migration/CRUD not yet exercised |
 | HPOS and legacy order storage | Not verified | Needs runtime fixtures on both modes |
 | WPML/Polylang active/absent cases | Not verified | Adapter source paths reviewed; compatible versions need runtime matrix |
-| Authorized staging-site availability | Fatal log matched; recovery/retest pending | `includes/RestController.php:538` matched a stray code fragment after the class close; fixed build passed lint and packaging, but the staging site must be recovered and retested. |
+| Staging REST smoke: Overview, History, Capture Sources | Pass after fix | Overview returned selected-period summary/empty state; History and Sources returned expected empty states without unsupported-fields error. No synthetic records were created. |
 | Visual, keyboard, RTL, contrast and screen-reader review | Not verified | Needs rendered wp-admin with supported WP/WC versions |
 | Security/privacy release criteria | Source implementation present; runtime check pending | WordPress privacy exporter/eraser covers user-attributed activity and order-linked insights. Order lookup/update database failures now emit a WooCommerce error log entry with no user/order identifiers. Exercise export, erasure, and failure paths in runtime. |
 | Pro licensing/entitlement | Incomplete | Free core defaults Pro to fail-closed; commercial entitlement provider remains unimplemented |
 
 ## Gate decision
 
-**Staging incident (2026-11-07):** The reported fatal path `wpessential-return-insights-prevention-woocommerce/includes/RestController.php:538` matched the repository source. A dangling 53-line route fragment after the class-closing brace caused a PHP parse error. The fragment has been removed. GitHub Actions now runs `php -l` for every PHP file before building; run `42375227945` passed lint, Composer autoload generation, ZIP validation, and artifact upload. This identifies the Return Insights build as the source of that fatal path; it does not implicate Order Rescue Hub. Site recovery and retesting the corrected artifact remain open.
+**Staging incidents and verification (2026-11-07):** The earlier fatal at `includes/RestController.php:538` was caused by a stray REST fragment and was removed; all PHP lint checks passed in the build workflow. After the user installed that artifact, the admin shell loaded but overview/history exposed the `_locale=user` allowlist bug. The fix is committed and build run `42377569578` passed. The corrected package was uploaded and WordPress reported `Plugin updated successfully`; Overview, History, and Capture Sources now render their expected empty-data states without plugin errors. A separate `ob_end_flush()` notice still appears from WordPress core `wp-includes/functions.php:5581`; it is unrelated to the plugin route fix. No synthetic data was entered.
 
-I-10 implementation is complete for the approved V1 scope: guarded WPML/Polylang reason-label adapters are implemented and no RMA adapter is in scope without approved demand/API/privacy review. WPML/Polylang absent/active runtime scenarios remain unverified and are tracked in I-11. I-11 cannot be marked complete until PHP parsing, generated Composer loader, activation/migration upgrade, API permission and CRUD flows, HPOS/legacy behavior, privacy exporter/eraser runtime behavior, rendered accessibility checks, and release compatibility evidence are recorded. No CLI/build tooling or third-party dependency was added to the repository for this pass.
+I-10 implementation is complete for the approved V1 scope: guarded WPML/Polylang reason-label adapters are implemented and no RMA adapter is in scope without approved demand/API/privacy review. WPML/Polylang absent/active runtime scenarios remain unverified and are tracked in I-11. I-11 cannot be marked complete until PHP parsing, generated Composer loader, upgrade migration, API permission and CRUD flows, HPOS/legacy behavior, privacy exporter/eraser runtime behavior, rendered accessibility checks, and release compatibility evidence are recorded. No CLI/build tooling or third-party dependency was added to the repository for this pass.
 
 ## Official integration references
 
@@ -64,3 +64,14 @@ I-10 implementation is complete for the approved V1 scope: guarded WPML/Polylang
 - [WooCommerce: `wc_get_orders()` and order queries](https://developer.woocommerce.com/docs/features/orders/wc-get-orders/) — customer orders must be accessed through WooCommerce query/CRUD APIs.
 - [WooCommerce privacy exporter code reference](https://woocommerce.github.io/code-reference/files/woocommerce-includes-class-wc-privacy-exporters.html) — order-specific export filter and personal-data field shape.
 - [WooCommerce privacy eraser code reference](https://woocommerce.github.io/code-reference/files/woocommerce-includes-class-wc-privacy-erasers.html) — per-order anonymization lifecycle hook used to remove this plugin's order linkage.
+
+
+## 2026-11-07 post-fix staging smoke details
+
+- Installed package: `wpessential-return-insights-prevention-woocommerce-0.1.0.zip` (artifact `13575829765`, workflow run `42377569578`). ZIP SHA-256 verified locally: `6bbfc01bb5683513e4f35adfe797d7d1330e56674e583603467a756098ffc915`.
+- WordPress confirmed the existing plugin replacement completed successfully; the Return Insights page remained reachable.
+- Overview: request completed; 0 active records, 0 quantity, mapping 0/0, expected empty-period message.
+- History: request completed; expected no-insights empty state.
+- Capture Sources: request completed; expected no-records empty state.
+- Reason Catalog: loaded canonical reason rows. No writes or artificial records were created.
+- Not exercised: creating an insight against a real order, refund ingestion, Pro endpoints/entitlement, HPOS vs legacy fixtures, permissions, WPML/Polylang, privacy export/erasure, accessibility, and release submission checks.
