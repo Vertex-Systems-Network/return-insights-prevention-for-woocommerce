@@ -2,11 +2,14 @@
 
 **Status:** I-00/I-01 design packages and I-02 foundation, I-03 catalog/manual-capture API, I-04 refund observation, I-05 Free reports, I-06 REST/React admin, and I-07 Pro patterns, I-08 clustering/alerts, and I-09 corrective-action tracking implementations are present. I-10 approved V1 integration implementation is complete; its WPML/Polylang runtime verification is tracked in I-11, along with release verification and the production Pro entitlement provider.
 **Start condition:** P6 approval recorded in `P6_READINESS_GATE.md` on 2026-11-06.  
-**Repository constraint:** Do not add CLI/build tooling to this repository until the plugin is final. The user authorized `composer.json` only for the PSR-4 autoload mapping; add no external dependencies and run no Composer command before final packaging. React uses WordPress-bundled globals without JSX or a build step.
+**Repository constraint:** No general CLI or frontend build tooling is in scope before finalization. The user explicitly authorized `tools/build-artifact.py` and its GitHub Actions workflow to produce a private test ZIP; Composer may run only in isolated packaging staging to generate PSR-4 autoload files. PHP lint is mandatory before packaging. No external dependencies or committed `vendor/` files. React uses WordPress-bundled globals without JSX or a build step.
 
 Each runtime item must be scoped with named files, acceptance evidence, dependencies, and a README progress update before work begins.
 
 ## Sequence
+
+**I-11 incident update (2026-11-07):** The staging fatal path `includes/RestController.php:538` was a real PHP parse error caused by stray code after the class close. It has been removed. The artifact workflow now lints every PHP source before package generation; latest lint and package run `42375227945` passed. Staging recovery and corrected-package runtime verification remain open.
+
 
 | ID | Work package | Main scope | Depends on | Exit evidence |
 |---|---|---|---|---|
