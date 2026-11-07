@@ -242,7 +242,7 @@ final class RestController {
 	}
 
 	public static function get_clusters( \WP_REST_Request $r ) {
-		if ( self::has_unknown_fields( $r->get_query_params(), array( 'maturity_days', 'cohort_days' ) ) ) { return self::unknown_fields_error(); }
+		if ( self::has_unknown_query_fields( $r->get_query_params(), array( 'maturity_days', 'cohort_days' ) ) ) { return self::unknown_fields_error(); }
 		$report = PatternService::report( absint( $r->get_param( 'maturity_days' ) ?: 90 ), absint( $r->get_param( 'cohort_days' ) ?: 90 ) );
 		if ( is_wp_error( $report ) ) { return $report; }
 		$report['clusters'] = ClusterService::build( $report['patterns'] ?? array(), $report['coverage'] ?? array() );
@@ -256,12 +256,12 @@ final class RestController {
 	}
 
 	public static function get_patterns( \WP_REST_Request $r ) {
-		if ( self::has_unknown_fields( $r->get_query_params(), array( 'maturity_days', 'cohort_days' ) ) ) { return self::unknown_fields_error(); }
+		if ( self::has_unknown_query_fields( $r->get_query_params(), array( 'maturity_days', 'cohort_days' ) ) ) { return self::unknown_fields_error(); }
 		return PatternService::report( absint( $r->get_param( 'maturity_days' ) ?: 90 ), absint( $r->get_param( 'cohort_days' ) ?: 90 ) );
 	}
 
 	public static function get_summary( \WP_REST_Request $r ) {
-		if ( self::has_unknown_fields( $r->get_query_params(), array( 'date_from', 'date_to' ) ) ) {
+		if ( self::has_unknown_query_fields( $r->get_query_params(), array( 'date_from', 'date_to' ) ) ) {
 			return self::unknown_fields_error();
 		}
 		global $wpdb;
@@ -410,7 +410,7 @@ final class RestController {
 	}
 
 	public static function get_events( \WP_REST_Request $r ) {
-		if ( self::has_unknown_fields( $r->get_query_params(), array( 'page', 'per_page', 'order_id' ) ) ) { return self::unknown_fields_error(); }
+		if ( self::has_unknown_query_fields( $r->get_query_params(), array( 'page', 'per_page', 'order_id' ) ) ) { return self::unknown_fields_error(); }
 
 		global $wpdb;
 		$page = max( 1, absint( $r->get_param( 'page' ) ) );
@@ -524,6 +524,13 @@ final class RestController {
 		$reason = ReasonCatalog::find( $row['reason_id'], true );
 		return array( 'id' => (int) $row['event_id'], 'event_kind' => $row['event_kind'], 'source_type' => $row['source_type'], 'order_id' => (int) $row['order_id'], 'refund_id' => (int) ( $row['refund_id'] ?? 0 ), 'order_item_id' => (int) $row['order_item_id'], 'attribution_scope' => $row['attribution_scope'], 'mapping_state' => $row['mapping_state'], 'product_id' => (int) $row['product_id'], 'variation_id' => (int) $row['variation_id'], 'reason_id' => $row['reason_id'], 'reason_label' => $reason ? Multilingual::reason_label( $reason ) : __( 'Archived reason', WPE_RI_TEXT_DOMAIN ), 'quantity' => (float) $row['quantity'], 'occurred_at' => gmdate( 'c', strtotime( $row['occurred_at_gmt'] . ' UTC' ) ), 'created_at' => gmdate( 'c', strtotime( $row['created_at_gmt'] . ' UTC' ) ), 'updated_at' => gmdate( 'c', strtotime( $row['updated_at_gmt'] . ' UTC' ) ), 'occurred_date' => get_date_from_gmt( $row['occurred_at_gmt'], 'Y-m-d' ) );
 	}
+	/** Ignore WordPress apiFetch's transport-only locale query parameter. */
+	private static function has_unknown_query_fields( $data, array $allowed ): bool {
+		if ( ! is_array( $data ) ) { return true; }
+		unset( $data['_locale'] );
+		return self::has_unknown_fields( $data, $allowed );
+	}
+
 	private static function has_unknown_fields( $data, array $allowed ): bool {
 		if ( ! is_array( $data ) ) { return true; }
 		return (bool) array_diff( array_keys( $data ), $allowed );
