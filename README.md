@@ -62,8 +62,8 @@ Details and official source links: docs/DISTRIBUTION.md. No submission has been 
 | I-07 Pro product/variation patterns | Implemented; entitlement provider + I-11 verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | I-08 Pro clustering and alerts | Implementation complete; I-11 runtime verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | I-09 Corrective-action tracking | Implementation complete; I-11 runtime verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
-| I-10 WPML/Polylang and optional source checks | Approved V1 adapter implementation complete; runtime matrix tracked in I-11 | ██████████ 100% | 2026-11-06 | 2026-11-07 |
-| I-11 Runtime, security, accessibility and release verification | Staging admin/REST, HPOS schema presence, read-only order lookup, Pro gates, and basic keyboard operation smoke-checked; remaining release gates open | ██████░░░░ 60% | 2026-11-06 | 2026-11-24 |
+| I-10 WPML/Polylang and optional source checks | V1 adapter implemented; absent-plugin fallback smoke-tested; active-plugin cases remain open | ██████████ 100% | 2026-11-06 | 2026-11-07 |
+| I-11 Runtime, security, accessibility and release verification | Staging admin/REST, HPOS schema presence, read-only lookup, Pro gates, basic keyboard and absent-translation fallback smoke-checked; remaining release gates open | ██████░░░░ 65% | 2026-11-06 | 2026-11-24 |
 | I-12 WordPress.org Free + WooCommerce.com Paid submission preparation | Pending I-11 release evidence and vendor account/package checks | ░░░░░░░░░░ 0% | 2026-11-25 | 2026-12-04 |
 
 Dates for pending packages are planning estimates; I-11 dates depend on access to a PHP/Composer and WordPress/WooCommerce runtime. Package progress means implementation scope is present; it does not mean runtime/release acceptance is verified. See `docs/IMPLEMENTATION_BACKLOG.md` and `docs/I10_I11_VERIFICATION.md` for detailed evidence and blockers.
@@ -154,3 +154,5 @@ P3 architecture specifies indexed custom event storage, source-level idempotency
 - 2026-11-07: WooCommerce System Status confirmed PHP 8.3.36, WordPress 7.1.4, WooCommerce 11.2.2, HPOS enabled, `OrdersTableDataStore` active, and all five Return Insights tables present. A read-only capture lookup had already returned an item. The same report labels the environment type `production` despite the `/el-test/` URL, so I kept subsequent work read-only. I-11 progress is 55%; legacy mode and write/permission/privacy gates remain.
 
 - 2026-11-07: Basic keyboard smoke check passed on the Return Insights admin: Tab reaches the WordPress skip links and first plugin tab after skip-to-main; Enter opens Overview and its data renders. This is limited keyboard evidence only; screen reader, RTL, contrast and full focus-order review remain open. I-11 progress is 60%.
+
+- 2026-11-07: Staging System Status lists no WPML or Polylang plugin as active, while the Return Insights reason catalog loaded canonical English labels. This confirms only the optional integrations' absent-plugin fallback on this runtime; WPML String Translation and Polylang active cases remain unverified. I-11 progress is 65%.
