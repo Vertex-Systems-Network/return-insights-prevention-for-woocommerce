@@ -117,6 +117,7 @@ P3 architecture specifies indexed custom event storage, source-level idempotency
 
 ## Change log
 
+- 2026-11-07: Hardened native refund observation to log database lookup/insert/update/delete failures without order or customer identifiers. CI run `42386157013` passed PHP lint and package validation; artifact `13580105362` includes refund and bounded privacy-erasure hardening. Runtime failure-injection and privacy callback checks remain open.
 - 2026-11-07: Staging System Status showed the plugin Author as blank; added `Author: WPEssential` and the WPEssential site URI to the plugin header. Bounded user-erasure batches to 100 rows per plugin table per callback, with residual-row checks and resumable status. CI run `42385970130` passed PHP lint and packaging; artifact `13579790771` contains these updates. Staging has not been updated with the latest package; privacy erasure runtime remains unverified.
 - 2026-11-07: Added a pre-autoloader PHP 8.3 guard so Composer's generated platform check cannot fatal before WordPress receives a compatibility notice. Then matched the staging fatal log to `includes/RestController.php:538`: a stray REST-route fragment after the class close caused a PHP parse error. Removed the 53-line fragment and made PHP lint mandatory before packaging. Latest lint + package run passed (`42375227945`); artifact `13575581948` is available through 2026-11-21. Runtime recovery on the staging site remains unconfirmed.
 
