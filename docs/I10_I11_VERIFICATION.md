@@ -2,7 +2,7 @@
 
 **Review date:** 2026-11-06  
 **I-10 status:** Approved V1 integration implementation complete; WPML/Polylang runtime matrix is an I-11 verification gate.  
-**I-11 status:** Static audit completed for this pass; release/runtime gate remains blocked.
+**I-11 status:** Static audit updated 2026-11-07; release/runtime gate remains blocked.
 
 **Latest verification pass:** Re-ran available repository checks on 2026-11-06. Composer JSON/PSR-4 mapping, no-custom-SPL-loader scan, browser-ready JavaScript syntax, whitespace, and merge-marker scans pass. GitHub reports no combined CI statuses for the reviewed commit. These checks do not replace PHP parsing or WordPress/WooCommerce runtime verification.
 
@@ -29,7 +29,7 @@ Stable reason IDs are the analytics key; translated text is display-only. Mercha
 
 ## I-11: Audit performed
 
-This pass checked PSR-4/bootstrap boundaries, the v1→v3 migration path by source inspection, Pro route entitlement and capability guards, REST input/error paths, WooCommerce CRUD boundaries, bounded scans/storage, multilingual API guards, privacy export/erasure registration, README/backlog claims, and browser-ready JavaScript syntax. It also hardened migration verification, reason-option normalization, report/history query failures, manual event write failures, and privacy data hooks.
+This pass checked PSR-4/bootstrap boundaries, the v1→v3 migration path by source inspection, Pro route entitlement and capability guards, REST input/error paths, WooCommerce CRUD boundaries, bounded scans/storage, multilingual API guards, privacy export/erasure registration, README/backlog claims, and browser-ready JavaScript syntax. Source hardening includes migration verification, reason-option normalization, report/history query failures, manual event write failures, privacy hooks, and WooCommerce privacy-operation error logging without user/order identifiers.
 
 | Check | Result | Evidence / limit |
 |---|---|---|
@@ -45,7 +45,7 @@ This pass checked PSR-4/bootstrap boundaries, the v1→v3 migration path by sour
 | WPML/Polylang active/absent cases | Not verified | Adapter source paths reviewed; compatible versions need runtime matrix |
 | Authorized staging-site availability | Inspected; integration test unavailable | WordPress 7.1.4 / WooCommerce 11.2.2 present; WPML, Polylang, and Return Insights plugin absent from installed plugin list |
 | Visual, keyboard, RTL, contrast and screen-reader review | Not verified | Needs rendered wp-admin with supported WP/WC versions |
-| Security/privacy release criteria | Source implementation present; runtime check pending | WordPress privacy exporter/eraser covers user-attributed plugin activity and attaches order insights to WooCommerce's order export/anonymization hooks. Verify execution and failure behavior in runtime. |
+| Security/privacy release criteria | Source implementation present; runtime check pending | WordPress privacy exporter/eraser covers user-attributed activity and order-linked insights. Order lookup/update database failures now emit a WooCommerce error log entry with no user/order identifiers. Exercise export, erasure, and failure paths in runtime. |
 | Pro licensing/entitlement | Incomplete | Free core defaults Pro to fail-closed; commercial entitlement provider remains unimplemented |
 
 ## Gate decision
