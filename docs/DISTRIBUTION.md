@@ -44,9 +44,9 @@ The dated WordPress 7.1/7.0 and WooCommerce 11.2/11.1 series in docs/COMPATIBILI
 ## 4. Release packaging and versioning
 
 - Maintain one repository as source of truth and produce separate Free core and Pro add-on release artifacts.
-- Include browser-ready React admin JavaScript using WordPress-bundled packages; no project CLI/build step is planned and merchants need no tooling.
-- Before release ZIP creation, generate the Composer autoloader from the root `composer.json` and include the resulting `vendor/autoload.php` and Composer runtime files in both plugin artifacts. There is no custom fallback; verify the generated Composer loader in I-11. Do not run Composer packaging commands before the plugin is final.
-- Exclude tests, development dependencies, source maps/secrets where inappropriate, and unused files from production ZIPs; retain readable source and manual release instructions in the development repository; no CLI/build tooling is included until the plugin is final.
+- Include browser-ready React admin JavaScript using WordPress-bundled packages; merchants need no tooling. No frontend project CLI/build step is planned.
+- The authorized private test packager (`tools/build-artifact.py`) copies an explicit allowlist into temporary staging, generates Composer's PSR-4 autoloader there, validates the loader and ZIP contents, and emits a SHA-256 sidecar. GitHub Actions uploads the ZIP and checksum for 14 days. This supports staging-site installation only; it is not a final marketplace package, and I-11 still requires a real WordPress/WooCommerce install and runtime checks. There is no custom fallback.
+- Exclude development docs, hidden files, source maps, and unused files from the private test ZIP. Keep readable source in the development repository. No general CLI or frontend build tooling is included; the private test packager is the sole authorized exception.
 - Use coordinated versioning and a compatibility table for Free/Pro pairing. Pro checks for Free and schema compatibility and fails safely when missing/outdated; Free remains usable. Define update order and license-expiry behavior as specified by the approved package model.
 - Provide a changelog, upgrade/rollback guidance, data migration policy, support route, and release verification record for every public release.
 - Run the required security, activation, API, E2E, PHP compatibility, malware, and validation checks before each Marketplace submission/update, according to then-current vendor requirements.
