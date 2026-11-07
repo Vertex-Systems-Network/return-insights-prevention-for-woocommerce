@@ -177,16 +177,19 @@ final class Privacy {
 		$actions = ActionService::table();
 		$history = ActionService::history_table();
 		$evidence = ActionService::evidence_table();
+		// Each affected row stops matching after anonymization, so repeated pages can
+		// safely process the next batch without OFFSET skipping rows.
 		$queries = array(
-			$wpdb->prepare( "UPDATE {$events} SET deletion_note = IF(created_by = %d OR updated_by = %d, '', deletion_note), created_by = IF(created_by = %d, 0, created_by), updated_by = IF(updated_by = %d, 0, updated_by) WHERE created_by = %d OR updated_by = %d", $user_id, $user_id, $user_id, $user_id, $user_id, $user_id ),
-			$wpdb->prepare( "UPDATE {$actions} SET title = IF(created_by = %d OR owner_id = %d OR updated_by = %d, 'Anonymized corrective action', title), hypothesis = IF(created_by = %d OR owner_id = %d OR updated_by = %d, '', hypothesis), issue_url = IF(created_by = %d OR owner_id = %d OR updated_by = %d, '', issue_url), owner_id = IF(owner_id = %d, 0, owner_id), created_by = IF(created_by = %d, 0, created_by), updated_by = IF(updated_by = %d, 0, updated_by) WHERE owner_id = %d OR created_by = %d OR updated_by = %d", $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id ),
-			$wpdb->prepare( "UPDATE {$history} SET actor_id = 0, note = '' WHERE actor_id = %d", $user_id ),
-			$wpdb->prepare( "UPDATE {$evidence} SET captured_by = 0 WHERE captured_by = %d", $user_id ),
+			$wpdb->prepare( "UPDATE {$events} SET deletion_note = IF(created_by = %d OR updated_by = %d, '', deletion_note), created_by = IF(created_by = %d, 0, created_by), updated_by = IF(updated_by = %d, 0, updated_by) WHERE created_by = %d OR updated_by = %d LIMIT %d", $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, self::PAGE_SIZE ),
+			$wpdb->prepare( "UPDATE {$actions} SET title = IF(created_by = %d OR owner_id = %d OR updated_by = %d, 'Anonymized corrective action', title), hypothesis = IF(created_by = %d OR owner_id = %d OR updated_by = %d, '', hypothesis), issue_url = IF(created_by = %d OR owner_id = %d OR updated_by = %d, '', issue_url), owner_id = IF(owner_id = %d, 0, owner_id), created_by = IF(created_by = %d, 0, created_by), updated_by = IF(updated_by = %d, 0, updated_by) WHERE owner_id = %d OR created_by = %d OR updated_by = %d LIMIT %d", $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, self::PAGE_SIZE ),
+			$wpdb->prepare( "UPDATE {$history} SET actor_id = 0, note = '' WHERE actor_id = %d LIMIT %d", $user_id, self::PAGE_SIZE ),
+			$wpdb->prepare( "UPDATE {$evidence} SET captured_by = 0 WHERE captured_by = %d LIMIT %d", $user_id, self::PAGE_SIZE ),
 		);
 		$removed = false;
 		foreach ( $queries as $query ) {
 			$result = $wpdb->query( $query );
 			if ( false === $result ) {
+				self::log_privacy_failure( 'user erasure update' );
 				return array(
 					'items_removed' => $removed,
 					'items_retained' => true,
@@ -195,6 +198,36 @@ final class Privacy {
 				);
 			}
 			$removed = $removed || $result > 0;
+		}
+
+		$remaining_queries = array(
+			$wpdb->prepare( "SELECT COUNT(*) FROM {$events} WHERE created_by = %d OR updated_by = %d", $user_id, $user_id ),
+			$wpdb->prepare( "SELECT COUNT(*) FROM {$actions} WHERE owner_id = %d OR created_by = %d OR updated_by = %d", $user_id, $user_id, $user_id ),
+			$wpdb->prepare( "SELECT COUNT(*) FROM {$history} WHERE actor_id = %d", $user_id ),
+			$wpdb->prepare( "SELECT COUNT(*) FROM {$evidence} WHERE captured_by = %d", $user_id ),
+		);
+		$remaining = 0;
+		foreach ( $remaining_queries as $query ) {
+			$count = $wpdb->get_var( $query );
+			if ( ! empty( $wpdb->last_error ) ) {
+				self::log_privacy_failure( 'user erasure verification' );
+				return array(
+					'items_removed' => $removed,
+					'items_retained' => true,
+					'messages' => array( __( 'The erasure status could not be verified. An administrator should retry this request.', WPE_RI_TEXT_DOMAIN ) ),
+					'done' => false,
+				);
+			}
+			$remaining += absint( $count );
+		}
+
+		if ( $remaining > 0 ) {
+			return array(
+				'items_removed' => $removed,
+				'items_retained' => true,
+				'messages' => array(),
+				'done' => false,
+			);
 		}
 
 		return array( 'items_removed' => $removed, 'items_retained' => false, 'messages' => array(), 'done' => true );
