@@ -2,13 +2,13 @@
 
 **Review date:** 2026-11-07  
 **I-10 status:** Approved V1 integration implementation complete; WPML/Polylang runtime matrix is an I-11 verification gate.  
-**I-11 status:** Initial staging smoke checks pass after a REST query-validation fix; the broader runtime/release gate remains open.
+**I-11 status:** Staging smoke checks cover Free read-only screens and fail-closed Pro presentation after the REST query-validation fix; the broader runtime/release gate remains open.
 
 **Latest verification pass:** Re-ran available repository checks on 2026-11-06. Composer JSON/PSR-4 mapping, no-custom-SPL-loader scan, browser-ready JavaScript syntax, whitespace, and merge-marker scans pass. GitHub reports no combined CI statuses for the reviewed commit. These checks do not replace PHP parsing or WordPress/WooCommerce runtime verification.
 
 **Integration correction (2026-11-07):** Corrected reason-label precedence so WPML/Polylang translate the registered source label first, then an explicit merchant locale override wins. Hook detection now distinguishes `false` from a valid priority of `0`. This is source-level correction only; no active WPML/Polylang site was available to test the path.
 
-**Authorized staging smoke check (2026-11-07):** On `https://wpessential.org/el-test/`, WordPress 7.1.4 and WooCommerce 11.2.2 were observed. The user installed/activated Return Insights; the admin shell and Reason Catalog loaded. Overview and History first returned `unknown_fields` because strict GET-query validation rejected WordPress apiFetch's `_locale=user` transport parameter. A query-only validator now ignores `_locale` while JSON body validators remain strict. Corrected artifact run `42377569578` passed and was installed over the existing 0.1.0 package. Post-fix Overview returned the selected-period zero counts and empty-period message, History returned the intended no-records empty state, and Capture Sources returned its no-records empty state. This is a limited staging smoke check, not full I-11 acceptance. WPML/Polylang remain unavailable for active-plugin checks.
+**Authorized staging smoke check (2026-11-07):** On `https://wpessential.org/el-test/`, WordPress 7.1.4 and WooCommerce 11.2.2 were observed. The user installed/activated Return Insights; the admin shell and Reason Catalog loaded. Overview and History first returned `unknown_fields` because strict GET-query validation rejected WordPress apiFetch's `_locale=user` transport parameter. A query-only validator now ignores `_locale` while JSON body validators remain strict. Corrected artifact run `42377569578` passed and was installed over the existing 0.1.0 package. Post-fix Overview returned the selected-period zero counts and empty-period message, History returned the intended no-records empty state, and Capture Sources returned its no-records empty state. Product Trends rendered the intended Pro upgrade gate; Alerts and Corrective Actions remained behind the shared Pro notice while no entitlement provider is configured. Reason Catalog showed the canonical reason list. This is a limited staging smoke check, not full I-11 acceptance. WPML/Polylang remain unavailable for active-plugin checks.
 
 ## I-10: WPML and Polylang
 
@@ -43,7 +43,7 @@ This pass checked PSR-4/bootstrap boundaries, the v1→v3 migration path by sour
 | WordPress/WooCommerce activation + admin shell | Pass, limited | Updated 0.1.0 package replaced successfully on staging; admin UI rendered on WP 7.1.4/WC 11.2.2; migration/CRUD not yet exercised |
 | HPOS and legacy order storage | Not verified | Needs runtime fixtures on both modes |
 | WPML/Polylang active/absent cases | Not verified | Adapter source paths reviewed; compatible versions need runtime matrix |
-| Staging REST smoke: Overview, History, Capture Sources | Pass after fix | Overview returned selected-period summary/empty state; History and Sources returned expected empty states without unsupported-fields error. No synthetic records were created. |
+| Staging REST smoke: Overview, History, Capture Sources, Reason Catalog | Pass after fix | Overview returned selected-period summary/empty state; History/Sources returned intended empty states; Catalog loaded canonical reason rows. No synthetic records were created. |\n| Staging Pro UI gates | Partial pass | Product Trends showed the Pro upgrade notice; Alerts and Corrective Actions remained behind the shared Pro notice. The commercial entitlement provider is absent, so Pro REST permission/data behavior is not verified. |
 | Visual, keyboard, RTL, contrast and screen-reader review | Not verified | Needs rendered wp-admin with supported WP/WC versions |
 | Security/privacy release criteria | Source implementation present; runtime check pending | WordPress privacy exporter/eraser covers user-attributed activity and order-linked insights. Order lookup/update database failures now emit a WooCommerce error log entry with no user/order identifiers. Exercise export, erasure, and failure paths in runtime. |
 | Pro licensing/entitlement | Incomplete | Free core defaults Pro to fail-closed; commercial entitlement provider remains unimplemented |
@@ -75,3 +75,6 @@ I-10 implementation is complete for the approved V1 scope: guarded WPML/Polylang
 - Capture Sources: request completed; expected no-records empty state.
 - Reason Catalog: loaded canonical reason rows. No writes or artificial records were created.
 - Not exercised: creating an insight against a real order, refund ingestion, Pro endpoints/entitlement, HPOS vs legacy fixtures, permissions, WPML/Polylang, privacy export/erasure, accessibility, and release submission checks.
+
+
+**Additional read-only UI check (2026-11-07):** Reason Catalog loaded canonical labels and stable IDs after package update. Product Trends displayed its Pro upsell; Alerts and Corrective Actions showed the shared Pro gate. No records were written. These observations do not verify server-side permissions or the absent production entitlement provider.
