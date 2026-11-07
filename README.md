@@ -63,7 +63,7 @@ Details and official source links: docs/DISTRIBUTION.md. No submission has been 
 | I-08 Pro clustering and alerts | Implementation complete; I-11 runtime verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | I-09 Corrective-action tracking | Implementation complete; I-11 runtime verification pending | ██████████ 100% | 2026-11-06 | 2026-11-06 |
 | I-10 WPML/Polylang and optional source checks | Approved V1 adapter implementation complete; runtime matrix tracked in I-11 | ██████████ 100% | 2026-11-06 | 2026-11-07 |
-| I-11 Runtime, security, accessibility and release verification | Static audit + privacy hooks; runtime gate blocked | ██░░░░░░░░ 20% | 2026-11-06 | 2026-11-24 |
+| I-11 Runtime, security, accessibility and release verification | PHP lint + package build pass; live runtime/release gate still blocked | ███░░░░░░░ 30% | 2026-11-06 | 2026-11-24 |
 | I-12 WordPress.org Free + WooCommerce.com Paid submission preparation | Pending I-11 release evidence and vendor account/package checks | ░░░░░░░░░░ 0% | 2026-11-25 | 2026-12-04 |
 
 Dates for pending packages are planning estimates; I-11 dates depend on access to a PHP/Composer and WordPress/WooCommerce runtime. Package progress means implementation scope is present; it does not mean runtime/release acceptance is verified. See `docs/IMPLEMENTATION_BACKLOG.md` and `docs/I10_I11_VERIFICATION.md` for detailed evidence and blockers.
@@ -117,7 +117,7 @@ P3 architecture specifies indexed custom event storage, source-level idempotency
 
 ## Change log
 
-- 2026-11-07: Added a pre-autoloader PHP 8.3 guard so Composer's generated platform check cannot fatal before WordPress receives a compatibility notice. Patch build passed in Actions run `42374432497`; artifact `13575405846` is available through 2026-11-21. Root cause on the reported site remains unconfirmed until its PHP version or fatal log is checked.
+- 2026-11-07: Added a pre-autoloader PHP 8.3 guard so Composer's generated platform check cannot fatal before WordPress receives a compatibility notice. Then matched the staging fatal log to `includes/RestController.php:538`: a stray REST-route fragment after the class close caused a PHP parse error. Removed the 53-line fragment and made PHP lint mandatory before packaging. Latest lint + package run passed (`42375227945`); artifact `13575581948` is available through 2026-11-21. Runtime recovery on the staging site remains unconfirmed.
 
 - 2026-11-07: Added a private test ZIP build path using isolated staging, Composer PSR-4 autoload generation, package allowlisting, ZIP validation, SHA-256 output, and a 14-day GitHub Actions artifact. Run #1 passed (GitHub Actions run `42373990114`); artifact `13575185569` is available through 2026-11-21. This confirms packaging only; the test-site runtime install is still pending.
 
