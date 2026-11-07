@@ -117,6 +117,8 @@ P3 architecture specifies indexed custom event storage, source-level idempotency
 
 ## Change log
 
+- 2026-11-07: Added a pre-autoloader PHP 8.3 guard so Composer's generated platform check cannot fatal before WordPress receives a compatibility notice. Patch build passed in Actions run `42374432497`; artifact `13575405846` is available through 2026-11-21. Root cause on the reported site remains unconfirmed until its PHP version or fatal log is checked.
+
 - 2026-11-07: Added a private test ZIP build path using isolated staging, Composer PSR-4 autoload generation, package allowlisting, ZIP validation, SHA-256 output, and a 14-day GitHub Actions artifact. Run #1 passed (GitHub Actions run `42373990114`); artifact `13575185569` is available through 2026-11-21. This confirms packaging only; the test-site runtime install is still pending.
 
 - 2026-11-06: Implemented optional WPML and Polylang reason-label registration/resolution with guarded public APIs; canonical reason IDs remain stable. Added WordPress privacy export/erasure hooks for actor data and WooCommerce order-linked insight references; runtime behavior remains unverified. Completed I-11 static audit notes and recorded remaining runtime, privacy, accessibility, and release blockers in `docs/I10_I11_VERIFICATION.md`. I-10 implementation is complete for the approved V1 scope; WPML/Polylang runtime cases and the I-11 release gate remain open.
