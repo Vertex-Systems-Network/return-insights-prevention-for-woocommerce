@@ -29,7 +29,7 @@ Planning estimates in UTC; reviewed 2026-11-06. P0–P7 track planning artifacts
 
 ## Implementation status
 
-P6 approval is recorded. I-02 foundation, I-03 catalog/manual-capture API, I-04 refund observation, I-05 Free reports, I-06 REST/React admin, I-07 Pro product/variation cohort insights, I-08 Pro clustering/alerts, and I-09 corrective-action tracking implementation are present (8/11, **73%**). PHP classes use Composer PSR-4 mapping `WPEssential\ReturnInsights\` to `includes/`. The custom fallback loader has been removed; the generated Composer `vendor/autoload.php` is required at runtime. Free reports provide date-filtered event/reason/quantity/source counts and item-scoped product/category totals. Pro patterns compare mature purchase cohorts, use exact item-level confirmed-return attribution, and suppress rates for incomplete mapping, fewer than 20 sold units, missing denominators, and returns above sold quantity. WPML/Polylang merchant-reason label adapters are implemented with guarded optional APIs; active/absent integration runtime checks remain in I-11. WordPress/WooCommerce privacy export/erasure hooks are now implemented; runtime behavior is still unverified. Runtime, visual, accessibility, compatibility, and commercial entitlement verification remain open. React uses WordPress bundled packages without JSX/build tooling; no CLI is to be added until the plugin is final.
+P6 approval is recorded. I-02 foundation, I-03 catalog/manual-capture API, I-04 refund observation, I-05 Free reports, I-06 REST/React admin, I-07 Pro product/variation cohort insights, I-08 Pro clustering/alerts, and I-09 corrective-action tracking implementation are present (8/11, **73%**). PHP classes use Composer PSR-4 mapping `WPEssential\ReturnInsights\` to `includes/`. The custom fallback loader has been removed; the generated Composer `vendor/autoload.php` is required at runtime. Free reports provide date-filtered event/reason/quantity/source counts and item-scoped product/category totals. Pro patterns compare mature purchase cohorts, use exact item-level confirmed-return attribution, and suppress rates for incomplete mapping, fewer than 20 sold units, missing denominators, and returns above sold quantity. WPML/Polylang merchant-reason label adapters are implemented with guarded optional APIs; active/absent integration runtime checks remain in I-11. WordPress/WooCommerce privacy export/erasure hooks are now implemented; runtime behavior is still unverified. Runtime, visual, accessibility, compatibility, and commercial entitlement verification remain open. React uses WordPress bundled packages without JSX/build tooling. A private test ZIP builder is now authorized; it runs Composer only in isolated staging and does not add a frontend build pipeline.
 
 ## Composer autoload task status
 
@@ -38,7 +38,7 @@ P6 approval is recorded. I-02 foundation, I-03 catalog/manual-capture API, I-04 
 | Keep plugin classes under `includes/` | Complete | 100% | Eleven PSR-4 class files use case-matched names in `includes/`. |
 | Map `WPEssential\ReturnInsights\` to `includes/` | Complete | 100% | `composer.json` declares the namespace prefix and directory. |
 | Load `vendor/autoload.php` directly | Code updated | 100% | Plugin bootstrap and uninstall handler directly require Composer's generated loader; no project SPL loader remains. |
-| Generate Composer vendor files and verify runtime | Pending | 0% | Composer and PHP executables are unavailable here; generate vendor during final packaging, then verify plugin activation and uninstall loading. |
+| Generate Composer vendor files and verify runtime | Build automated; runtime pending | 75% | GitHub Actions builds a staged test ZIP with Composer PSR-4 files; still install and verify activation/uninstall on a WordPress + WooCommerce test site. |
 
 ## Distribution plan
 
@@ -70,7 +70,7 @@ Dates for pending packages are planning estimates; I-11 dates depend on access t
 
 ## Current gate
 
-P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS_GATE.md. I-02 through I-09 implementation packages are present (8/11, 73%); I-08 and I-09 are complete at implementation scope. I-08 includes deterministic clusters, reversible assignments, weekly Pro evaluation, a full candidate scan capped at 2,000 rows with fail-closed overflow, ≥80% mapping threshold, per-candidate sample/rate gates, stable deduplication, bounded 2,000-alert storage and 50-entry action history, persisted scan status, and React cluster/alert review UI. The Alerts screen surfaces coverage blocks and withheld-candidate reasons. WPML/Polylang optional reason-label adapters are present, but their active/absent runtime checks remain open. Runtime, visual, accessibility, compatibility, privacy exporter/eraser, action-workflow, and entitlement-provider verification remain tracked in I-11. Test-site installation was blocked by browser security policy, so no live-site result is claimed. Composer manifest is now authorized only for PSR-4 mapping; Composer generation is reserved for final package preparation. No third-party dependency or other CLI/build tooling has been added.
+P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS_GATE.md. I-02 through I-09 implementation packages are present (8/11, 73%); I-08 and I-09 are complete at implementation scope. I-08 includes deterministic clusters, reversible assignments, weekly Pro evaluation, a full candidate scan capped at 2,000 rows with fail-closed overflow, ≥80% mapping threshold, per-candidate sample/rate gates, stable deduplication, bounded 2,000-alert storage and 50-entry action history, persisted scan status, and React cluster/alert review UI. The Alerts screen surfaces coverage blocks and withheld-candidate reasons. WPML/Polylang optional reason-label adapters are present, but their active/absent runtime checks remain open. Runtime, visual, accessibility, compatibility, privacy exporter/eraser, action-workflow, and entitlement-provider verification remain tracked in I-11. Test-site installation was blocked by browser security policy, so no live-site result is claimed. Composer manifest maps PSR-4 only; the private test-package workflow generates Composer files in a temporary staging directory. No third-party dependency, generated vendor files, or frontend build tooling is committed.
 
 ## Plan files
 
@@ -88,7 +88,10 @@ P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS
 - docs/IMPLEMENTATION_BACKLOG.md — approved dependency-ordered implementation work.
 - docs/I10_I11_VERIFICATION.md — integration behavior, static audit evidence, and release-gate blockers.
 - docs/AI_BACKLOG.md — agent tasks and provider handoff.
-- composer.json — Composer PSR-4 namespace map (`WPEssential\ReturnInsights\` → `includes/`); generated vendor files are required in release ZIPs.
+- composer.json — Composer PSR-4 namespace map (`WPEssential\ReturnInsights\` → `includes/`); generated vendor files are required in plugin ZIPs.
+- tools/build-artifact.py — private test ZIP packager with staged Composer autoload generation and SHA-256 output.
+- .github/workflows/build-test-artifact.yml — on-demand and source-change GitHub Actions artifact build (14-day download window).
+- readme.txt — plugin-directory-format test package metadata and install instructions.
 - AGENTS.md — canonical project instructions.
 - CLAUDE.md, GEMINI.md, .cursor/rules/project.mdc, .github/copilot-instructions.md — provider entry points.
 
@@ -100,9 +103,9 @@ P6 passed on 2026-11-06. D1–D12 are approved and recorded in docs/P6_READINESS
 4. React-based, polished, accessible wp-admin interface.
 5. HPOS-safe WooCommerce integration.
 6. WPML and Polylang behavior specified and tested; neither is a hard dependency.
-7. P6 is passed; implementation follows the approved backlog. No CLI/build tooling in this repo until the plugin is final.
+7. P6 is passed; implementation follows the approved backlog. The only current packaging exception is the private test ZIP workflow (`tools/build-artifact.py` and its GitHub Actions workflow); no general CLI, WP-CLI, or frontend build pipeline.
 8. AI agents read this README and AGENTS.md, make scoped changes, and update the dashboard in the same update.
-9. PHP classes follow Composer PSR-4: `WPEssential\ReturnInsights\` maps to `/includes/` in `composer.json`; plugin bootstrap and uninstall directly require generated `vendor/autoload.php`. Do not add third-party dependencies or run Composer commands before final packaging.
+9. PHP classes follow Composer PSR-4: `WPEssential\ReturnInsights\` maps to `/includes/` in `composer.json`; plugin bootstrap and uninstall directly require generated `vendor/autoload.php`. The test packager runs Composer only in temporary staging; do not commit generated vendor files or add third-party dependencies.
 
 ## Research snapshot
 
@@ -113,6 +116,8 @@ Recommended MVP capture model: observe native WooCommerce refund records and all
 P3 architecture specifies indexed custom event storage, source-level idempotency, bounded background aggregation, separate return/refund metrics, and privacy export/erasure. See docs/ARCHITECTURE_DATA_FLOW.md and docs/DATA_MODEL.md.
 
 ## Change log
+
+- 2026-11-07: Added a private test ZIP build path using isolated staging, Composer PSR-4 autoload generation, package allowlisting, ZIP validation, SHA-256 output, and a 14-day GitHub Actions artifact. The workflow is pending its first successful run; no runtime install claim is made.
 
 - 2026-11-06: Implemented optional WPML and Polylang reason-label registration/resolution with guarded public APIs; canonical reason IDs remain stable. Added WordPress privacy export/erasure hooks for actor data and WooCommerce order-linked insight references; runtime behavior remains unverified. Completed I-11 static audit notes and recorded remaining runtime, privacy, accessibility, and release blockers in `docs/I10_I11_VERIFICATION.md`. I-10 implementation is complete for the approved V1 scope; WPML/Polylang runtime cases and the I-11 release gate remain open.
 - 2026-11-06: Re-ran I-10/I-11 static checks: Composer JSON/PSR-4 mapping, no custom SPL loader, admin JavaScript syntax, whitespace, and merge-marker scans pass. No combined GitHub CI statuses were reported for the reviewed commit. I-10 implementation is 100%; I-11 remains 20% because the PHP/Composer and WordPress/WooCommerce runtime matrix is unavailable; see `docs/I10_I11_VERIFICATION.md`.
