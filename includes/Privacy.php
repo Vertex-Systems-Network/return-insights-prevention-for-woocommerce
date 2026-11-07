@@ -27,6 +27,7 @@ final class Privacy {
 		global $wpdb;
 		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT event_id, reason_id, quantity, occurred_at_gmt FROM ' . Installer::events_table() . ' WHERE order_id = %d AND deleted_at_gmt IS NULL ORDER BY event_id ASC', $order->get_id() ), ARRAY_A );
 		if ( ! empty( $wpdb->last_error ) ) {
+			self::log_privacy_failure( 'export' );
 			return $personal_data;
 		}
 		foreach ( $rows ?: array() as $row ) {
@@ -53,11 +54,15 @@ final class Privacy {
 		global $wpdb;
 		$table = Installer::events_table();
 		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT event_id, event_uuid FROM {$table} WHERE order_id = %d", $order->get_id() ), ARRAY_A );
-		if ( ! empty( $wpdb->last_error ) || ! $rows ) {
+		if ( ! empty( $wpdb->last_error ) ) {
+			self::log_privacy_failure( 'order erasure lookup' );
+			return;
+		}
+		if ( ! $rows ) {
 			return;
 		}
 		foreach ( $rows as $row ) {
-			$wpdb->update(
+			$result = $wpdb->update(
 				$table,
 				array(
 					'source_key' => hash( 'sha256', 'privacy-erased|' . $row['event_uuid'] ),
@@ -71,7 +76,21 @@ final class Privacy {
 				array( '%s', '%s', '%d', '%d', '%d', '%s' ),
 				array( '%d' )
 			);
+			if ( false === $result ) {
+				self::log_privacy_failure( 'order erasure update' );
+			}
 		}
+	}
+
+	/** Log a privacy operation failure without recording personal or order data. */
+	private static function log_privacy_failure( string $operation ): void {
+		if ( ! function_exists( 'wc_get_logger' ) ) {
+			return;
+		}
+		wc_get_logger()->error(
+			sprintf( 'Return Insights personal data %s failed because a database operation failed.', sanitize_key( $operation ) ),
+			array( 'source' => 'wpessential-return-insights-privacy' )
+		);
 	}
 
 	public static function exporter( array $exporters ): array {
