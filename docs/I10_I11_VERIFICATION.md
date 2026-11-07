@@ -8,6 +8,8 @@
 
 **Integration correction (2026-11-07):** Corrected reason-label precedence so WPML/Polylang translate the registered source label first, then an explicit merchant locale override wins. Hook detection now distinguishes `false` from a valid priority of `0`. This is source-level correction only; no active WPML/Polylang site was available to test the path.
 
+**Authorized staging-site inspection (2026-11-07):** Read-only Plugins screen showed WordPress 7.1.4 and WooCommerce 11.2.2, with four installed plugins. Neither WPML nor Polylang nor this Return Insights plugin was installed. The site is a real WP/WC environment, but it cannot provide runtime evidence for this integration until those plugins are made available there.
+
 ## I-10: WPML and Polylang
 
 `includes/Multilingual.php` is an optional integration boundary. It has no hard dependency on either product and checks for their public APIs before calling them. Merchant-entered canonical reason labels are registered for string translation in the admin context. REST reason labels, event history, summary reason names, and Pro pattern names use the integration resolver. Canonical reason IDs and stored event data do not change with translated labels. If neither integration is active, the plugin uses its stored locale override or source label.
@@ -41,6 +43,7 @@ This pass checked PSR-4/bootstrap boundaries, the v1→v3 migration path by sour
 | WordPress/WooCommerce activation, migration, API and CRUD runtime | Blocked | No local PHP/database/WP/WC runtime; no live-site result claimed |
 | HPOS and legacy order storage | Not verified | Needs runtime fixtures on both modes |
 | WPML/Polylang active/absent cases | Not verified | Adapter source paths reviewed; compatible versions need runtime matrix |
+| Authorized staging-site availability | Inspected; integration test unavailable | WordPress 7.1.4 / WooCommerce 11.2.2 present; WPML, Polylang, and Return Insights plugin absent from installed plugin list |
 | Visual, keyboard, RTL, contrast and screen-reader review | Not verified | Needs rendered wp-admin with supported WP/WC versions |
 | Security/privacy release criteria | Source implementation present; runtime check pending | WordPress privacy exporter/eraser covers user-attributed plugin activity and attaches order insights to WooCommerce's order export/anonymization hooks. Verify execution and failure behavior in runtime. |
 | Pro licensing/entitlement | Incomplete | Free core defaults Pro to fail-closed; commercial entitlement provider remains unimplemented |
