@@ -50,6 +50,10 @@ final class RefundObserver {
 		$source_type = 'woocommerce_refund';
 		$source_key = hash( 'sha256', $source_type . '|' . get_current_blog_id() . '|' . $refund_id );
 		$existing = $wpdb->get_row( $wpdb->prepare( "SELECT event_id FROM {$table} WHERE source_key = %s", $source_key ), ARRAY_A );
+		if ( ! empty( $wpdb->last_error ) ) {
+			self::log_database_failure( 'refund lookup' );
+			return;
+		}
 
 		$record = array(
 			'refund_id' => $refund_id,
@@ -72,7 +76,10 @@ final class RefundObserver {
 		);
 
 		if ( $existing ) {
-			$wpdb->update( $table, $record, array( 'event_id' => absint( $existing['event_id'] ) ) );
+			$result = $wpdb->update( $table, $record, array( 'event_id' => absint( $existing['event_id'] ) ) );
+			if ( false === $result ) {
+				self::log_database_failure( 'refund update' );
+			}
 			return;
 		}
 
@@ -80,7 +87,10 @@ final class RefundObserver {
 		$record['source_key'] = $source_key;
 		$record['created_at_gmt'] = $now;
 		$record['created_by'] = 0;
-		$wpdb->insert( $table, $record );
+		$result = $wpdb->insert( $table, $record );
+		if ( false === $result ) {
+			self::log_database_failure( 'refund insert' );
+		}
 	}
 
 	/**
@@ -97,7 +107,7 @@ final class RefundObserver {
 			return;
 		}
 		$now = gmdate( 'Y-m-d H:i:s' );
-		$wpdb->update(
+		$result = $wpdb->update(
 			Installer::events_table(),
 			array(
 				'deleted_at_gmt' => $now,
@@ -109,6 +119,20 @@ final class RefundObserver {
 				'source_type' => 'woocommerce_refund',
 				'source_record_id' => (string) absint( $refund_id ),
 			)
+		);
+		if ( false === $result ) {
+			self::log_database_failure( 'refund delete update' );
+		}
+	}
+
+	/** Log persistence failures without refund, order, or customer identifiers. */
+	private static function log_database_failure( string $operation ): void {
+		if ( ! function_exists( 'wc_get_logger' ) ) {
+			return;
+		}
+		wc_get_logger()->error(
+			sprintf( 'Return Insights refund observation %s failed because a database operation failed.', sanitize_key( $operation ) ),
+			array( 'source' => 'wpessential-return-insights-refunds' )
 		);
 	}
 }
