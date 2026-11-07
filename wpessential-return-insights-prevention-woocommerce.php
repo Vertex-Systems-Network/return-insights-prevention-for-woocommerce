@@ -2,6 +2,8 @@
 /**
  * Plugin Name: WPEssential Return Insights & Prevention for WooCommerce
  * Description: Helps merchants understand repeat return reasons and identify product improvements.
+ * Author: WPEssential
+ * Author URI: https://wpessential.org/
  * Version: 0.1.0
  * Requires at least: 7.0
  * Requires PHP: 8.3
