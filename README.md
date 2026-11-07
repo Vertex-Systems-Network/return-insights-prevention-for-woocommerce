@@ -117,6 +117,7 @@ P3 architecture specifies indexed custom event storage, source-level idempotency
 
 ## Change log
 
+- 2026-11-07: Staging System Status showed the plugin Author as blank; added `Author: WPEssential` and the WPEssential site URI to the plugin header. This metadata fix requires a new test artifact before staging can reflect it.
 - 2026-11-07: Added a pre-autoloader PHP 8.3 guard so Composer's generated platform check cannot fatal before WordPress receives a compatibility notice. Then matched the staging fatal log to `includes/RestController.php:538`: a stray REST-route fragment after the class close caused a PHP parse error. Removed the 53-line fragment and made PHP lint mandatory before packaging. Latest lint + package run passed (`42375227945`); artifact `13575581948` is available through 2026-11-21. Runtime recovery on the staging site remains unconfirmed.
 
 - 2026-11-07: Added a private test ZIP build path using isolated staging, Composer PSR-4 autoload generation, package allowlisting, ZIP validation, SHA-256 output, and a 14-day GitHub Actions artifact. Run #1 passed (GitHub Actions run `42373990114`); artifact `13575185569` is available through 2026-11-21. This confirms packaging only; the test-site runtime install is still pending.
