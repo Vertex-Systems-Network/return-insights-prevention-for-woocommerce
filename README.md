@@ -117,7 +117,7 @@ P3 architecture specifies indexed custom event storage, source-level idempotency
 
 ## Change log
 
-- 2026-11-07: Added a private test ZIP build path using isolated staging, Composer PSR-4 autoload generation, package allowlisting, ZIP validation, SHA-256 output, and a 14-day GitHub Actions artifact. The workflow is pending its first successful run; no runtime install claim is made.
+- 2026-11-07: Added a private test ZIP build path using isolated staging, Composer PSR-4 autoload generation, package allowlisting, ZIP validation, SHA-256 output, and a 14-day GitHub Actions artifact. Run #1 passed (GitHub Actions run `42373990114`); artifact `13575185569` is available through 2026-11-21. This confirms packaging only; the test-site runtime install is still pending.
 
 - 2026-11-06: Implemented optional WPML and Polylang reason-label registration/resolution with guarded public APIs; canonical reason IDs remain stable. Added WordPress privacy export/erasure hooks for actor data and WooCommerce order-linked insight references; runtime behavior remains unverified. Completed I-11 static audit notes and recorded remaining runtime, privacy, accessibility, and release blockers in `docs/I10_I11_VERIFICATION.md`. I-10 implementation is complete for the approved V1 scope; WPML/Polylang runtime cases and the I-11 release gate remain open.
 - 2026-11-06: Re-ran I-10/I-11 static checks: Composer JSON/PSR-4 mapping, no custom SPL loader, admin JavaScript syntax, whitespace, and merge-marker scans pass. No combined GitHub CI statuses were reported for the reviewed commit. I-10 implementation is 100%; I-11 remains 20% because the PHP/Composer and WordPress/WooCommerce runtime matrix is unavailable; see `docs/I10_I11_VERIFICATION.md`.
