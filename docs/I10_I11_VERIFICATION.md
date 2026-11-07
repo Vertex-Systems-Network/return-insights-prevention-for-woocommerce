@@ -8,7 +8,7 @@
 
 **Integration correction (2026-11-07):** Corrected reason-label precedence so WPML/Polylang translate the registered source label first, then an explicit merchant locale override wins. Hook detection now distinguishes `false` from a valid priority of `0`. This is source-level correction only; no active WPML/Polylang site was available to test the path.
 
-**Authorized staging smoke check (2026-11-07):** On `https://wpessential.org/el-test/`, WordPress 7.1.4 and WooCommerce 11.2.2 were observed. The user installed/activated Return Insights; the admin shell and Reason Catalog loaded. Overview and History first returned `unknown_fields` because strict GET-query validation rejected WordPress apiFetch's `_locale=user` transport parameter. A query-only validator now ignores `_locale` while JSON body validators remain strict. Corrected artifact run `42377569578` passed and was installed over the existing 0.1.0 package. Post-fix Overview returned the selected-period zero counts and empty-period message, History returned the intended no-records empty state, and Capture Sources returned its no-records empty state. Product Trends rendered the intended Pro upgrade gate; Alerts and Corrective Actions remained behind the shared Pro notice while no entitlement provider is configured. Reason Catalog showed the canonical reason list. The capture screen's read-only lookup for existing order #49 also returned one line item and quantity. WooCommerce System Status confirms PHP 8.3.36, HPOS enabled, `OrdersTableDataStore`, and all five Return Insights tables. Its environment type is reported as `production` despite the `/el-test/` URL; subsequent checks remained read-only, and no event was written. This is limited runtime evidence, not full I-11 acceptance. WPML/Polylang remain unavailable for active-plugin checks.
+**Authorized staging smoke check (2026-11-07):** On `https://wpessential.org/el-test/`, WordPress 7.1.4 and WooCommerce 11.2.2 were observed. The user installed/activated Return Insights; the admin shell and Reason Catalog loaded. Overview and History first returned `unknown_fields` because strict GET-query validation rejected WordPress apiFetch's `_locale=user` transport parameter. A query-only validator now ignores `_locale` while JSON body validators remain strict. Corrected artifact run `42377569578` passed and was installed over the existing 0.1.0 package. Post-fix Overview returned the selected-period zero counts and empty-period message, History returned the intended no-records empty state, and Capture Sources returned its no-records empty state. Product Trends rendered the intended Pro upgrade gate; Alerts and Corrective Actions remained behind the shared Pro notice while no entitlement provider is configured. Reason Catalog showed the canonical reason list. The capture screen's read-only lookup for existing order #49 also returned one line item and quantity. WooCommerce System Status confirms PHP 8.3.36, HPOS enabled, `OrdersTableDataStore`, and all five Return Insights tables. Its environment type is reported as `production` despite the `/el-test/` URL; subsequent checks remained read-only, and no event was written. This is limited runtime evidence, not full I-11 acceptance. The active-plugin list contained neither WPML nor Polylang; the observed labels therefore verify only the absent-plugin fallback, not active integration behavior.
 
 ## I-10: WPML and Polylang
 
@@ -18,9 +18,9 @@ No RMA/return-management adapter was added: no adapter or source API was approve
 
 | Case | Source-level behavior | Runtime evidence |
 |---|---|---|
-| WPML absent | WPML hook checks fail closed; core label fallback remains | Not run |
+| WPML absent | WPML hook checks fail closed; core label fallback remains | Pass, limited: no WPML plugin listed as active; core reason labels loaded in Catalog |
 | WPML active | Registers merchant labels through `wpml_register_single_string`; reads translated value through `wpml_translate_single_string` when available | Not run; requires WPML String Translation |
-| Polylang absent | `function_exists` guard leaves core behavior intact | Not run |
+| Polylang absent | `function_exists` guard leaves core behavior intact | Pass, limited: no Polylang plugin listed as active; core reason labels loaded in Catalog |
 | Polylang active | Registers labels through `pll_register_string`; reads through `pll__` | Not run |
 | Both plugins present | WPML integration is preferred when its translation filter is registered; otherwise Polylang is used | Not run; simultaneous operation is not a support claim |
 | WooCommerce Multilingual / Polylang for WooCommerce | No custom product-translation SQL/API; product and order access stays on WooCommerce CRUD boundary | Not run |
@@ -89,3 +89,6 @@ I-10 implementation is complete for the approved V1 scope: guarded WPML/Polylang
 
 
 **Keyboard smoke check (2026-11-07):** With the staging admin loaded, Tab moved through the WordPress skip-to-main/toolbar links. Activating skip-to-main placed focus on the plugin Overview button; pressing Enter opened the Overview and its REST data rendered. This does not constitute a full accessibility audit.
+
+
+**Optional integration absent-mode check (2026-11-07):** WooCommerce System Status lists active plugins and contained neither WPML nor Polylang. Return Insights Reason Catalog rendered canonical labels successfully, confirming a limited no-integration fallback path. No active WPML String Translation or Polylang runtime is available on this site.
