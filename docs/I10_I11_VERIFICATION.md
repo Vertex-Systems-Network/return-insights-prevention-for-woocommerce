@@ -2,7 +2,7 @@
 
 **Review date:** 2026-11-08  
 **I-10 status:** Approved V1 integration implementation complete; WPML/Polylang runtime matrix is an I-11 verification gate.  
-**I-11 status:** Staging smoke checks now cover Free read-only screens, manual capture/edit/soft-delete, and fail-closed Pro presentation; the broader runtime/release gate remains open (68%).
+**I-11 status:** Staging smoke checks now cover Free read-only screens, manual capture/edit/soft-delete, and fail-closed Pro presentation; the broader runtime/release gate remains open (70%).
 
 **Latest verification pass:** Re-ran available repository checks on 2026-11-06. Composer JSON/PSR-4 mapping, no-custom-SPL-loader scan, browser-ready JavaScript syntax, whitespace, and merge-marker scans pass. GitHub reports no combined CI statuses for the reviewed commit. These checks do not replace PHP parsing or WordPress/WooCommerce runtime verification.
 
@@ -110,3 +110,12 @@ I-10 implementation is complete for the approved V1 scope: guarded WPML/Polylang
 
 
 **Quantity upper-bound UI check (2026-11-08):** On the capture form for order #49/item #1 (`Hat`, ordered quantity 1), entering quantity 2 triggered the browser's native constraint message, “Value must be less than or equal to 1.” The request was not submitted; History remained empty. Source inspection confirms the REST validator independently checks previously recorded quantity plus the proposed amount against the ordered quantity, but a direct malformed-request runtime test was not performed. This verifies only the form constraint and does not close API authorization or server-boundary testing.
+
+
+## 2026-11-08 order lookup regression verification
+
+- Fixed a stale-context window in the React capture flow. Editing the order ID clears the previously loaded order and selected item immediately; lookup also clears context before the request begins. Product, reason, type, quantity, date, and Save controls stay disabled while lookup is in progress.
+- GitHub Actions run [42439188546](https://github.com/Vertex-Systems-Network/wpessential-return-insights-prevention-woocommerce/actions/runs/42439188546) completed successfully; artifact `13600439437` was installed over the existing plugin. WordPress displayed “Plugin updated successfully.”
+- On staging, invalid order ID `999999999` returned “Order not found,” no previous Hat item remained selectable, and Save was disabled. A subsequent lookup of order `49` returned one Hat line item with ordered quantity 1 and enabled the form. History remained at “No return insights yet.” No insight was saved, and no WooCommerce order or refund was changed.
+- The admin page also displays two WordPress core `ob_end_flush()` notices from `wp-includes/functions.php:5581`; this is outside the plugin source and remains an environment issue to investigate separately.
+- I-11 is now 70%. This closes only a narrow client-side stale-state regression; it does not prove direct REST authorization, database failure handling, refund observer lifecycle, legacy order storage, privacy callbacks, active WPML/Polylang, Pro entitlement, full accessibility, or marketplace release readiness.
