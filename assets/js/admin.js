@@ -318,6 +318,8 @@
 			}
 			setOrderBusy( true );
 			setNotice( null );
+			setOrder( null );
+			setSelectedItem( '' );
 			try {
 				const found = await apiFetch( { path: namespace + '/orders/' + encodeURIComponent( cleanId ) } );
 				setOrder( found );
@@ -707,8 +709,12 @@
 				h( 'div', { className: 'wpe-ri-order-lookup' },
 					field( config.strings.orderNumber, 'wpe-ri-order-id', h( 'input', {
 						id: 'wpe-ri-order-id', type: 'number', min: '1', step: '1', value: orderId,
-						onChange: function ( e ) { setOrderId( e.target.value ); },
-						disabled: !!editing || !config.canManage
+												onChange: function ( e ) {
+							setOrderId( e.target.value );
+							setOrder( null );
+							setSelectedItem( '' );
+						},
+						disabled: orderBusy || !!editing || !config.canManage
 					} ), config.strings.orderLookupHint ),
 					h( Button, {
 						variant: 'secondary',
@@ -724,24 +730,24 @@
 					h( 'div', { className: 'wpe-ri-form-grid' },
 						field( config.strings.productItem, 'wpe-ri-item', nativeSelect( 'wpe-ri-item', selectedItem, ( order && order.items ? order.items : [] ).map( function ( item ) {
 							return { value: String( item.order_item_id ), label: item.name + ' · ' + config.strings.ordered + ': ' + item.ordered_quantity };
-						} ), setSelectedItem, !order || !config.canManage ) ),
+						} ), setSelectedItem, orderBusy || !order || !config.canManage ) ),
 						field( config.strings.reason, 'wpe-ri-reason', nativeSelect( 'wpe-ri-reason', reasonId, [ { value: '', label: config.strings.chooseReason } ].concat( activeReasons ), setReasonId, !config.canManage ) ),
 						field( config.strings.eventType, 'wpe-ri-event-kind', nativeSelect( 'wpe-ri-event-kind', eventKind, [
 							{ value: 'confirmed_return', label: config.strings.confirmedReturn },
 							{ value: 'exchange', label: config.strings.exchange }
-						], setEventKind, !config.canManage ) ),
+						], setEventKind, orderBusy || !config.canManage ) ),
 						field( config.strings.quantity, 'wpe-ri-quantity', h( 'input', {
 							id: 'wpe-ri-quantity', type: 'number', min: '0.0001', step: '0.0001',
 							max: selectedOrderItem ? selectedOrderItem.ordered_quantity : undefined,
-							value: quantity, onChange: function ( e ) { setQuantity( e.target.value ); }, disabled: !config.canManage
+							value: quantity, onChange: function ( e ) { setQuantity( e.target.value ); }, disabled: orderBusy || !config.canManage
 						} ), selectedOrderItem ? config.strings.quantityHint.replace( '%s', String( selectedOrderItem.ordered_quantity ) ) : '' ),
 						field( config.strings.occurredDate, 'wpe-ri-date', h( 'input', {
 							id: 'wpe-ri-date', type: 'date', value: occurredDate,
-							onChange: function ( e ) { setOccurredDate( e.target.value ); }, disabled: !config.canManage
+							onChange: function ( e ) { setOccurredDate( e.target.value ); }, disabled: orderBusy || !config.canManage
 						} ), config.strings.siteDateHint )
 					),
 					h( 'div', { className: 'wpe-ri-form-actions' },
-						h( Button, { variant: 'primary', type: 'submit', disabled: saving || !config.canManage || !order || !selectedItem }, saving ? h( Spinner ) : ( editing ? config.strings.updateInsight : config.strings.saveInsight ) ),
+						h( Button, { variant: 'primary', type: 'submit', disabled: saving || orderBusy || !config.canManage || !order || !selectedItem }, saving ? h( Spinner ) : ( editing ? config.strings.updateInsight : config.strings.saveInsight ) ),
 						editing ? h( 'span', { className: 'wpe-ri-muted' }, config.strings.editScope ) : null
 					)
 				)
