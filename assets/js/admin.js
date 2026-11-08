@@ -709,7 +709,7 @@
 				h( 'div', { className: 'wpe-ri-order-lookup' },
 					field( config.strings.orderNumber, 'wpe-ri-order-id', h( 'input', {
 						id: 'wpe-ri-order-id', type: 'number', min: '1', step: '1', value: orderId,
-												onChange: function ( e ) {
+							onChange: function ( e ) {
 							setOrderId( e.target.value );
 							setOrder( null );
 							setSelectedItem( '' );
@@ -731,7 +731,7 @@
 						field( config.strings.productItem, 'wpe-ri-item', nativeSelect( 'wpe-ri-item', selectedItem, ( order && order.items ? order.items : [] ).map( function ( item ) {
 							return { value: String( item.order_item_id ), label: item.name + ' · ' + config.strings.ordered + ': ' + item.ordered_quantity };
 						} ), setSelectedItem, orderBusy || !order || !config.canManage ) ),
-						field( config.strings.reason, 'wpe-ri-reason', nativeSelect( 'wpe-ri-reason', reasonId, [ { value: '', label: config.strings.chooseReason } ].concat( activeReasons ), setReasonId, !config.canManage ) ),
+						field( config.strings.reason, 'wpe-ri-reason', nativeSelect( 'wpe-ri-reason', reasonId, [ { value: '', label: config.strings.chooseReason } ].concat( activeReasons ), setReasonId, orderBusy || !config.canManage ) ),
 						field( config.strings.eventType, 'wpe-ri-event-kind', nativeSelect( 'wpe-ri-event-kind', eventKind, [
 							{ value: 'confirmed_return', label: config.strings.confirmedReturn },
 							{ value: 'exchange', label: config.strings.exchange }
