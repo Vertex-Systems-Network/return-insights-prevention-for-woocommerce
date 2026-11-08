@@ -374,7 +374,13 @@
 			};
 			try {
 				if ( editing ) {
-					await apiFetch( { path: namespace + '/events/' + editing.id, method: 'PATCH', data: data } );
+					const updateData = {
+						event_kind: eventKind,
+						quantity: Number( quantity ),
+						reason_id: reasonId,
+						occurred_at: occurredDate
+					};
+					await apiFetch( { path: namespace + '/events/' + editing.id, method: 'PATCH', data: updateData } );
 					setNotice( { status: 'success', message: config.strings.eventUpdated } );
 				} else {
 					data.idempotency_key = makeKey();
