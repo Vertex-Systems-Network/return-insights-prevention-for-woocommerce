@@ -1,8 +1,8 @@
 # I-10 Integration and I-11 Release Verification
 
-**Review date:** 2026-11-07  
+**Review date:** 2026-11-08  
 **I-10 status:** Approved V1 integration implementation complete; WPML/Polylang runtime matrix is an I-11 verification gate.  
-**I-11 status:** Staging smoke checks cover Free read-only screens and fail-closed Pro presentation after the REST query-validation fix; the broader runtime/release gate remains open.
+**I-11 status:** Staging smoke checks now cover Free read-only screens, manual capture/edit/soft-delete, and fail-closed Pro presentation; the broader runtime/release gate remains open (68%).
 
 **Latest verification pass:** Re-ran available repository checks on 2026-11-06. Composer JSON/PSR-4 mapping, no-custom-SPL-loader scan, browser-ready JavaScript syntax, whitespace, and merge-marker scans pass. GitHub reports no combined CI statuses for the reviewed commit. These checks do not replace PHP parsing or WordPress/WooCommerce runtime verification.
 
@@ -99,3 +99,11 @@ I-10 implementation is complete for the approved V1 scope: guarded WPML/Polylang
 
 
 **Optional integration absent-mode check (2026-11-07):** WooCommerce System Status lists active plugins and contained neither WPML nor Polylang. Return Insights Reason Catalog rendered canonical labels successfully, confirming a limited no-integration fallback path. No active WPML String Translation or Polylang runtime is available on this site.
+
+
+## 2026-11-08 edit-flow staging verification
+
+- A staging save exposed a PATCH body mismatch: the React edit handler sent immutable `order_id` and `order_item_id` fields that the REST update schema correctly rejects. The client now sends only `event_kind`, `quantity`, `reason_id`, and `occurred_at` for PATCH.
+- GitHub Actions run `42434063755` passed PHP lint and test ZIP packaging. Artifact `13598489437` (outer ZIP SHA-256 `3e658121233d99705ba84b9ba5ddfc1b0badb5d0b3205e1cb67e9d0d6b098396`; inner plugin ZIP SHA-256 `bc93479bdbc36e8f4b3abd7f23b9d81cb66de6caad4f21644eca726a7ca8d4ff`) was installed over the existing 0.1.0 package; WordPress displayed “Plugin updated successfully.”
+- On the updated package, manual capture for existing order #49/item #1 (`Hat`, ordered quantity 1) succeeded. Editing its reason from `Other` to `Changed mind` succeeded and persisted in History, confirming the PATCH route fix. The record was then soft-deleted with a test audit note. History showed “No return insights yet.” No WooCommerce order, refund, or customer record was modified.
+- This is a narrow staging smoke check, not full CRUD/security/release acceptance. It does not verify authorization boundaries, DB failures, migration upgrades, refund observer lifecycle, legacy order storage, active WPML/Polylang, privacy callbacks, Pro entitlement, visual/accessibility coverage, or marketplace readiness. The unrelated WordPress core `ob_end_flush()` notice remains visible.
