@@ -709,7 +709,7 @@
 				h( 'div', { className: 'wpe-ri-order-lookup' },
 					field( config.strings.orderNumber, 'wpe-ri-order-id', h( 'input', {
 						id: 'wpe-ri-order-id', type: 'number', min: '1', step: '1', value: orderId,
-							onChange: function ( e ) {
+						onChange: function ( e ) {
 							setOrderId( e.target.value );
 							setOrder( null );
 							setSelectedItem( '' );
