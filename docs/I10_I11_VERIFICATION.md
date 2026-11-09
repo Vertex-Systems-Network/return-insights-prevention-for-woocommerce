@@ -2,9 +2,9 @@
 
 **Review date:** 2026-11-09  
 **I-10 status:** Approved V1 integration implementation complete; WPML/Polylang runtime matrix is an I-11 verification gate.  
-**I-11 status:** Staging smoke checks now cover Free read-only screens, manual capture/edit/soft-delete, and fail-closed Pro presentation; the broader runtime/release gate remains open (70%).
+**I-11 status:** Limited runtime smoke checks are evidenced on `wpessential.org/el-test`; the separate TasteWP site `quirkybrake.s2-tastewp.com` has WooCommerce active but Return Insights installation was blocked before completion. Runtime/release gate remains open; no overall percentage is claimed here. README's 70% is a historical checklist estimate, not a release-readiness score.
 
-**Latest verification pass:** On 2026-11-09, a source audit hardened manual-event database read paths: failed idempotency/row lookups now return controlled errors, quantity-limit aggregation fails closed when its query errors, and create/update verify their persisted row before serialization. The main-branch push triggers PHP lint, Composer PSR-4 packaging, and ZIP validation; CI evidence is pending. This source change does not close I-11 runtime gates.
+**Latest verification pass:** On 2026-11-09, a source audit hardened manual-event database read paths: failed idempotency/row lookups now return controlled errors, quantity-limit aggregation fails closed when its query errors, and create/update verify their persisted row before serialization. GitHub Actions run [42637830397](https://github.com/Vertex-Systems-Network/wpessential-return-insights-prevention-woocommerce/actions/runs/42637830397) passed PHP 8.3 lint, Composer PSR-4 packaging, and ZIP validation; artifact `13683022555` was uploaded (SHA-256 `0801dea18585d7ff19d8199bff45e17f8061351b5754550f8226378ce146ea0b`, expires 2026-11-23). This is CI/package evidence only and does not close I-11 runtime gates.
 
 **Integration correction (2026-11-07):** Corrected reason-label precedence so WPML/Polylang translate the registered source label first, then an explicit merchant locale override wins. Hook detection now distinguishes `false` from a valid priority of `0`. This is source-level correction only; no active WPML/Polylang site was available to test the path.
 
@@ -133,3 +133,12 @@ I-10 implementation is complete for the approved V1 scope: guarded WPML/Polylang
 Manual event persistence and validation were hardened after a read-through of the current main-branch source. The idempotency lookup now returns a controlled 500 response on database errors instead of proceeding as if the record were absent. `validate_event()` now returns a controlled error if the quantity sum cannot be read; it no longer treats a failed query as zero. `find_event()` distinguishes database errors from a legitimate missing event, and create/update verify the saved row before serializing it. This is source-level verification only. It does not close concurrency/race testing, hostile REST request tests, or database failure injection.
 
 The local workspace checkout at `/workspace/scratch/15c66e332e50/plugin-src` is older than the GitHub `main` source and has uncommitted edits; it was not used to publish this change or to build an artifact. Continue using GitHub `main` as the source of truth and reconcile that working copy before any local release build.
+
+
+## 2026-11-10 execution protocol correction
+
+- Added `docs/EXECUTION_PROTOCOL.md` as the authoritative contributor workflow: atomic acceptance items, explicit evidence classes, status vocabulary, blocker handling, and closure gates for I-11/I-12.
+- Updated `AGENTS.md` and the reusable AI task prompt in `docs/AI_BACKLOG.md`: a “continue” message now directs the agent to execute the next unblocked acceptance item in the same work session; a status-only response is insufficient while work can proceed.
+- Corrected the latest build record: run `42637830397` passed PHP lint and produced artifact `13683022555`. The artifact is not staging-install evidence.
+- Environment records are separate: earlier limited runtime checks were performed on `wpessential.org/el-test`; on TasteWP, the final installation action was blocked before plugin installation. No alternate route was attempted and no site data changed.
+- I-11 remains open for the explicit gates above; no percentage in this evidence log is treated as completion proof. Next unblocked task: reconcile README and backlog dashboards to this ledger, then continue the highest-priority release check permitted by the documented environment constraints.
