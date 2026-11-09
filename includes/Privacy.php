@@ -109,8 +109,11 @@ final class Privacy {
 		return $erasers;
 	}
 
-	/** Export user-attributed plugin records in bounded pages. */
-	public static function export_user_data( string $email, int $page = 1 ): array {
+	/** Export user-attributed plugin records in bounded pages.
+	 *
+	 * @return array|\\WP_Error
+	 */
+	public static function export_user_data( string $email, int $page = 1 ) {
 		$user = get_user_by( 'email', sanitize_email( $email ) );
 		if ( ! $user ) {
 			return array( 'data' => array(), 'done' => true );
@@ -137,14 +140,10 @@ final class Privacy {
 		$params[] = ( max( 1, $page ) - 1 ) * self::PAGE_SIZE;
 		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $params ), ARRAY_A );
 		if ( ! empty( $wpdb->last_error ) ) {
-			return array(
-				'data' => array( array(
-					'group_id' => 'return-insight-export-status',
-					'group_label' => __( 'Return insight activity', WPE_RI_TEXT_DOMAIN ),
-					'item_id' => 'export-status',
-					'data' => array( array( 'name' => __( 'Export status', WPE_RI_TEXT_DOMAIN ), 'value' => __( 'The activity export could not be read. Please ask the site administrator to retry.', WPE_RI_TEXT_DOMAIN ) ), ),
-				) ),
-				'done' => true,
+			self::log_privacy_failure( 'user export query' );
+			return new \\WP_Error(
+				'return_insight_export_failed',
+				__( 'Return insight activity could not be exported because its database query failed. Please retry the export.', WPE_RI_TEXT_DOMAIN )
 			);
 		}
 
