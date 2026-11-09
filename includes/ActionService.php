@@ -234,6 +234,41 @@ final class ActionService {
 			'captured_by' => get_current_user_id(),
 		);
 		if ( false === $wpdb->query( 'START TRANSACTION' ) ) { return new \WP_Error( 'action_evidence_transaction_failed', __( 'Evidence could not be captured safely.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) ); }
+		$locked = $wpdb->get_row( $wpdb->prepare( 'SELECT action_id FROM ' . self::table() . ' WHERE action_id = %d FOR UPDATE', $id ), ARRAY_A );
+		if ( ! empty( $wpdb->last_error ) ) {
+			$wpdb->query( 'ROLLBACK' );
+			return new \WP_Error( 'action_evidence_lock_failed', __( 'The action could not be locked while capturing evidence.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+		}
+		if ( ! $locked ) {
+			$wpdb->query( 'ROLLBACK' );
+			return new \WP_Error( 'action_not_found', __( 'Corrective action not found.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 404 ) );
+		}
+		$locked_action = self::get( $id );
+		if ( is_wp_error( $locked_action ) ) {
+			$wpdb->query( 'ROLLBACK' );
+			return $locked_action;
+		}
+		if ( (int) $locked_action['measurement_days'] !== (int) $action['measurement_days'] || wp_json_encode( $locked_action['targets'] ) !== wp_json_encode( $action['targets'] ) ) {
+			$wpdb->query( 'ROLLBACK' );
+			return new \WP_Error( 'action_changed_during_evidence', __( 'The action settings changed while evidence was being prepared. Refresh and try again.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 409 ) );
+		}
+		$has_baseline = false; $has_followup = false; $locked_baseline = null;
+		foreach ( $locked_action['evidence'] as $snapshot ) {
+			if ( 'baseline' === $snapshot['phase'] ) { $has_baseline = true; $locked_baseline = $snapshot; }
+			if ( 'followup' === $snapshot['phase'] ) { $has_followup = true; }
+		}
+		if ( 'followup' === $phase && ! $has_baseline ) {
+			$wpdb->query( 'ROLLBACK' );
+			return new \WP_Error( 'action_baseline_required', __( 'Capture baseline evidence before follow-up evidence.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 409 ) );
+		}
+		if ( 'baseline' === $phase && ( $has_baseline || $has_followup ) ) {
+			$wpdb->query( 'ROLLBACK' );
+			return new \WP_Error( 'action_baseline_exists', __( 'Baseline evidence is already recorded for this action.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 409 ) );
+		}
+		if ( 'followup' === $phase && $locked_baseline && $report['periods']['current']['date_from'] <= $locked_baseline['period_to'] ) {
+			$wpdb->query( 'ROLLBACK' );
+			return new \WP_Error( 'action_followup_window_not_ready', __( 'The follow-up cohort must start after the baseline cohort ends. Wait for the selected comparison window to advance.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 409 ) );
+		}
 		$inserted = $wpdb->insert( self::evidence_table(), $row, array( '%d', '%s', '%s', '%s', '%s', '%f', '%f', '%f', '%f', '%d', '%s', '%d' ) );
 		if ( false === $inserted ) {
 			$wpdb->query( 'ROLLBACK' );
