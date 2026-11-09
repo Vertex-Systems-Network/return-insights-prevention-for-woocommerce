@@ -142,3 +142,11 @@ The local workspace checkout at `/workspace/scratch/15c66e332e50/plugin-src` is 
 - Corrected the latest build record: run `42637830397` passed PHP lint and produced artifact `13683022555`. The artifact is not staging-install evidence.
 - Environment records are separate: earlier limited runtime checks were performed on `wpessential.org/el-test`; on TasteWP, the final installation action was blocked before plugin installation. No alternate route was attempted and no site data changed.
 - I-11 remains open for the explicit gates above; no percentage in this evidence log is treated as completion proof. Next unblocked task: reconcile README and backlog dashboards to this ledger, then continue the highest-priority release check permitted by the documented environment constraints.
+
+
+## 2026-11-10 privacy-export failure-path audit
+
+- **Finding:** `Privacy::export_user_data()` previously converted a failed database read into a synthetic “Export status” data row and returned `done=true`. That could make an incomplete export look successful and place an operational error message in the exported personal-data report.
+- **Fix:** The callback now logs a generic operation label and returns `WP_Error` on query failure. It no longer marks failed output complete or inserts synthetic data. WordPress core's AJAX exporter explicitly recognizes `WP_Error` and sends an error response: [export AJAX handler](https://developer.wordpress.org/reference/functions/wp_ajax_wp_privacy_export_personal_data/) (reviewed 2026-11-10).
+- **CI evidence:** [run 42703752886](https://github.com/Vertex-Systems-Network/wpessential-return-insights-prevention-woocommerce/actions/runs/42703752886) completed successfully. PHP 8.3 lint, Composer PSR-4 package generation, ZIP build, and artifact upload all passed. Artifact `13712606784`, GitHub artifact archive digest `sha256:48cbef0c3726d26e02385bcf38b2b8bcb005e061b7be4be32c7ba90dfdd9865f`, expires 2026-11-23.
+- **Limit:** This is source and CI verification only. No database failure injection or WordPress privacy export request was run. The privacy-export runtime acceptance item remains open.
