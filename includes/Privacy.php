@@ -111,7 +111,7 @@ final class Privacy {
 
 	/** Export user-attributed plugin records in bounded pages.
 	 *
-	 * @return array|\\WP_Error
+	 * @return array|\WP_Error
 	 */
 	public static function export_user_data( string $email, int $page = 1 ) {
 		$user = get_user_by( 'email', sanitize_email( $email ) );
@@ -141,7 +141,7 @@ final class Privacy {
 		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $params ), ARRAY_A );
 		if ( ! empty( $wpdb->last_error ) ) {
 			self::log_privacy_failure( 'user export query' );
-			return new \\WP_Error(
+			return new \WP_Error(
 				'return_insight_export_failed',
 				__( 'Return insight activity could not be exported because its database query failed. Please retry the export.', WPE_RI_TEXT_DOMAIN )
 			);
