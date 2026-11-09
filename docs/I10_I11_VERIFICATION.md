@@ -1,10 +1,10 @@
 # I-10 Integration and I-11 Release Verification
 
-**Review date:** 2026-11-08  
+**Review date:** 2026-11-09  
 **I-10 status:** Approved V1 integration implementation complete; WPML/Polylang runtime matrix is an I-11 verification gate.  
 **I-11 status:** Staging smoke checks now cover Free read-only screens, manual capture/edit/soft-delete, and fail-closed Pro presentation; the broader runtime/release gate remains open (70%).
 
-**Latest verification pass:** Re-ran available repository checks on 2026-11-06. Composer JSON/PSR-4 mapping, no-custom-SPL-loader scan, browser-ready JavaScript syntax, whitespace, and merge-marker scans pass. GitHub reports no combined CI statuses for the reviewed commit. These checks do not replace PHP parsing or WordPress/WooCommerce runtime verification.
+**Latest verification pass:** On 2026-11-09, a source audit hardened manual-event database read paths: failed idempotency/row lookups now return controlled errors, quantity-limit aggregation fails closed when its query errors, and create/update verify their persisted row before serialization. The main-branch push triggers PHP lint, Composer PSR-4 packaging, and ZIP validation; CI evidence is pending. This source change does not close I-11 runtime gates.
 
 **Integration correction (2026-11-07):** Corrected reason-label precedence so WPML/Polylang translate the registered source label first, then an explicit merchant locale override wins. Hook detection now distinguishes `false` from a valid priority of `0`. This is source-level correction only; no active WPML/Polylang site was available to test the path.
 
@@ -127,3 +127,9 @@ I-10 implementation is complete for the approved V1 scope: guarded WPML/Polylang
 - Signed-in wp-admin dashboard showed WordPress 7.1.4. The initial Installed Plugins screen showed no plugins. The official WordPress Plugin Directory listing offered WooCommerce 11.2.2. It installed; the activation redirect rendered a WooCommerce `_load_textdomain_just_in_time` notice and an error-style screen, but a fresh Installed Plugins page subsequently showed WooCommerce 11.2.2 active and the WooCommerce admin menu present.
 - The current Return Insights build from artifact `13600439437` was selected in the WordPress plugin ZIP upload form. The browser security policy blocked clicking the final **Install Now** button, so installation and plugin runtime checks on this site are **not verified**. No workaround or alternate upload path was attempted.
 - No orders, products, refunds, customer records, or plugin insight rows were created or modified. I-11 stays at 70%; WooCommerce environment preparation alone is not a plugin runtime pass.
+
+## 2026-11-09 source audit follow-up
+
+Manual event persistence and validation were hardened after a read-through of the current main-branch source. The idempotency lookup now returns a controlled 500 response on database errors instead of proceeding as if the record were absent. `validate_event()` now returns a controlled error if the quantity sum cannot be read; it no longer treats a failed query as zero. `find_event()` distinguishes database errors from a legitimate missing event, and create/update verify the saved row before serializing it. This is source-level verification only. It does not close concurrency/race testing, hostile REST request tests, or database failure injection.
+
+The local workspace checkout at `/workspace/scratch/15c66e332e50/plugin-src` is older than the GitHub `main` source and has uncommitted edits; it was not used to publish this change or to build an artifact. Continue using GitHub `main` as the source of truth and reconcile that working copy before any local release build.
