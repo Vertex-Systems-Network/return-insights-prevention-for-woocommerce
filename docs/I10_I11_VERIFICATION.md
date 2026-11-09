@@ -2,7 +2,7 @@
 
 **Review date:** 2026-11-09  
 **I-10 status:** Approved V1 integration implementation complete; WPML/Polylang runtime matrix is an I-11 verification gate.  
-**I-11 status:** Limited runtime smoke checks are evidenced on `wpessential.org/el-test`; the separate TasteWP site `quirkybrake.s2-tastewp.com` has WooCommerce active but Return Insights installation was blocked before completion. Runtime/release gate remains open; no overall percentage is claimed here. README's 70% is a historical checklist estimate, not a release-readiness score.
+**I-11 status:** Limited runtime smoke checks are evidenced on `wpessential.org/el-test`; the separate TasteWP site `quirkybrake.s2-tastewp.com` has WooCommerce active but Return Insights installation was blocked before completion. Runtime/release gate remains open; no overall percentage is claimed here. The README reports gate status without an aggregate percentage.
 
 **Latest verification pass:** On 2026-11-09, a source audit hardened manual-event database read paths: failed idempotency/row lookups now return controlled errors, quantity-limit aggregation fails closed when its query errors, and create/update verify their persisted row before serialization. GitHub Actions run [42637830397](https://github.com/Vertex-Systems-Network/wpessential-return-insights-prevention-woocommerce/actions/runs/42637830397) passed PHP 8.3 lint, Composer PSR-4 packaging, and ZIP validation; artifact `13683022555` was uploaded (SHA-256 `0801dea18585d7ff19d8199bff45e17f8061351b5754550f8226378ce146ea0b`, expires 2026-11-23). This is CI/package evidence only and does not close I-11 runtime gates.
 
