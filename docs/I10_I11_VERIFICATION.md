@@ -180,3 +180,11 @@ Every registered route inspected has an explicit permission callback; the read/w
 
 
 **Follow-up, 2026-11-10:** Evidence capture now also locks the action row and re-reads current action settings/evidence before insert. A second concurrent baseline is rejected after the first transaction commits; stale target/window calculations return a conflict. CI run [42705553668](https://github.com/Vertex-Systems-Network/wpessential-return-insights-prevention-woocommerce/actions/runs/42705553668) passed PHP 8.3 lint, Composer packaging, ZIP build, and upload. Artifact `13712978338` (GitHub artifact archive digest `sha256:996132f3f9cb98e57d1132a5f4577adeccf70fc12a30f309739c564a1fc3f2ea`) expires 2026-11-23. Concurrency behavior still requires a live DB test; only source guard and CI are verified.
+
+
+## 2026-11-10 corrective-action detail query audit
+
+- **Finding:** `ActionService::hydrate_many()` checked `$wpdb->last_error` only after three detail queries. WordPress `wpdb::query()` flushes previous query state before each next query, so a failed targets/history query could be hidden by a later successful query and produce incomplete action details. [WordPress `wpdb::query()` reference](https://developer.wordpress.org/reference/classes/wpdb/query/) documents the per-query result/error behavior.
+- **Fix:** The targets, history, and evidence queries now each check `last_error` immediately and return a distinct controlled REST error before continuing.
+- **CI evidence:** [run 42707097395](https://github.com/Vertex-Systems-Network/wpessential-return-insights-prevention-woocommerce/actions/runs/42707097395) passed PHP 8.3 lint, Composer PSR-4 packaging, ZIP validation and artifact upload. Artifact `13713609300`, GitHub archive digest `sha256:75930348e61d47944988175d7bc572e58f4d51dac6e25d0a53cf37a0e5e928c6`, expires 2026-11-23.
+- **Limit:** No database failure injection was run; runtime action-detail read failures remain part of I-11.
