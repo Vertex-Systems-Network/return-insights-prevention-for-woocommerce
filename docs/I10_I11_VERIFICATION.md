@@ -169,3 +169,11 @@ Compared every registered route in `includes/RestController.php` with the approv
 | Corrective-action writes/evidence | `can_manage_actions`: manage capability plus Pro entitlement | Pass | Runtime test pending |
 
 Every registered route inspected has an explicit permission callback; the read/write split and Pro gates match the approved contract. This is source-level evidence only. I did not send unauthorized requests or alter role capabilities on either site. Remaining executable acceptance cases are: anonymous/no-capability denial, read-only capability access, manager mutation access, object/order lookup access, Pro-disabled denial, and Pro-entitled access. Run these on a clearly non-production test site when the package can be installed through an allowed flow.
+
+
+## 2026-11-10 corrective-action transaction audit
+
+- **Finding:** `ActionService::update()` read the old status before opening its transaction, allowing concurrent status changes to write audit history from stale state. Target replacement ignored a failed DELETE, history trimming ignored a failed lookup, and create/update/evidence paths did not check COMMIT results.
+- **Fix:** Action updates now lock and reread the action row with `SELECT ... FOR UPDATE` inside the transaction before determining status transitions. Target DELETE and history-retention lookup failures now abort the transaction; all three action transaction paths check COMMIT and return controlled errors on failure.
+- **CI evidence:** [run 42705241357](https://github.com/Vertex-Systems-Network/wpessential-return-insights-prevention-woocommerce/actions/runs/42705241357) passed all PHP 8.3 lint, Composer PSR-4 packaging, ZIP build, and artifact upload steps. Artifact `13712508716`, GitHub archive digest `sha256:05ab51cd6ed54829503f83b0636e22d2217e7d3d996372bcc14fba25f9140d6d`, expires 2026-11-23.
+- **Limit:** No live concurrent update or database failure-injection test was run. Action evidence capture's baseline/follow-up race, REST role authorization, and runtime rollback behavior remain open release tests.
