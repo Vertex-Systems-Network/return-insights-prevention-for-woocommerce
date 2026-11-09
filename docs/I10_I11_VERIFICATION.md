@@ -150,3 +150,22 @@ The local workspace checkout at `/workspace/scratch/15c66e332e50/plugin-src` is 
 - **Fix:** The callback now logs a generic operation label and returns `WP_Error` on query failure. It no longer marks failed output complete or inserts synthetic data. WordPress core's AJAX exporter explicitly recognizes `WP_Error` and sends an error response: [export AJAX handler](https://developer.wordpress.org/reference/functions/wp_ajax_wp_privacy_export_personal_data/) (reviewed 2026-11-10).
 - **CI evidence:** The first commit's run [42703690672](https://github.com/Vertex-Systems-Network/wpessential-return-insights-prevention-woocommerce/actions/runs/42703690672) caught an invalid namespace escape during PHP lint; the immediately following commit corrected it. Follow-up run [42703752886](https://github.com/Vertex-Systems-Network/wpessential-return-insights-prevention-woocommerce/actions/runs/42703752886) completed successfully. PHP 8.3 lint, Composer PSR-4 package generation, ZIP build, and artifact upload all passed. Artifact `13712606784`, GitHub artifact archive digest `sha256:48cbef0c3726d26e02385bcf38b2b8bcb005e061b7be4be32c7ba90dfdd9865f`, expires 2026-11-23.
 - **Limit:** This is source and CI verification only. No database failure injection or WordPress privacy export request was run. The privacy-export runtime acceptance item remains open.
+
+
+## 2026-11-10 REST permission callback source audit
+
+Compared every registered route in `includes/RestController.php` with the approved capability policy in `docs/P6_TECHNICAL_CONTRACTS.md`.
+
+| Route group | Expected and observed callback | Static result | Runtime result |
+|---|---|---|---|
+| Reasons catalog and individual reasons | GET: `can_view`; POST/PATCH: `can_manage` | Pass | Role matrix pending |
+| Order-item lookup | GET: `can_manage` | Pass | Unauthorized-role test pending |
+| Summary, sources, event list/detail | GET: `can_view` | Pass | Unauthorized-role test pending |
+| Manual event create/edit/soft-delete | POST/PATCH/DELETE: `can_manage` | Pass | REST permission test pending |
+| Patterns, clusters, alert list | `can_view_patterns`: view capability plus fail-closed Pro entitlement | Pass | Pro entitlement/runtime test pending |
+| Cluster override | `can_manage_clusters`: manage capability plus Pro entitlement | Pass | Runtime test pending |
+| Alert mutation | `can_manage_alerts`: manage capability plus Pro entitlement | Pass | Runtime test pending |
+| Corrective-action reads | `can_view_actions`: view capability plus Pro entitlement | Pass | Runtime test pending |
+| Corrective-action writes/evidence | `can_manage_actions`: manage capability plus Pro entitlement | Pass | Runtime test pending |
+
+Every registered route inspected has an explicit permission callback; the read/write split and Pro gates match the approved contract. This is source-level evidence only. I did not send unauthorized requests or alter role capabilities on either site. Remaining executable acceptance cases are: anonymous/no-capability denial, read-only capability access, manager mutation access, object/order lookup access, Pro-disabled denial, and Pro-entitled access. Run these on a clearly non-production test site when the package can be installed through an allowed flow.
