@@ -442,67 +442,144 @@ final class RestController {
 		global $wpdb;
 		$d = $r->get_json_params() ?: array();
 		if ( self::has_unknown_fields( $d, array( 'event_kind', 'order_id', 'order_item_id', 'quantity', 'reason_id', 'occurred_at', 'idempotency_key' ) ) ) { return self::unknown_fields_error(); }
-		$v = self::validate_event( $d );
-		if ( is_wp_error( $v ) ) { return $v; }
 		$key = sanitize_text_field( $d['idempotency_key'] ?? '' );
 		if ( ! preg_match( '/^[A-Za-z0-9_-]{16,100}$/', $key ) ) { return new \WP_Error( 'invalid_idempotency_key', __( 'A 16–100 character idempotency key is required.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) ); }
-		$hash = hash( 'sha256', 'manual|' . get_current_blog_id() . '|' . $key ); $table = Installer::events_table();
+		$hash = hash( 'sha256', 'manual|' . get_current_blog_id() . '|' . $key );
+		$table = Installer::events_table();
 		$existing = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE source_key = %s", $hash ), ARRAY_A );
 		if ( ! empty( $wpdb->last_error ) ) {
 			return new \WP_Error( 'event_lookup_failed', __( 'The existing insight could not be checked. Please retry.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
 		}
 		if ( $existing ) { return new \WP_REST_Response( self::serialize_event( $existing ), 200 ); }
-		$now = gmdate( 'Y-m-d H:i:s' );
-		$ok = $wpdb->insert( $table, array(
-			'event_uuid' => wp_generate_uuid4(), 'source_key' => $hash, 'source_type' => 'manual', 'source_record_id' => $key,
-			'event_kind' => $v['kind'], 'order_id' => $v['order']->get_id(), 'order_item_id' => $v['item']->get_id(),
-			'product_id' => $v['product_id'], 'variation_id' => $v['variation_id'], 'reason_id' => $v['reason']['id'],
-			'quantity' => $v['quantity'], 'attribution_scope' => 'item', 'mapping_state' => 'mapped',
-			'occurred_at_gmt' => $v['date'], 'created_at_gmt' => $now, 'updated_at_gmt' => $now,
-			'created_by' => get_current_user_id(), 'updated_by' => get_current_user_id(),
-		) );
-		if ( false === $ok ) { return new \WP_Error( 'event_write_failed', __( 'The insight could not be saved.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) ); }
-		$saved = self::find_event( (int) $wpdb->insert_id );
-		if ( is_wp_error( $saved ) || ! is_array( $saved ) ) {
-			return new \WP_Error( 'event_read_failed', __( 'The saved insight could not be verified. Refresh the history before retrying.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+
+		$lock = self::acquire_item_write_lock( absint( $d['order_item_id'] ?? 0 ) );
+		if ( is_wp_error( $lock ) ) { return $lock; }
+		try {
+			// Recheck after acquiring the per-item lock so a concurrent retry is idempotent.
+			$existing = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE source_key = %s", $hash ), ARRAY_A );
+			if ( ! empty( $wpdb->last_error ) ) {
+				return new \WP_Error( 'event_lookup_failed', __( 'The existing insight could not be checked. Please retry.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+			}
+			if ( $existing ) { return new \WP_REST_Response( self::serialize_event( $existing ), 200 ); }
+
+			$v = self::validate_event( $d );
+			if ( is_wp_error( $v ) ) { return $v; }
+			$now = gmdate( 'Y-m-d H:i:s' );
+			$ok = $wpdb->insert( $table, array(
+				'event_uuid' => wp_generate_uuid4(), 'source_key' => $hash, 'source_type' => 'manual', 'source_record_id' => $key,
+				'event_kind' => $v['kind'], 'order_id' => $v['order']->get_id(), 'order_item_id' => $v['item']->get_id(),
+				'product_id' => $v['product_id'], 'variation_id' => $v['variation_id'], 'reason_id' => $v['reason']['id'],
+				'quantity' => $v['quantity'], 'attribution_scope' => 'item', 'mapping_state' => 'mapped',
+				'occurred_at_gmt' => $v['date'], 'created_at_gmt' => $now, 'updated_at_gmt' => $now,
+				'created_by' => get_current_user_id(), 'updated_by' => get_current_user_id(),
+			) );
+			if ( false === $ok ) {
+				$existing = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE source_key = %s", $hash ), ARRAY_A );
+				if ( empty( $wpdb->last_error ) && $existing ) { return new \WP_REST_Response( self::serialize_event( $existing ), 200 ); }
+				return new \WP_Error( 'event_write_failed', __( 'The insight could not be saved.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+			}
+			$saved = self::find_event( (int) $wpdb->insert_id );
+			if ( is_wp_error( $saved ) || ! is_array( $saved ) ) {
+				return new \WP_Error( 'event_read_failed', __( 'The saved insight could not be verified. Refresh the history before retrying.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+			}
+			return new \WP_REST_Response( self::serialize_event( $saved ), 201 );
+		} finally {
+			self::release_item_write_lock( $lock );
 		}
-		return new \WP_REST_Response( self::serialize_event( $saved ), 201 );
 	}
+
 	public static function update_event( \WP_REST_Request $r ) {
 		global $wpdb;
-		$id = absint( $r['id'] ); $row = self::find_event( $id );
+		$id = absint( $r['id'] );
+		$row = self::find_event( $id );
 		if ( is_wp_error( $row ) ) { return $row; }
 		if ( ! $row ) { return self::missing_event(); }
 		if ( 'manual' !== $row['source_type'] ) { return new \WP_Error( 'immutable_source', __( 'Observed source records cannot be edited here.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 409 ) ); }
-		$d = $r->get_json_params() ?: array();
-		if ( self::has_unknown_fields( $d, array( 'event_kind', 'quantity', 'reason_id', 'occurred_at' ) ) ) { return self::unknown_fields_error(); }
-		$v = self::validate_event( array_merge( $d, array( 'order_id' => $row['order_id'], 'order_item_id' => $row['order_item_id'] ) ), $id );
-		if ( is_wp_error( $v ) ) { return $v; }
-		$updated = $wpdb->update( Installer::events_table(), array( 'event_kind' => $v['kind'], 'quantity' => $v['quantity'], 'reason_id' => $v['reason']['id'], 'occurred_at_gmt' => $v['date'], 'updated_at_gmt' => gmdate( 'Y-m-d H:i:s' ), 'updated_by' => get_current_user_id() ), array( 'event_id' => $id ) );
-		if ( false === $updated ) {
-			return new \WP_Error( 'event_update_failed', __( 'The insight could not be updated.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+
+		$lock = self::acquire_item_write_lock( absint( $row['order_item_id'] ) );
+		if ( is_wp_error( $lock ) ) { return $lock; }
+		try {
+			$row = self::find_event( $id );
+			if ( is_wp_error( $row ) ) { return $row; }
+			if ( ! $row ) { return self::missing_event(); }
+			if ( 'manual' !== $row['source_type'] ) { return new \WP_Error( 'immutable_source', __( 'Observed source records cannot be edited here.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 409 ) ); }
+			if ( ! empty( $row['deleted_at_gmt'] ) ) { return new \WP_Error( 'event_deleted', __( 'Removed insights cannot be edited.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 409 ) ); }
+
+			$d = $r->get_json_params() ?: array();
+			if ( self::has_unknown_fields( $d, array( 'event_kind', 'quantity', 'reason_id', 'occurred_at' ) ) ) { return self::unknown_fields_error(); }
+			$v = self::validate_event( array_merge( $d, array( 'order_id' => $row['order_id'], 'order_item_id' => $row['order_item_id'] ) ), $id );
+			if ( is_wp_error( $v ) ) { return $v; }
+			$updated = $wpdb->update( Installer::events_table(), array( 'event_kind' => $v['kind'], 'quantity' => $v['quantity'], 'reason_id' => $v['reason']['id'], 'occurred_at_gmt' => $v['date'], 'updated_at_gmt' => gmdate( 'Y-m-d H:i:s' ), 'updated_by' => get_current_user_id() ), array( 'event_id' => $id ) );
+			if ( false === $updated ) {
+				return new \WP_Error( 'event_update_failed', __( 'The insight could not be updated.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+			}
+			$updated_row = self::find_event( $id );
+			if ( is_wp_error( $updated_row ) || ! is_array( $updated_row ) ) {
+				return new \WP_Error( 'event_read_failed', __( 'The updated insight could not be verified. Refresh the history before retrying.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+			}
+			return rest_ensure_response( self::serialize_event( $updated_row ) );
+		} finally {
+			self::release_item_write_lock( $lock );
 		}
-		$updated_row = self::find_event( $id );
-		if ( is_wp_error( $updated_row ) || ! is_array( $updated_row ) ) {
-			return new \WP_Error( 'event_read_failed', __( 'The updated insight could not be verified. Refresh the history before retrying.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
-		}
-		return rest_ensure_response( self::serialize_event( $updated_row ) );
 	}
+
 	public static function delete_event( \WP_REST_Request $r ) {
 		global $wpdb;
-		$id = absint( $r['id'] ); $row = self::find_event( $id );
+		$id = absint( $r['id'] );
+		$row = self::find_event( $id );
+		if ( is_wp_error( $row ) ) { return $row; }
 		if ( ! $row ) { return self::missing_event(); }
-		if ( 'manual' !== $row['source_type'] ) { return new \WP_Error( 'immutable_source', __( 'Observed source records cannot be deleted here.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 409 ) ); }
-		$data = $r->get_json_params() ?: array();
-		if ( self::has_unknown_fields( $data, array( 'audit_reason' ) ) ) { return self::unknown_fields_error(); }
-		$note = sanitize_text_field( (string) ( $data['audit_reason'] ?? '' ) );
-		if ( '' === $note || strlen( $note ) > 200 ) { return new \WP_Error( 'audit_reason_required', __( 'Provide an audit reason up to 200 characters.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) ); }
-		$deleted = $wpdb->update( Installer::events_table(), array( 'deleted_at_gmt' => gmdate( 'Y-m-d H:i:s' ), 'deletion_note' => $note, 'updated_at_gmt' => gmdate( 'Y-m-d H:i:s' ), 'updated_by' => get_current_user_id() ), array( 'event_id' => $id ) );
-		if ( false === $deleted ) {
-			return new \WP_Error( 'event_delete_failed', __( 'The insight could not be removed.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+		if ( 'manual' !== $row['source_type'] ) { return new \WP_Error( 'immutable_source', __( 'Observed source records cannot be removed here.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 409 ) ); }
+
+		$lock = self::acquire_item_write_lock( absint( $row['order_item_id'] ) );
+		if ( is_wp_error( $lock ) ) { return $lock; }
+		try {
+			$row = self::find_event( $id );
+			if ( is_wp_error( $row ) ) { return $row; }
+			if ( ! $row ) { return self::missing_event(); }
+			if ( 'manual' !== $row['source_type'] ) { return new \WP_Error( 'immutable_source', __( 'Observed source records cannot be removed here.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 409 ) ); }
+			if ( ! empty( $row['deleted_at_gmt'] ) ) { return new \WP_Error( 'event_deleted', __( 'The insight has already been removed.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 409 ) ); }
+
+			$data = $r->get_json_params() ?: array();
+			if ( self::has_unknown_fields( $data, array( 'audit_reason' ) ) ) { return self::unknown_fields_error(); }
+			$note = sanitize_text_field( (string) ( $data['audit_reason'] ?? '' ) );
+			if ( '' === $note || strlen( $note ) > 200 ) { return new \WP_Error( 'audit_reason_required', __( 'Provide an audit reason up to 200 characters.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) ); }
+			$deleted = $wpdb->update( Installer::events_table(), array( 'deleted_at_gmt' => gmdate( 'Y-m-d H:i:s' ), 'deletion_note' => $note, 'updated_at_gmt' => gmdate( 'Y-m-d H:i:s' ), 'updated_by' => get_current_user_id() ), array( 'event_id' => $id ) );
+			if ( false === $deleted ) {
+				return new \WP_Error( 'event_delete_failed', __( 'The insight could not be removed.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+			}
+			return new \WP_REST_Response( null, 204 );
+		} finally {
+			self::release_item_write_lock( $lock );
 		}
-		return new \WP_REST_Response( null, 204 );
 	}
+
+	private static function acquire_item_write_lock( int $order_item_id ) {
+		global $wpdb;
+		if ( $order_item_id < 1 ) {
+			return new \WP_Error( 'invalid_order_item', __( 'Select a valid order item before saving an insight.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) );
+		}
+		$lock_name = 'wperi_' . get_current_blog_id() . '_' . substr( hash( 'sha256', (string) $order_item_id ), 0, 40 );
+		$acquired = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, 5)', $lock_name ) );
+		if ( ! empty( $wpdb->last_error ) || 1 !== (int) $acquired ) {
+			return new \WP_Error( 'event_write_busy', __( 'Another insight update is in progress for this item. Please retry shortly.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 503 ) );
+		}
+		return array( 'name' => $lock_name );
+	}
+
+	private static function release_item_write_lock( array $lock ): void {
+		global $wpdb;
+		$released = $wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock['name'] ) );
+		if ( ! empty( $wpdb->last_error ) || 1 !== (int) $released ) {
+			if ( function_exists( 'wc_get_logger' ) ) {
+				wc_get_logger()->error(
+					'Return Insights item write lock release failed.',
+					array( 'source' => 'wpessential-return-insights-locks' )
+				);
+			}
+		}
+	}
+
 	private static function validate_event( array $d, int $ignore_event_id = 0 ) {
 		$kind = sanitize_key( $d['event_kind'] ?? '' );
 		if ( ! in_array( $kind, array( 'confirmed_return', 'exchange' ), true ) ) { return new \WP_Error( 'invalid_event_kind', __( 'Manual insights support confirmed returns or exchanges.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) ); }
