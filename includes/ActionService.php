@@ -96,7 +96,10 @@ final class ActionService {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'action_audit_failed', __( 'The action could not be saved to its audit history.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
 		}
-		$wpdb->query( 'COMMIT' );
+		if ( false === $wpdb->query( 'COMMIT' ) ) {
+			$wpdb->query( 'ROLLBACK' );
+			return new \WP_Error( 'action_commit_failed', __( 'The corrective action could not be committed. Refresh before retrying.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+		}
 		return self::get( $id );
 	}
 
@@ -125,8 +128,22 @@ final class ActionService {
 			$targets = self::validate_targets( $data['targets'] );
 			if ( is_wp_error( $targets ) ) { return $targets; }
 		}
-		$status_changed = isset( $data['status'] ) && $data['status'] !== $current['status'];
 		if ( false === $wpdb->query( 'START TRANSACTION' ) ) { return new \WP_Error( 'action_transaction_failed', __( 'The corrective action could not be started safely.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) ); }
+		$locked = $wpdb->get_row( $wpdb->prepare( 'SELECT action_id FROM ' . self::table() . ' WHERE action_id = %d FOR UPDATE', $id ), ARRAY_A );
+		if ( ! empty( $wpdb->last_error ) ) {
+			$wpdb->query( 'ROLLBACK' );
+			return new \WP_Error( 'action_lock_failed', __( 'The corrective action could not be locked for update.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+		}
+		if ( ! $locked ) {
+			$wpdb->query( 'ROLLBACK' );
+			return new \WP_Error( 'action_not_found', __( 'Corrective action not found.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 404 ) );
+		}
+		$current = self::get( $id );
+		if ( is_wp_error( $current ) ) {
+			$wpdb->query( 'ROLLBACK' );
+			return $current;
+		}
+		$status_changed = isset( $data['status'] ) && $data['status'] !== $current['status'];
 		if ( $status_changed ) { $updates['status'] = $data['status']; $formats[] = '%s'; }
 		if ( $updates || $replace_targets ) {
 			$updates['updated_at_gmt'] = gmdate( 'Y-m-d H:i:s' );
@@ -138,7 +155,11 @@ final class ActionService {
 			}
 		}
 		if ( $replace_targets ) {
-			$wpdb->delete( self::targets_table(), array( 'action_id' => $id ), array( '%d' ) );
+			$deleted = $wpdb->delete( self::targets_table(), array( 'action_id' => $id ), array( '%d' ) );
+			if ( false === $deleted ) {
+				$wpdb->query( 'ROLLBACK' );
+				return new \WP_Error( 'action_target_failed', __( 'Existing action targets could not be replaced.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+			}
 			foreach ( $targets as $target ) {
 				if ( false === $wpdb->insert( self::targets_table(), array_merge( array( 'action_id' => $id ), $target ), array( '%d', '%d', '%d', '%s' ) ) ) {
 					$wpdb->query( 'ROLLBACK' );
@@ -150,7 +171,10 @@ final class ActionService {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'action_audit_failed', __( 'The status change could not be audited, so it was reverted.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
 		}
-		$wpdb->query( 'COMMIT' );
+		if ( false === $wpdb->query( 'COMMIT' ) ) {
+			$wpdb->query( 'ROLLBACK' );
+			return new \WP_Error( 'action_commit_failed', __( 'The corrective action could not be committed. Refresh before retrying.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+		}
 		return self::get( $id );
 	}
 
@@ -225,7 +249,10 @@ final class ActionService {
 			if ( $baseline_id ) { $delete_sql .= ' AND evidence_id <> %d'; $args[] = absint( $baseline_id ); }
 			if ( false === $wpdb->query( $wpdb->prepare( $delete_sql, $args ) ) ) { $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'action_evidence_retention_failed', __( 'Evidence retention could not be completed.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) ); }
 		}
-		$wpdb->query( 'COMMIT' );
+		if ( false === $wpdb->query( 'COMMIT' ) ) {
+			$wpdb->query( 'ROLLBACK' );
+			return new \WP_Error( 'action_evidence_commit_failed', __( 'The evidence snapshot could not be committed. Refresh before retrying.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+		}
 		return self::get( $id );
 	}
 
@@ -336,6 +363,7 @@ final class ActionService {
 		global $wpdb;
 		if ( false === $wpdb->insert( self::history_table(), array( 'action_id' => $id, 'previous_status' => $previous, 'new_status' => $next, 'note' => sanitize_text_field( $note ), 'actor_id' => get_current_user_id(), 'changed_at_gmt' => gmdate( 'Y-m-d H:i:s' ) ), array( '%d', '%s', '%s', '%s', '%d', '%s' ) ) ) { return false; }
 		$trim_id = $wpdb->get_var( $wpdb->prepare( 'SELECT history_id FROM ' . self::history_table() . ' WHERE action_id = %d ORDER BY history_id DESC LIMIT 1 OFFSET %d', $id, self::MAX_HISTORY ) );
+		if ( ! empty( $wpdb->last_error ) ) { return false; }
 		if ( $trim_id && false === $wpdb->query( $wpdb->prepare( 'DELETE FROM ' . self::history_table() . ' WHERE action_id = %d AND history_id <= %d', $id, absint( $trim_id ) ) ) ) { return false; }
 		return true;
 	}
