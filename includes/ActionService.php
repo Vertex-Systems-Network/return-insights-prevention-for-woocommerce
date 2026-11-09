@@ -371,9 +371,11 @@ final class ActionService {
 		$ids = array_map( 'absint', array_column( $rows, 'action_id' ) );
 		$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
 		$targets = $wpdb->get_results( $wpdb->prepare( 'SELECT action_id, product_id, variation_id, reason_id FROM ' . self::targets_table() . ' WHERE action_id IN (' . $placeholders . ') ORDER BY target_id ASC', $ids ), ARRAY_A );
+		if ( ! empty( $wpdb->last_error ) ) { return new \WP_Error( 'actions_targets_query_failed', __( 'Corrective-action targets could not be loaded.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) ); }
 		$history = $wpdb->get_results( $wpdb->prepare( 'SELECT action_id, previous_status, new_status, note, actor_id, changed_at_gmt FROM ' . self::history_table() . ' WHERE action_id IN (' . $placeholders . ') ORDER BY history_id DESC', $ids ), ARRAY_A );
+		if ( ! empty( $wpdb->last_error ) ) { return new \WP_Error( 'actions_history_query_failed', __( 'Corrective-action history could not be loaded.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) ); }
 		$evidence = $wpdb->get_results( $wpdb->prepare( 'SELECT action_id, phase, metric_definition_version, period_from, period_to, returned_quantity, sold_quantity, rate_percent, mapping_percent, eligible_orders, captured_at_gmt, captured_by FROM ' . self::evidence_table() . ' WHERE action_id IN (' . $placeholders . ') ORDER BY evidence_id DESC', $ids ), ARRAY_A );
-		if ( ! empty( $wpdb->last_error ) ) { return new \WP_Error( 'actions_detail_query_failed', __( 'Corrective-action details could not be loaded.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) ); }
+		if ( ! empty( $wpdb->last_error ) ) { return new \WP_Error( 'actions_evidence_query_failed', __( 'Corrective-action evidence could not be loaded.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) ); }
 		$groups = array( 'targets' => array(), 'history' => array(), 'evidence' => array() );
 		foreach ( array( 'targets' => $targets, 'history' => $history, 'evidence' => $evidence ) as $kind => $items ) {
 			foreach ( is_array( $items ) ? $items : array() as $item ) {
