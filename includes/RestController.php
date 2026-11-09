@@ -435,6 +435,7 @@ final class RestController {
 	}
 	public static function get_event( \WP_REST_Request $r ) {
 		$row = self::find_event( absint( $r['id'] ) );
+		if ( is_wp_error( $row ) ) { return $row; }
 		return $row ? rest_ensure_response( self::serialize_event( $row ) ) : self::missing_event();
 	}
 	public static function create_event( \WP_REST_Request $r ) {
@@ -447,6 +448,9 @@ final class RestController {
 		if ( ! preg_match( '/^[A-Za-z0-9_-]{16,100}$/', $key ) ) { return new \WP_Error( 'invalid_idempotency_key', __( 'A 16–100 character idempotency key is required.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) ); }
 		$hash = hash( 'sha256', 'manual|' . get_current_blog_id() . '|' . $key ); $table = Installer::events_table();
 		$existing = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE source_key = %s", $hash ), ARRAY_A );
+		if ( ! empty( $wpdb->last_error ) ) {
+			return new \WP_Error( 'event_lookup_failed', __( 'The existing insight could not be checked. Please retry.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+		}
 		if ( $existing ) { return new \WP_REST_Response( self::serialize_event( $existing ), 200 ); }
 		$now = gmdate( 'Y-m-d H:i:s' );
 		$ok = $wpdb->insert( $table, array(
@@ -458,11 +462,16 @@ final class RestController {
 			'created_by' => get_current_user_id(), 'updated_by' => get_current_user_id(),
 		) );
 		if ( false === $ok ) { return new \WP_Error( 'event_write_failed', __( 'The insight could not be saved.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) ); }
-		return new \WP_REST_Response( self::serialize_event( self::find_event( (int) $wpdb->insert_id ) ), 201 );
+		$saved = self::find_event( (int) $wpdb->insert_id );
+		if ( is_wp_error( $saved ) || ! is_array( $saved ) ) {
+			return new \WP_Error( 'event_read_failed', __( 'The saved insight could not be verified. Refresh the history before retrying.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+		}
+		return new \WP_REST_Response( self::serialize_event( $saved ), 201 );
 	}
 	public static function update_event( \WP_REST_Request $r ) {
 		global $wpdb;
 		$id = absint( $r['id'] ); $row = self::find_event( $id );
+		if ( is_wp_error( $row ) ) { return $row; }
 		if ( ! $row ) { return self::missing_event(); }
 		if ( 'manual' !== $row['source_type'] ) { return new \WP_Error( 'immutable_source', __( 'Observed source records cannot be edited here.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 409 ) ); }
 		$d = $r->get_json_params() ?: array();
@@ -474,7 +483,10 @@ final class RestController {
 			return new \WP_Error( 'event_update_failed', __( 'The insight could not be updated.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
 		}
 		$updated_row = self::find_event( $id );
-		return is_array( $updated_row ) ? rest_ensure_response( self::serialize_event( $updated_row ) ) : new \WP_Error( 'event_read_failed', __( 'The updated insight could not be read.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+		if ( is_wp_error( $updated_row ) || ! is_array( $updated_row ) ) {
+			return new \WP_Error( 'event_read_failed', __( 'The updated insight could not be verified. Refresh the history before retrying.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+		}
+		return rest_ensure_response( self::serialize_event( $updated_row ) );
 	}
 	public static function delete_event( \WP_REST_Request $r ) {
 		global $wpdb;
@@ -506,7 +518,11 @@ final class RestController {
 		$sql = "SELECT COALESCE(SUM(quantity), 0) FROM {$table} WHERE order_item_id = %d AND event_kind IN ('confirmed_return','exchange') AND deleted_at_gmt IS NULL";
 		$args = array( $item->get_id() );
 		if ( $ignore_event_id ) { $sql .= ' AND event_id <> %d'; $args[] = $ignore_event_id; }
-		$already_recorded = (float) $wpdb->get_var( $wpdb->prepare( $sql, $args ) );
+		$recorded_quantity = $wpdb->get_var( $wpdb->prepare( $sql, $args ) );
+		if ( ! empty( $wpdb->last_error ) ) {
+			return new \WP_Error( 'event_quantity_check_failed', __( 'The item quantity could not be verified. Please retry.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+		}
+		$already_recorded = (float) $recorded_quantity;
 		if ( $already_recorded + $q > (float) $item->get_quantity() ) {
 			return new \WP_Error( 'quantity_exceeds_ordered', __( 'Insight quantity cannot exceed the remaining quantity on this order item.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 400 ) );
 		}
@@ -518,7 +534,11 @@ final class RestController {
 	}
 	private static function find_event( int $id ) {
 		global $wpdb; $table = Installer::events_table();
-		return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE event_id = %d", $id ), ARRAY_A );
+		$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE event_id = %d", $id ), ARRAY_A );
+		if ( ! empty( $wpdb->last_error ) ) {
+			return new \WP_Error( 'event_read_failed', __( 'The insight could not be loaded. Please retry.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+		}
+		return $row;
 	}
 	private static function serialize_event( array $row ): array {
 		$reason = ReasonCatalog::find( $row['reason_id'], true );
