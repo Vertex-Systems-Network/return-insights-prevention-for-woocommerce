@@ -218,3 +218,19 @@ These are static findings to resolve or explicitly disposition before I-11 close
 Primary references reviewed 2026-11-10: [WordPress privacy eraser callback contract](https://developer.wordpress.org/reference/functions/wp_ajax_wp_privacy_erase_personal_data/), [WordPress plugin privacy eraser guide](https://developer.wordpress.org/plugins/privacy/adding-the-personal-data-eraser-to-your-plugin/), and [WooCommerce privacy implementation](https://github.com/woocommerce/woocommerce/blob/trunk/plugins/woocommerce/includes/class-wc-privacy-erasers.php). Recheck supported-release source at release time.
 
 These observations do not imply a proven exploit, data loss, or production failure. They are concrete unresolved acceptance cases; do not mark them complete from source inspection alone.
+
+## 2026-11-10 Ahead Earth TasteWP upload attempt
+
+**Authorized environment:** Ahead Earth, `https://aheadearth.s3-tastewp.com` (the only site authorized for this round). Credentials were supplied by the owner and are not recorded here.
+
+| Check | Observed result | Status |
+|---|---|---|
+| WordPress admin access | Login succeeded as admin; WordPress 7.1.4 shown in footer. | Pass |
+| WooCommerce prerequisite | Official WooCommerce 11.2.2 was installed through this site's Plugins → Add Plugins directory and activated. The activation response displayed “312 characters of unexpected output”; admin remained reachable and WooCommerce menus appeared. Root cause is unverified. | Setup pass; warning open |
+| Target package identity | GitHub Actions run 42707097395, source commit 14a0dafd1804c7778b4a99958fa6a353b1722fe2; inner ZIP SHA-256 `5d57884c243b2cd668928bbe917a07de7569a62fc0a2c0ca2768e3d1ef547361`. | Identity verified before upload |
+| Plugin upload / activation | WordPress Upload Plugin screen opened, but its native file chooser did not expose the build artifact from the execution environment. The plugin ZIP could not be selected; no install or activation occurred. | Blocked; no plugin runtime evidence |
+| Site health after setup | Admin remained accessible after WooCommerce activation. Plugin-specific fatal/error check is not applicable because the plugin was not installed. | Limited pass |
+
+**Disposition:** This attempt is not an I-11 package install, activation, or runtime pass. Do not infer plugin compatibility or safety from the WooCommerce prerequisite setup. Resume when the exact ZIP can be made available to the browser's native chooser through an authorized transfer path; continue other source/CI/release work meanwhile. Do not use a different site or upload method that bypasses the WordPress admin flow without owner direction.
+
+**I-12 preparation:** Checklist and two-package model are documented in `docs/DISTRIBUTION.md`. The current repository has not produced a final Free + Pro marketplace pair; no WordPress.org submission, Woo vendor application, or WooCommerce.com submission has been made. I-12 is preparation-only and blocked from submission by I-11 and product/vendor prerequisites.
