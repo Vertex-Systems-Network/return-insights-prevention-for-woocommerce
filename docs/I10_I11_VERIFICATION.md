@@ -55,6 +55,8 @@ I-10 has no approved third-party adapter deliverable for V1. WPML/WCML/Polylang-
 
 ## Historical integration references
 
+These references document the former adapter investigation only; they are not current V1 dependencies or acceptance criteria.
+
 - [WPML: Make user-input texts translatable](https://wpml.org/documentation/support/translation-for-texts-by-other-plugins-and-themes/) — register dynamic strings, translate them through String Translation, and re-register on admin loads to support late activation.
 - [WPML: Current language hook](https://wpml.org/wpml-hook/wpml_current_language/) — supported language-context hook; the current implementation does not alter query language context.
 - [Polylang: Function reference](https://polylang.pro/documentation/support/developers/function-reference/) — guard optional APIs and use `pll_register_string`/`pll__` for dynamic labels.
