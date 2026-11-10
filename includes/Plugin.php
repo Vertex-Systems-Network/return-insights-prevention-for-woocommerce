@@ -51,6 +51,7 @@ final class Plugin {
 	 * @return void
 	 */
 	public static function deactivate(): void {
+		AlertService::unschedule();
 		// Preserve access configuration and merchant data on deactivation.
 	}
 
