@@ -25,6 +25,11 @@ final class AlertService {
 		}
 	}
 
+	/** Remove recurring alert evaluation when the plugin is deactivated. */
+	public static function unschedule(): void {
+		wp_clear_scheduled_hook( self::CRON_HOOK );
+	}
+
 	/** Evaluate default approved launch thresholds once per distinct ISO week. */
 	public static function refresh() {
 		if ( ! PatternService::is_entitled() ) {
