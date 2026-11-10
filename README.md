@@ -64,7 +64,7 @@ This dashboard separates source implementation from I-11 evidence. "Implemented"
 | I-07 Pro product/variation patterns | Present; entitlement provider absent and fail-closed | Cohort math, data boundaries and entitled-provider behavior open | 2026-11-06 | Open |
 | I-08 Pro clustering and alerts | Present | Persistence, weekly refresh, volume, visual/accessibility checks open | 2026-11-06 | Open |
 | I-09 Corrective-action tracking | Present | Transaction/concurrency/failure-injection and Pro entitlement checks open | 2026-11-06 | Open |
-| I-10 Third-party integration scope | No third-party adapters approved for V1 | WPML/WCML/Polylang excluded from support claims and runtime gates; existing adapter source remains out of scope | 2026-11-06 | Complete by scope decision |
+| I-10 Third-party integration scope | No third-party adapters approved for V1 | WPML/WCML/Polylang excluded from V1 support claims and runtime gates | 2026-11-06 | 2026-11-11 |
 | I-11 Runtime, security, accessibility and release verification | Audit/source hardening in progress | Open; atomic evidence ledger in `docs/I10_I11_VERIFICATION.md` is authoritative | 2026-11-06 | Re-estimate after gate review |
 | I-12 WordPress.org Free + WooCommerce.com Paid submissions | Plan recorded | Not started; blocked by I-11 and vendor/package prerequisites | Not started | Re-estimate after I-11 |
 
