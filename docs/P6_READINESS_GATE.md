@@ -20,7 +20,7 @@ The product owner explicitly delegated approval and final choices in ChatGPT on 
 | D8 | Integrations | V1 directly supports WooCommerce native refund evidence and manual insight entry. Defer third-party RMA adapters until official API feasibility, demand, data quality, and privacy are reviewed per adapter. | Approved; third-party adapters remain deferred from V1. |
 | D9 | Storage / processing | Keep settings and reason catalog in WP options where appropriate; use versioned indexed event/action tables for growing data; queue bounded aggregation through Action Scheduler. Use WooCommerce CRUD and public APIs for order/product data. | Approved logical approach; validate volume assumptions, migrations, and indexes during implementation. |
 | D10 | Free/Pro packaging | One repository produces two independent ZIPs: a complete Free core for WordPress.org and a Pro add-on for WooCommerce.com that requires Free. Free works independently; Pro stores only Pro-specific actions/alerts and reuses the Free event store. Version handshake fails safely; license expiry never deletes data. | Approved architecture. Woo Freemium guidance supports two submissions and an additional plugin for premium functionality; verify final vendor requirements at submission. |
-| D11 | Compatibility | Plan PHP 8.3+, rolling support for the current and previous required WordPress/WooCommerce release series at submission, HPOS and legacy storage, optional WPML/Polylang integrations. Refresh versions before coding and submission. | Approved release policy; runtime test matrix remains unrun. |
+| D11 | Compatibility | Plan PHP 8.3+, rolling support for required WordPress/WooCommerce release series at submission, and HPOS/legacy storage. WPML/WCML/Polylang-specific integrations are excluded from V1. Refresh versions before coding and submission. | Approved release policy; runtime test matrix remains unrun. |
 | D12 | Admin UI / build | Use WordPress-provided React via the `wp.element` global, WordPress components via `wp.components`, and REST requests via `wp.apiFetch`; enqueue registered package handles. Write browser-ready JavaScript without JSX/transpilation and no npm/CLI/build tooling in the repository. | Approved no-build approach. Reassess only if maintainability/accessibility review shows it cannot meet the UX bar; any change must preserve the no-CLI-until-final constraint. |
 
 ## Implementation entry criteria
@@ -34,7 +34,7 @@ P6 passed on 2026-11-06 after owner delegation and recording approved decisions 
 - No external AI service receives store data by default; V1 excludes external AI.
 - Server-side capability checks, input validation, REST permissions, privacy exporter/eraser, retention, uninstall, and migration behavior are specified before their implementation tasks.
 - HPOS and legacy order storage use public WooCommerce CRUD/API surfaces.
-- WPML and Polylang remain optional; translated labels cannot split canonical reason identity.
+- Standard WordPress gettext localization remains in scope. WPML, WooCommerce Multilingual/WCML, and Polylang-specific support and runtime checks are excluded from V1. Stable reason IDs remain independent of display labels.
 - Free and Paid editions have distinct responsibilities and a documented update/dependency model before release packaging.
 - React uses WordPress-bundled globals and no build tool or CLI is added to the repository until the plugin is final.
 - Every agent task follows `AGENTS.md`, names files and acceptance evidence, and updates README progress in the same update.
