@@ -210,3 +210,19 @@ This review used the current GitHub `main` tree (commit `b76c07e9d9d29ca5e29d1d7
 4. I-12: begin WordPress.org Free and WooCommerce.com Paid preparation only after I-11 and vendor/package prerequisites are evidenced.
 
 No runtime test was performed as part of this documentation audit. No new behavior, test suite, artifact, or marketplace submission is claimed.
+
+### Source-level release findings from this audit
+
+These are static findings to resolve or explicitly disposition before I-11 closes. No live failure/race behavior has been demonstrated in this audit.
+
+| ID / priority | Source observation | Required resolution and acceptance evidence | Status |
+|---|---|---|---|
+| SA-01 / High | `ActionService::create()` checks `MAX_ACTIONS` before starting its transaction; simultaneous creates can both observe capacity and exceed the 1,000-action cap. | Serialize quota check plus insert or redefine/remove the cap; verify two concurrent requests at the last available slot and database failure rollback. | Open; source fix and runtime concurrency evidence required. |
+| SA-02 / High | `Privacy::export_order_data()` logs a failed event query and returns the incoming data array, which can leave plugin rows absent without a caller-visible export failure. | Check the supported WooCommerce order-export filter contract; make database failure visible/retryable without exporting synthetic error text. Test both successful rows and injected query failure. | Open; confirm API behavior, then fix/verify. |
+| SA-03 / High | `Privacy::erase_order_data()` processes linked rows one by one; on a failed update it logs and returns from a `void` hook, with no plugin-level pending/retry signal. | Confirm WooCommerce hook failure semantics from the current supported source; design a safe retry/administrator-visible failure path and verify partial-failure retry without leaking identifiers. | Open; failure path not tested. |
+| SA-04 / Medium | `AlertService::schedule()` creates a recurring cron event, while `Plugin::deactivate()` says there are no scheduled jobs and does not clear the hook. | Decide whether deactivation should clear the scheduled hook or intentionally preserve it; align lifecycle code/comments and test activation, duplicate scheduling, deactivation, and reactivation behavior. | Open; lifecycle intent/runtime evidence needed. |
+| SA-05 / High | Current build workflow runs PHP lint and artifact validation only; repository tree has no dedicated behavioral test suite and CI does not run the separately documented JavaScript syntax check. | AI-13 must define a permitted no-CLI test approach, then add/execute the minimal behavior matrix or document a specific accepted exclusion. Include REST capabilities/Pro gates, schema upgrade, capture idempotency, privacy failures, refund observer, cohort/alerts/actions boundaries, cron lifecycle, and JS parse check. | Open; CI green currently proves parse/package only. |
+
+Primary references reviewed 2026-11-10: [WordPress privacy eraser callback contract](https://developer.wordpress.org/reference/functions/wp_ajax_wp_privacy_erase_personal_data/), [WordPress plugin privacy eraser guide](https://developer.wordpress.org/plugins/privacy/adding-the-personal-data-eraser-to-your-plugin/), and [WooCommerce privacy implementation](https://github.com/woocommerce/woocommerce/blob/trunk/plugins/woocommerce/includes/class-wc-privacy-erasers.php). Recheck supported-release source at release time.
+
+These observations do not imply a proven exploit, data loss, or production failure. They are concrete unresolved acceptance cases; do not mark them complete from source inspection alone.
