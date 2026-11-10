@@ -1,4 +1,11 @@
+# Project instructions
 
-# Claude Code Entry Point
+This file is a discovery pointer. Do not treat it as separate policy.
 
-Read README.md and canonical AGENTS.md before work, then the relevant plan. P6 was approved on 2026-11-06; follow one scoped item in docs/IMPLEMENTATION_BACKLOG.md. Do not add CLI/build tooling to this repo until the plugin is final; React uses WordPress bundled globals without a build step. Keep options deduplicated and update README progress/change log with every meaningful repository update. See docs/AI_BACKLOG.md for scoped packages.
+Before any work:
+1. Read `README.md` and `AGENTS.md`.
+2. Read `docs/EXECUTION_PROTOCOL.md`, `docs/AI_BACKLOG.md`, and the assigned I-ID plan/evidence record.
+3. Use GitHub `main` as source of truth and inspect its current state/recent CI.
+4. For an unscoped “continue”, execute the highest-priority unblocked acceptance item in this session.
+
+Follow the canonical scope, evidence, test, privacy, and no-local-artifact rules in `AGENTS.md`. The approved Composer PSR-4 manifest and isolated CI packaging exception are allowed; do not ban `composer.json` or run Composer locally. Keep statuses evidence-backed, update the detailed ledger and README together, and do not return status-only when work can proceed.
