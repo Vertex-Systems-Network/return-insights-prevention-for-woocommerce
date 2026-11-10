@@ -1,7 +1,9 @@
 # I-10 Integration and I-11 Release Verification
 
+**Scope decision (2026-11-11):** V1 has no WPML, WooCommerce Multilingual/WCML, or Polylang-specific support contract. Standard WordPress gettext localization remains. Their active/absent integration tests are removed from required I-11 evidence. Dated staging observations are historical evidence only. includes/Multilingual.php remains in source; this documentation-only update does not remove it. Cleanup is a separate code task.
+
 **Review date:** 2026-11-10  
-**I-10 status:** Approved V1 integration implementation complete; WPML/Polylang runtime matrix is an I-11 verification gate.  
+**I-10 status:** Revised 2026-11-11. WPML/WCML/Polylang-specific support and runtime tests are removed from V1. I-11 remains open for other runtime/release gates.  
 **I-11 status:** Limited runtime smoke checks are evidenced on `wpessential.org/el-test`; the separate TasteWP site `quirkybrake.s2-tastewp.com` has WooCommerce active but Return Insights installation was blocked before completion. Runtime/release gate remains open; no overall percentage is claimed here. The README reports gate status without an aggregate percentage.
 
 **Latest verification pass:** On 2026-11-09, a source audit hardened manual-event database read paths: failed idempotency/row lookups now return controlled errors, quantity-limit aggregation fails closed when its query errors, and create/update verify their persisted row before serialization. GitHub Actions run [42637830397](https://github.com/Vertex-Systems-Network/wpessential-return-insights-prevention-woocommerce/actions/runs/42637830397) passed PHP 8.3 lint, Composer PSR-4 packaging, and ZIP validation; artifact `13683022555` was uploaded (SHA-256 `0801dea18585d7ff19d8199bff45e17f8061351b5754550f8226378ce146ea0b`, expires 2026-11-23). This is CI/package evidence only and does not close I-11 runtime gates.
@@ -14,23 +16,11 @@
 
 **Authorized staging smoke check (2026-11-07):** On `https://wpessential.org/el-test/`, WordPress 7.1.4 and WooCommerce 11.2.2 were observed. The user installed/activated Return Insights; the admin shell and Reason Catalog loaded. Overview and History first returned `unknown_fields` because strict GET-query validation rejected WordPress apiFetch's `_locale=user` transport parameter. A query-only validator now ignores `_locale` while JSON body validators remain strict. Corrected artifact run `42377569578` passed and was installed over the existing 0.1.0 package. Post-fix Overview returned the selected-period zero counts and empty-period message, History returned the intended no-records empty state, and Capture Sources returned its no-records empty state. Product Trends rendered the intended Pro upgrade gate; Alerts and Corrective Actions remained behind the shared Pro notice while no entitlement provider is configured. Reason Catalog showed the canonical reason list. The capture screen's read-only lookup for existing order #49 also returned one line item and quantity. WooCommerce System Status confirms PHP 8.3.36, HPOS enabled, `OrdersTableDataStore`, and all five Return Insights tables. Its environment type is reported as `production` despite the `/el-test/` URL; subsequent checks remained read-only, and no event was written. This is limited runtime evidence, not full I-11 acceptance. The active-plugin list contained neither WPML nor Polylang; the observed labels therefore verify only the absent-plugin fallback, not active integration behavior.
 
-## I-10: WPML and Polylang
+## I-10: Third-party integration scope
 
-`includes/Multilingual.php` is an optional integration boundary. It has no hard dependency on either product and checks for their public APIs before calling them. Merchant-entered canonical reason labels are registered for string translation in the admin context. REST reason labels, event history, summary reason names, and Pro pattern names use the integration resolver. Canonical reason IDs and stored event data do not change with translated labels. If neither integration is active, the plugin uses its stored locale override or source label.
+No third-party RMA or multilingual adapter is approved as a V1 supported integration. WPML, WCML, and Polylang-specific compatibility promises and active/absent runtime matrices are excluded from I-11 acceptance. Standard WordPress gettext localization remains a general admin UI behavior.
 
-No RMA/return-management adapter was added: no adapter or source API was approved for this release scope. WooCommerce order and refund access remains through WooCommerce CRUD objects. The source adapter boundary remains optional and does not make another plugin a dependency.
-
-| Case | Source-level behavior | Runtime evidence |
-|---|---|---|
-| WPML absent | WPML hook checks fail closed; core label fallback remains | Pass, limited: no WPML plugin listed as active; core reason labels loaded in Catalog |
-| WPML active | Registers merchant labels through `wpml_register_single_string`; reads translated value through `wpml_translate_single_string` when available | Not run; requires WPML String Translation |
-| Polylang absent | `function_exists` guard leaves core behavior intact | Pass, limited: no Polylang plugin listed as active; core reason labels loaded in Catalog |
-| Polylang active | Registers labels through `pll_register_string`; reads through `pll__` | Not run |
-| Both plugins present | WPML integration is preferred when its translation filter is registered; otherwise Polylang is used | Not run; simultaneous operation is not a support claim |
-| WooCommerce Multilingual / Polylang for WooCommerce | No custom product-translation SQL/API; product and order access stays on WooCommerce CRUD boundary | Not run |
-
-Stable reason IDs are the analytics key; translated text is display-only. Merchants may still provide explicit locale overrides in the reason catalog, which take precedence over optional engine translations. Optional multilingual integration does not translate historical event identities or create duplicate reasons.
-
+Source note: includes/Multilingual.php still exists. Its implementation is outside the current support contract and is not removed by this documentation-only scope decision. Historical checks below record observations at the time; they do not establish current support.
 ## I-11: Audit performed
 
 This pass checked PSR-4/bootstrap boundaries, the v1→v3 migration path by source inspection, Pro route entitlement and capability guards, REST input/error paths, WooCommerce CRUD boundaries, bounded scans/storage, multilingual API guards, privacy export/erasure registration, README/backlog claims, and browser-ready JavaScript syntax. Source hardening includes migration verification, reason-option normalization, report/history query failures, manual event write failures, privacy hooks, and WooCommerce privacy-operation error logging without user/order identifiers.
@@ -61,9 +51,9 @@ This pass checked PSR-4/bootstrap boundaries, the v1→v3 migration path by sour
 
 **Staging incidents and verification (2026-11-07):** The earlier fatal at `includes/RestController.php:538` was caused by a stray REST fragment and was removed; all PHP lint checks passed in the build workflow. After the user installed that artifact, the admin shell loaded but overview/history exposed the `_locale=user` allowlist bug. The fix is committed and build run `42377569578` passed. The corrected package was uploaded and WordPress reported `Plugin updated successfully`; Overview, History, and Capture Sources now render their expected empty-data states without plugin errors. A separate `ob_end_flush()` notice still appears from WordPress core `wp-includes/functions.php:5581`; it is unrelated to the plugin route fix. No synthetic data was entered.
 
-I-10 implementation is complete for the approved V1 scope: guarded WPML/Polylang reason-label adapters are implemented and no RMA adapter is in scope without approved demand/API/privacy review. WPML/Polylang absent/active runtime scenarios remain unverified and are tracked in I-11. I-11 cannot be marked complete until PHP parsing, generated Composer loader, upgrade migration, API permission and CRUD flows, HPOS/legacy behavior, privacy exporter/eraser runtime behavior, rendered accessibility checks, and release compatibility evidence are recorded. No CLI/build tooling or third-party dependency was added to the repository for this pass.
+I-10 has no approved third-party adapter deliverable for V1. WPML/WCML/Polylang-specific active/absent runtime scenarios are excluded by the 2026-11-11 scope decision and are not I-11 blockers. I-11 cannot be marked complete until PHP parsing, generated Composer loader, upgrade migration, API permission and CRUD flows, HPOS/legacy behavior, privacy exporter/eraser runtime behavior, rendered accessibility checks, and release compatibility evidence are recorded. No CLI/build tooling or third-party dependency was added to the repository for this pass.
 
-## Official integration references
+## Historical integration references
 
 - [WPML: Make user-input texts translatable](https://wpml.org/documentation/support/translation-for-texts-by-other-plugins-and-themes/) — register dynamic strings, translate them through String Translation, and re-register on admin loads to support late activation.
 - [WPML: Current language hook](https://wpml.org/wpml-hook/wpml_current_language/) — supported language-context hook; the current implementation does not alter query language context.
@@ -106,7 +96,7 @@ I-10 implementation is complete for the approved V1 scope: guarded WPML/Polylang
 - A staging save exposed a PATCH body mismatch: the React edit handler sent immutable `order_id` and `order_item_id` fields that the REST update schema correctly rejects. The client now sends only `event_kind`, `quantity`, `reason_id`, and `occurred_at` for PATCH.
 - GitHub Actions run `42434063755` passed PHP lint and test ZIP packaging. Artifact `13598489437` (outer ZIP SHA-256 `3e658121233d99705ba84b9ba5ddfc1b0badb5d0b3205e1cb67e9d0d6b098396`; inner plugin ZIP SHA-256 `bc93479bdbc36e8f4b3abd7f23b9d81cb66de6caad4f21644eca726a7ca8d4ff`) was installed over the existing 0.1.0 package; WordPress displayed “Plugin updated successfully.”
 - On the updated package, manual capture for existing order #49/item #1 (`Hat`, ordered quantity 1) succeeded. Editing its reason from `Other` to `Changed mind` succeeded and persisted in History, confirming the PATCH route fix. The record was then soft-deleted with a test audit note. History showed “No return insights yet.” No WooCommerce order, refund, or customer record was modified.
-- This is a narrow staging smoke check, not full CRUD/security/release acceptance. It does not verify authorization boundaries, DB failures, migration upgrades, refund observer lifecycle, legacy order storage, active WPML/Polylang, privacy callbacks, Pro entitlement, visual/accessibility coverage, or marketplace readiness. The unrelated WordPress core `ob_end_flush()` notice remains visible.
+- This is a narrow staging smoke check, not full CRUD/security/release acceptance. It does not verify authorization boundaries, DB failures, migration upgrades, refund observer lifecycle, legacy order storage, third-party translation integrations, privacy callbacks, Pro entitlement, visual/accessibility coverage, or marketplace readiness. The unrelated WordPress core `ob_end_flush()` notice remains visible.
 
 
 **Quantity upper-bound UI check (2026-11-08):** On the capture form for order #49/item #1 (`Hat`, ordered quantity 1), entering quantity 2 triggered the browser's native constraint message, “Value must be less than or equal to 1.” The request was not submitted; History remained empty. Source inspection confirms the REST validator independently checks previously recorded quantity plus the proposed amount against the ordered quantity, but a direct malformed-request runtime test was not performed. This verifies only the form constraint and does not close API authorization or server-boundary testing.
@@ -118,7 +108,7 @@ I-10 implementation is complete for the approved V1 scope: guarded WPML/Polylang
 - GitHub Actions run [42439188546](https://github.com/Vertex-Systems-Network/wpessential-return-insights-prevention-woocommerce/actions/runs/42439188546) completed successfully; artifact `13600439437` was installed over the existing plugin. WordPress displayed “Plugin updated successfully.”
 - On staging, invalid order ID `999999999` returned “Order not found,” no previous Hat item remained selectable, and Save was disabled. A subsequent lookup of order `49` returned one Hat line item with ordered quantity 1 and enabled the form. History remained at “No return insights yet.” No insight was saved, and no WooCommerce order or refund was changed.
 - The admin page also displays two WordPress core `ob_end_flush()` notices from `wp-includes/functions.php:5581`; this is outside the plugin source and remains an environment issue to investigate separately.
-- I-11 is now 70%. This closes only a narrow client-side stale-state regression; it does not prove direct REST authorization, database failure handling, refund observer lifecycle, legacy order storage, privacy callbacks, active WPML/Polylang, Pro entitlement, full accessibility, or marketplace release readiness.
+- I-11 is now 70%. This closes only a narrow client-side stale-state regression; it does not prove direct REST authorization, database failure handling, refund observer lifecycle, legacy order storage, privacy callbacks, third-party translation integrations, Pro entitlement, full accessibility, or marketplace release readiness.
 
 
 ## 2026-11-09 TasteWP runtime preparation
@@ -204,7 +194,7 @@ This review used the current GitHub `main` tree (commit `b76c07e9d9d29ca5e29d1d7
 
 ### AI-guided next actions
 
-1. AI-13: define an approved, minimal behavioral test strategy without adding prohibited CLI/build dependencies. Prioritize capability/entitlement boundaries, migrations, idempotent capture, failure-closed database behavior, privacy callbacks, refund observation, cohort math, alert/action concurrency, and active/absent WPML/Polylang.
+1. AI-13: define an approved, minimal behavioral test strategy without adding prohibited CLI/build dependencies. Prioritize capability/entitlement boundaries, migrations, idempotent capture, failure-closed database behavior, privacy callbacks, refund observation, cohort math, alert/action concurrency, and third-party translation integrations.
 2. I-11: execute atomic checks only on a clearly non-production environment; keep each expected result, observed result, evidence reference, and status separate.
 3. I-11: close remaining accessibility, compatibility, HPOS/legacy, and privacy/release checks. Do not call a gate complete from source inspection or CI packaging.
 4. I-12: begin WordPress.org Free and WooCommerce.com Paid preparation only after I-11 and vendor/package prerequisites are evidenced.
