@@ -66,7 +66,7 @@ This dashboard separates source implementation from I-11 evidence. "Implemented"
 | I-09 Corrective-action tracking | Present | Transaction/concurrency/failure-injection and Pro entitlement checks open | 2026-11-06 | Open |
 | I-10 Third-party integration scope | No third-party adapters approved for V1 | WPML/WCML/Polylang excluded from V1 support claims and runtime gates | 2026-11-06 | 2026-11-11 |
 | I-11 Runtime, security, accessibility and release verification | Audit/source hardening in progress | Open; atomic evidence ledger in `docs/I10_I11_VERIFICATION.md` is authoritative | 2026-11-06 | Re-estimate after gate review |
-| I-12 WordPress.org Free + WooCommerce.com Paid submissions | Plan recorded | Not started; blocked by I-11 and vendor/package prerequisites | Not started | Re-estimate after I-11 |
+| I-12 WordPress.org Free + WooCommerce.com Paid submissions | Checklist/package-model preparation | In progress (prep only) — no final Free + Pro pair, vendor application, or submission | 2026-11-10 | Re-estimate after I-11 |
 
 Dates after actual work started are estimates and are not delivery promises. The repository currently has no dedicated automated behavioral test suite; CI lint and package validation do not establish behavior. See `docs/AI_BACKLOG.md` AI-13 and I-11's test strategy before release. All contributors follow `docs/EXECUTION_PROTOCOL.md`.
 
@@ -125,6 +125,8 @@ Recommended MVP capture model: observe native WooCommerce refund records and all
 P3 architecture specifies indexed custom event storage, source-level idempotency, bounded background aggregation, separate return/refund metrics, and privacy export/erasure. See docs/ARCHITECTURE_DATA_FLOW.md and docs/DATA_MODEL.md.
 
 ## Change log
+
+- 2026-11-10: Began I-12 preparation-only review and attempted the authorized Ahead Earth TasteWP runtime setup. WordPress 7.1.4 and WooCommerce 11.2.2 were observed; WooCommerce activation showed an unexplained 312-character-output warning but admin remained available. The native ZIP chooser could not access the build artifact, so the target plugin was not installed or activated and no plugin runtime pass is claimed. Evidence is in `docs/I10_I11_VERIFICATION.md`. I-12 remains blocked from submission by I-11 and vendor/final-package prerequisites.
 
 - 2026-11-11: Removed WPML, WooCommerce Multilingual/WCML, and Polylang-specific support and runtime tests from V1. Standard WordPress gettext localization remains. Existing includes/Multilingual.php adapter source was not removed; code cleanup is a separate implementation decision. Earlier dated staging notes remain historical evidence, not a support commitment.
 
