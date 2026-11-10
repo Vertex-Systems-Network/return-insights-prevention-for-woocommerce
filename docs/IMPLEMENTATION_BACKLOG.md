@@ -108,4 +108,4 @@ Activation and upgrade run the forward-only schema migration after dependency ch
 ## I-10/I-11 implementation and verification references
 
 - includes/Multilingual.php remains in the source tree. WPML/WCML/Polylang-specific behavior is outside V1 support scope and is not a release acceptance gate; no code cleanup is included here.
-- `docs/I10_I11_VERIFICATION.md` records the API references, audit checks, results, and outstanding release gate evidence. I-10 runtime integrations and I-11 runtime/accessibility/privacy gates remain open.
+- `docs/I10_I11_VERIFICATION.md` records the API references, audit checks, results, and outstanding release gate evidence. WPML/WCML/Polylang-specific runtime integrations are excluded from V1; I-11 runtime/accessibility/privacy gates remain open.
