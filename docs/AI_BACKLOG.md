@@ -42,7 +42,7 @@ Provider files must stay short and point to the same rules. They must not restat
 | AI-10 | Deliver implementation packages in dependency order | Source implementation I-02–I-10 recorded; I-11 acceptance open | Each I-ID's code and acceptance evidence are distinguished. CI lint/package does not imply runtime acceptance. |
 | AI-11 | Prepare WordPress.org Free and WooCommerce.com Paid submissions | Blocked by I-11 and commercial prerequisites | Separate package/listing/reviewer checklists and vendor/account evidence in `docs/DISTRIBUTION.md`. |
 | AI-12 | Close execution and evidence gaps | Active | Atomic checks, named environments, blocker records, dashboard synchronization, and I-11/I-12 closure rules are followed. |
-| AI-13 | Establish maintainable test coverage for critical behavior | Not started | Propose a test matrix for REST permissions, migration/rollback, CRUD/idempotency, privacy failures, refund lifecycle, cohort math, alerts/actions transactions, and localization; identify allowed tooling under the no-CLI rule before adding tests. |
+| AI-13 | Establish maintainable test coverage for critical behavior | Not started | Propose a test matrix for REST permissions, migration/rollback, CRUD/idempotency and action-cap concurrency, privacy export/erasure failures, refund lifecycle, cohort math, alert/action transaction and cron lifecycle, localization, and JavaScript syntax; identify allowed tooling under the no-CLI rule before adding tests. Reconcile every case with SA-01–SA-05 in the I-11 verification ledger. |
 
 ## Required execution loop
 
