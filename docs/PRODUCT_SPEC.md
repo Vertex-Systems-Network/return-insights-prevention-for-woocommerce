@@ -76,7 +76,7 @@ Approved by product-owner delegation on 2026-11-06; full record is in `docs/P6_R
 
 - Capture: native refund observation plus authorized manual per-item insight entry; no customer return portal or RMA workflow in V1.
 - Event kinds: confirmed return, refund-only, exchange, warranty/repair, cancellation, unknown. A WooCommerce refund remains refund-only evidence.
-- Seed reasons: fit/size; quality/defect; damage; appearance/color; not as described; wrong item/variation; missing part/accessory; delivery delay; delivery damage; duplicate order; changed mind; ordered by mistake; other; unknown. Stable reason IDs are separate from translated labels.
+- Seed reasons: fit/size; quality/defect; damage; appearance/color; not as described; wrong item/variation; missing part/accessory; delivery delay; delivery damage; duplicate order; changed mind; ordered by mistake; other; unknown. Stable reason IDs are separate from merchant-facing display labels. Shipped UI uses WordPress gettext; vendor-specific translation integrations are not part of V1.
 - Rates: confirmed returned quantity divided by eligible sold quantity in the same product/variation purchase cohort, with 90-day maturity by default and merchant-selectable 30/60/90/120/180 days. Refund ratios remain separate. Suppress incomplete/immature metrics.
 - Alerts: Pro, in-product only; heuristic defaults require at least 5 confirmed returned units, 80% item mapping, at least 20 eligible sold units in each mature 90-day comparison cohort, and persistence across two weekly refreshes. These are configurable operational thresholds, not significance claims.
 - Clustering: local deterministic grouping, explainable and reversible; external AI off and out of V1.
@@ -85,5 +85,5 @@ Approved by product-owner delegation on 2026-11-06; full record is in `docs/P6_R
 - Integrations: no third-party RMA adapters in V1; evaluate individually after demand/API/privacy review.
 - Storage: plugin-owned indexed event/action tables, options for small settings/catalog, bounded Action Scheduler work; physical schema follows benchmarks.
 - Packaging: one repo generates independent Free core and Pro add-on ZIPs; Pro requires Free, shares event data, and stores Pro-only records. Separate WordPress.org and Woo Marketplace submissions.
-- Compatibility: PHP 8.3+, current and prior required WordPress/WooCommerce series at implementation and submission, HPOS/legacy support, WPML/Polylang optional, per-site multisite activation only.
+- Compatibility: PHP 8.3+, current and prior required WordPress/WooCommerce series at implementation and submission, HPOS/legacy support, standard WordPress gettext and RTL behavior, per-site activation only. WPML/WCML/Polylang-specific support is excluded from V1.
 - Admin/build: React via WordPress bundled `wp.element`, `wp.components`, and `wp.apiFetch`; browser-ready JS without JSX or build tooling. No CLI/build tooling in this repo until plugin final.
