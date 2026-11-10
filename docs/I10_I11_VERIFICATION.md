@@ -1,6 +1,6 @@
 # I-10 Integration and I-11 Release Verification
 
-**Review date:** 2026-11-09  
+**Review date:** 2026-11-10  
 **I-10 status:** Approved V1 integration implementation complete; WPML/Polylang runtime matrix is an I-11 verification gate.  
 **I-11 status:** Limited runtime smoke checks are evidenced on `wpessential.org/el-test`; the separate TasteWP site `quirkybrake.s2-tastewp.com` has WooCommerce active but Return Insights installation was blocked before completion. Runtime/release gate remains open; no overall percentage is claimed here. The README reports gate status without an aggregate percentage.
 
@@ -188,3 +188,25 @@ Every registered route inspected has an explicit permission callback; the read/w
 - **Fix:** The targets, history, and evidence queries now each check `last_error` immediately and return a distinct controlled REST error before continuing.
 - **CI evidence:** [run 42707097395](https://github.com/Vertex-Systems-Network/wpessential-return-insights-prevention-woocommerce/actions/runs/42707097395) passed PHP 8.3 lint, Composer PSR-4 packaging, ZIP validation and artifact upload. Artifact `13713609300`, GitHub archive digest `sha256:75930348e61d47944988175d7bc572e58f4d51dac6e25d0a53cf37a0e5e928c6`, expires 2026-11-23.
 - **Limit:** No database failure injection was run; runtime action-detail read failures remain part of I-11.
+
+
+## 2026-11-10 deep plan and source-tree audit
+
+This review used the current GitHub `main` tree (commit `b76c07e9d9d29ca5e29d1d7f851bda728473f59b`) and current instructions/backlogs. It did not download or create a local checkout or package.
+
+| Finding | Impact | Plan repair |
+|---|---|---|
+| Cursor instructions prohibited `composer.json` while the approved PSR-4 contract requires it; provider files also restated partial policy independently. | Different AI tools could reject required work or drift from the canonical contract. | Provider files are now short pointers to `AGENTS.md` and `docs/EXECUTION_PROTOCOL.md`; Composer manifest and isolated CI-only staging exception are explicit. |
+| README marked planning phases and implementation rows at 100% while research/visual/runtime/release checks remained open; it reported 8/11 despite I-10 source adapters also being implemented. | Progress bars overstated completion and mixed different gates. | README now reports planning state qualitatively unless a named gate is complete, records I-02–I-10 as source implementation, and keeps I-11/I-12 as separate gates. Historical dated log entries are retained as snapshots. |
+| `build-test-artifact.yml` runs PHP lint and package validation, but repository tree contains no dedicated behavioral test suite; JS syntax was only a separately recorded check. | Green CI cannot validate REST permissions, migrations, transactions, privacy behavior, cohort calculations, or UI interactions. | Added AI-13 and an I-11 test-matrix requirement. Define an allowed test approach under the no-CLI constraint before adding test infrastructure; do not infer behavioral coverage from the packaging workflow. |
+| README, backlog, and verification file contained repeated evidence/status prose, making it easy for a new model to use a stale summary. | Contributors could choose blocked/low-priority work or duplicate completed work. | Canonical ownership is now explicit: backlog owns I-ID acceptance, verification ledger owns I-10/I-11 evidence, README is a summary mirror, provider files are discovery pointers. |
+| I-11 includes a production-marked `/el-test/` environment and prior TasteWP install action was blocked before plugin installation. | Site label/path alone cannot authorize writes; blocked install must not be reported as a pass. | AI rules explicitly prohibit mutation checks on production-marked environments and keep TasteWP separate from the staging evidence. Continue independent source/plan work when blocked. |
+
+### AI-guided next actions
+
+1. AI-13: define an approved, minimal behavioral test strategy without adding prohibited CLI/build dependencies. Prioritize capability/entitlement boundaries, migrations, idempotent capture, failure-closed database behavior, privacy callbacks, refund observation, cohort math, alert/action concurrency, and active/absent WPML/Polylang.
+2. I-11: execute atomic checks only on a clearly non-production environment; keep each expected result, observed result, evidence reference, and status separate.
+3. I-11: close remaining accessibility, compatibility, HPOS/legacy, and privacy/release checks. Do not call a gate complete from source inspection or CI packaging.
+4. I-12: begin WordPress.org Free and WooCommerce.com Paid preparation only after I-11 and vendor/package prerequisites are evidenced.
+
+No runtime test was performed as part of this documentation audit. No new behavior, test suite, artifact, or marketplace submission is claimed.
