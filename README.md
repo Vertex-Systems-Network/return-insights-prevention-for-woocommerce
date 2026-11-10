@@ -125,6 +125,7 @@ Recommended MVP capture model: observe native WooCommerce refund records and all
 P3 architecture specifies indexed custom event storage, source-level idempotency, bounded background aggregation, separate return/refund metrics, and privacy export/erasure. See docs/ARCHITECTURE_DATA_FLOW.md and docs/DATA_MODEL.md.
 
 ## Change log
+- 2026-11-10: Fixed the SA-04 cron lifecycle mismatch: plugin deactivation now clears the weekly alert hook. CI and activation/deactivation/reactivation runtime checks remain pending, so I-11 remains open.
 
 - 2026-11-10: Began I-12 preparation-only review and attempted the authorized Ahead Earth TasteWP runtime setup. WordPress 7.1.4 and WooCommerce 11.2.2 were observed; WooCommerce activation showed an unexplained 312-character-output warning but admin remained available. The native ZIP chooser could not access the build artifact, so the target plugin was not installed or activated and no plugin runtime pass is claimed. Evidence is in `docs/I10_I11_VERIFICATION.md`. I-12 remains blocked from submission by I-11 and vendor/final-package prerequisites.
 
