@@ -2,9 +2,9 @@
 
 **Scope decision (2026-11-11):** V1 has no WPML, WooCommerce Multilingual/WCML, or Polylang-specific support contract. Standard WordPress gettext localization remains. Their active/absent integration tests are removed from required I-11 evidence. Dated staging observations are historical evidence only. includes/Multilingual.php remains in source; this documentation-only update does not remove it. Cleanup is a separate code task.
 
-**Review date:** 2026-11-10  
+**Review date:** 2026-11-11  
 **I-10 status:** Revised 2026-11-11. WPML/WCML/Polylang-specific support and runtime tests are removed from V1. I-11 remains open for other runtime/release gates.  
-**I-11 status:** Limited runtime smoke checks are evidenced on `wpessential.org/el-test`; the separate TasteWP site `quirkybrake.s2-tastewp.com` has WooCommerce active but Return Insights installation was blocked before completion. Runtime/release gate remains open; no overall percentage is claimed here. The README reports gate status without an aggregate percentage.
+**I-11 status:** Limited runtime checks now include a successful install/update and Free/Pro admin-screen smoke review on the authorized Ahead Earth TasteWP site. No return/order records were mutated because WooCommerce reports environment type `production`. I-11 remains open for privacy failure behavior, concurrency, behavioral tests, capabilities, compatibility, accessibility, and release checks; no aggregate percentage is claimed.
 
 **Latest verification pass:** On 2026-11-09, a source audit hardened manual-event database read paths: failed idempotency/row lookups now return controlled errors, quantity-limit aggregation fails closed when its query errors, and create/update verify their persisted row before serialization. GitHub Actions run [42637830397](https://github.com/Vertex-Systems-Network/wpessential-return-insights-prevention-woocommerce/actions/runs/42637830397) passed PHP 8.3 lint, Composer PSR-4 packaging, and ZIP validation; artifact `13683022555` was uploaded (SHA-256 `0801dea18585d7ff19d8199bff45e17f8061351b5754550f8226378ce146ea0b`, expires 2026-11-23). This is CI/package evidence only and does not close I-11 runtime gates.
 
@@ -219,22 +219,27 @@ Primary references reviewed 2026-11-10: [WordPress privacy eraser callback contr
 
 These observations do not imply a proven exploit, data loss, or production failure. They are concrete unresolved acceptance cases; do not mark them complete from source inspection alone.
 
-## 2026-11-10 Ahead Earth TasteWP upload attempt
+## 2026-11-11 Ahead Earth TasteWP runtime smoke check
 
-**Authorized environment:** Ahead Earth, `https://aheadearth.s3-tastewp.com` (the only site authorized for this round). Credentials were supplied by the owner and are not recorded here.
+**Authorized environment:** Ahead Earth, `https://aheadearth.s3-tastewp.com` (the only site authorized for this round). Credentials are not recorded here.
 
 | Check | Observed result | Status |
 |---|---|---|
-| WordPress admin access | Login succeeded as admin; WordPress 7.1.4 shown in footer. | Pass |
-| WooCommerce prerequisite | Official WooCommerce 11.2.2 was installed through this site's Plugins → Add Plugins directory and activated. The activation response displayed “312 characters of unexpected output”; admin remained reachable and WooCommerce menus appeared. Root cause is unverified. | Setup pass; warning open |
-| Target package identity | GitHub Actions run 42707097395, source commit 14a0dafd1804c7778b4a99958fa6a353b1722fe2; inner ZIP SHA-256 `5d57884c243b2cd668928bbe917a07de7569a62fc0a2c0ca2768e3d1ef547361`. | Identity verified before upload |
-| Plugin upload / activation | WordPress Upload Plugin screen opened, but its native file chooser did not expose the build artifact from the execution environment. The plugin ZIP could not be selected; no install or activation occurred. | Blocked; no plugin runtime evidence |
-| Site health after setup | Admin remained accessible after WooCommerce activation. Plugin-specific fatal/error check is not applicable because the plugin was not installed. | Limited pass |
+| Runtime versions | WordPress 7.1.4, WooCommerce 11.2.2, PHP 8.3.36, MySQL 8.0.46. WooCommerce reports HPOS enabled and the HPOS order datastore active. | Observed; not a compatibility-matrix pass |
+| Artifact provenance | GitHub Actions run [42936569058](https://github.com/Vertex-Systems-Network/wpessential-return-insights-prevention-woocommerce/actions/runs/42936569058), source commit `ec7fe510bdd24716f9a730c58162aa2e4d25eeee`, artifact `13819265817`. Inner package SHA-256: `99a403be2e7372dc46bb84e343a9b5967aef38d590b32ca9f9d9380188f6cf88`. The ZIP contains the commit’s corrected Pro gate message. | Identity verified |
+| Install / activation | Package installed through WordPress Plugins → Add Plugin upload. The first same-version replacement succeeded. A second replacement using the exact run artifact also succeeded; plugin stayed active. | Pass |
+| Admin UI | React admin mounted without a plugin-specific fatal. Capture, product trends, and alerts screens rendered. Product/variation trends, reason clusters, weekly alerts, and corrective-action tracking are described consistently in the Pro gate. | Limited smoke pass |
+| Free states | Capture form, default reason catalog, empty event/report states were visible. No event was created. | Limited smoke pass |
+| Plugin data schema | WooCommerce System Status lists all five plugin tables: events, actions, action targets, action history, and action evidence. | Observed; row-level migration/contents assertions remain open |
+| Console/runtime errors | No plugin-specific browser console errors were returned by the `wpessential` filter. A separate Backup Migration script warning was observed earlier and is not attributed to this plugin. | Limited check |
+| Site health | Admin and WooCommerce System Status remained reachable after installation/update. Generic host warnings remain, including environment type reported as `production` and visitor error-display warning. | Limited pass; host warnings open |
+| Data mutation boundary | Because this TasteWP instance reports `production`, no orders, refunds, or plugin insight/action records were created or changed. | Safeguard followed |
 
-**Disposition:** This attempt is not an I-11 package install, activation, or runtime pass. Do not infer plugin compatibility or safety from the WooCommerce prerequisite setup. Resume when the exact ZIP can be made available to the browser's native chooser through an authorized transfer path; continue other source/CI/release work meanwhile. Do not use a different site or upload method that bypasses the WordPress admin flow without owner direction.
+**Disposition:** This proves only package upload/update, active admin rendering, selected empty-state screens, and basic schema presence on the observed version stack. It does not prove business behavior, permission boundaries, query failure handling, concurrency, HPOS/legacy parity, upgrades/uninstall, accessibility, compatibility, or marketplace acceptance.
 
-**I-12 preparation:** Checklist and two-package model are documented in `docs/DISTRIBUTION.md`. The current repository has not produced a final Free + Pro marketplace pair; no WordPress.org submission, Woo vendor application, or WooCommerce.com submission has been made. I-12 is preparation-only and blocked from submission by I-11 and product/vendor prerequisites.
+**I-11:** SA-01 source serialization fix is included in run 42936569058 and CI passed; live concurrent quota test remains open. SA-04 deactivation unschedule fix has its own passing run 42925662732; runtime lifecycle test remains open. SA-02/SA-03 privacy failure behavior and SA-05 behavioral/JS test strategy remain open.
 
+**I-12:** WordPress.org Free and WooCommerce.com Paid package/listing preparation remains prep-only. No final package pair, vendor application, or marketplace submission exists; submission remains gated by I-11 and vendor/product prerequisites.
 
 ## 2026-11-10 alert cron lifecycle source fix
 
