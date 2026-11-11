@@ -63,17 +63,17 @@ final class ActionService {
 		$lock_name = 'wperi_' . get_current_blog_id() . '_actioncap';
 		$locked = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, 5)', $lock_name ) );
 		if ( ! empty( $wpdb->last_error ) || 1 !== (int) $locked ) {
-			return new \\WP_Error( 'action_limit_busy', __( 'Corrective action storage is busy. Please retry shortly.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 503 ) );
+			return new \WP_Error( 'action_limit_busy', __( 'Corrective action storage is busy. Please retry shortly.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 503 ) );
 		}
 
 		try {
 			$count = self::count_actions();
 			if ( is_wp_error( $count ) ) { return $count; }
 			if ( $count >= self::MAX_ACTIONS ) {
-				return new \\WP_Error( 'action_limit_reached', __( 'The action storage limit has been reached.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 409 ) );
+				return new \WP_Error( 'action_limit_reached', __( 'The action storage limit has been reached.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 409 ) );
 			}
 
-			if ( false === $wpdb->query( 'START TRANSACTION' ) ) { return new \\WP_Error( 'action_transaction_failed', __( 'The corrective action could not be started safely.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) ); }
+			if ( false === $wpdb->query( 'START TRANSACTION' ) ) { return new \WP_Error( 'action_transaction_failed', __( 'The corrective action could not be started safely.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) ); }
 			$now = gmdate( 'Y-m-d H:i:s' );
 			$ok = $wpdb->insert( self::table(), array(
 				'action_uuid' => wp_generate_uuid4(),
@@ -91,23 +91,23 @@ final class ActionService {
 			), array( '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%s', '%s', '%s', '%d', '%d' ) );
 			if ( false === $ok ) {
 				$wpdb->query( 'ROLLBACK' );
-				return new \\WP_Error( 'action_create_failed', __( 'The corrective action could not be saved.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+				return new \WP_Error( 'action_create_failed', __( 'The corrective action could not be saved.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
 			}
 			$id = (int) $wpdb->insert_id;
 			foreach ( $targets as $target ) {
 				$inserted = $wpdb->insert( self::targets_table(), array_merge( array( 'action_id' => $id ), $target ), array( '%d', '%d', '%d', '%s' ) );
 				if ( false === $inserted ) {
 					$wpdb->query( 'ROLLBACK' );
-					return new \\WP_Error( 'action_target_failed', __( 'One or more action targets could not be saved.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+					return new \WP_Error( 'action_target_failed', __( 'One or more action targets could not be saved.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
 				}
 			}
 			if ( ! self::record_status( $id, '', 'proposed', __( 'Action created.', WPE_RI_TEXT_DOMAIN ) ) ) {
 				$wpdb->query( 'ROLLBACK' );
-				return new \\WP_Error( 'action_audit_failed', __( 'The action could not be saved to its audit history.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+				return new \WP_Error( 'action_audit_failed', __( 'The action could not be saved to its audit history.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
 			}
 			if ( false === $wpdb->query( 'COMMIT' ) ) {
 				$wpdb->query( 'ROLLBACK' );
-				return new \\WP_Error( 'action_commit_failed', __( 'The corrective action could not be committed. Refresh before retrying.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
+				return new \WP_Error( 'action_commit_failed', __( 'The corrective action could not be committed. Refresh before retrying.', WPE_RI_TEXT_DOMAIN ), array( 'status' => 500 ) );
 			}
 			return self::get( $id );
 		} finally {
