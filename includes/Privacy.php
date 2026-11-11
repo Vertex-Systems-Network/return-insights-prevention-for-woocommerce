@@ -16,7 +16,7 @@ final class Privacy {
 		add_filter( 'wp_privacy_personal_data_exporters', array( self::class, 'exporter' ) );
 		add_filter( 'wp_privacy_personal_data_erasers', array( self::class, 'eraser' ) );
 		add_filter( 'woocommerce_privacy_export_order_personal_data', array( self::class, 'export_order_data' ), 10, 2 );
-		add_action( 'woocommerce_privacy_remove_order_personal_data', array( self::class, 'erase_order_data' ) );
+		add_filter( 'woocommerce_privacy_erase_order_personal_data', array( self::class, 'erase_order_data' ), 10, 2 );
 	}
 
 	/** Append return-insight records to WooCommerce's order export. */
@@ -46,22 +46,38 @@ final class Privacy {
 		return $personal_data;
 	}
 
-	/** Remove order and refund linkage after WooCommerce anonymizes that order. */
-	public static function erase_order_data( $order ): void {
-		if ( ! $order instanceof \WC_Order ) {
-			return;
+	/**
+	 * Erase plugin order linkage before WooCommerce anonymizes the order.
+	 *
+	 * Returning false makes WooCommerce retain the order data and report that
+	 * erasure was not completed when this plugin cannot safely erase its rows.
+	 */
+	public static function erase_order_data( bool $erasure_enabled, $order ): bool {
+		if ( ! $erasure_enabled ) {
+			return false;
 		}
+		if ( ! $order instanceof \\WC_Order ) {
+			return true;
+		}
+
 		global $wpdb;
 		$table = Installer::events_table();
-		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT event_id, event_uuid FROM {$table} WHERE order_id = %d", $order->get_id() ), ARRAY_A );
+		if ( false === $wpdb->query( 'START TRANSACTION' ) ) {
+			self::log_privacy_failure( 'order erasure transaction start' );
+			return false;
+		}
+
+		$rows = $wpdb->get_results(
+			$wpdb->prepare( "SELECT event_id, event_uuid FROM {$table} WHERE order_id = %d FOR UPDATE", $order->get_id() ),
+			ARRAY_A
+		);
 		if ( ! empty( $wpdb->last_error ) ) {
+			$wpdb->query( 'ROLLBACK' );
 			self::log_privacy_failure( 'order erasure lookup' );
-			return;
+			return false;
 		}
-		if ( ! $rows ) {
-			return;
-		}
-		foreach ( $rows as $row ) {
+
+		foreach ( $rows ?: array() as $row ) {
 			$result = $wpdb->update(
 				$table,
 				array(
@@ -77,9 +93,18 @@ final class Privacy {
 				array( '%d' )
 			);
 			if ( false === $result ) {
+				$wpdb->query( 'ROLLBACK' );
 				self::log_privacy_failure( 'order erasure update' );
+				return false;
 			}
 		}
+
+		if ( false === $wpdb->query( 'COMMIT' ) ) {
+			$wpdb->query( 'ROLLBACK' );
+			self::log_privacy_failure( 'order erasure commit' );
+			return false;
+		}
+		return true;
 	}
 
 	/** Log a privacy operation failure without recording personal or order data. */
