@@ -166,6 +166,8 @@ final class Privacy {
 			'orderby'  => 'ID',
 			'order'    => 'ASC',
 		);
+		$order_query_count = (int) $wpdb->num_queries;
+		$order_error_before = (string) $wpdb->last_error;
 		try {
 			$order_result = wc_get_orders( $order_query );
 		} catch ( \Throwable $error ) {
@@ -175,6 +177,15 @@ final class Privacy {
 				__( 'Order-linked return insights could not be exported because the WooCommerce order lookup failed. Please retry the export.', WPE_RI_TEXT_DOMAIN )
 			);
 		}
+		$order_lookup_error = (string) $wpdb->last_error;
+		if ( '' !== $order_lookup_error && ( $order_lookup_error !== $order_error_before || (int) $wpdb->num_queries > $order_query_count ) ) {
+			self::log_privacy_failure( 'customer order lookup database query' );
+			return new \WP_Error(
+				'return_insight_order_lookup_failed',
+				__( 'Order-linked return insights could not be exported because the WooCommerce order lookup failed. Please retry the export.', WPE_RI_TEXT_DOMAIN )
+			);
+		}
+
 		if ( is_wp_error( $order_result ) || ! is_object( $order_result ) || ! isset( $order_result->orders, $order_result->max_num_pages ) || ! is_array( $order_result->orders ) ) {
 			self::log_privacy_failure( 'customer order lookup' );
 			return new \WP_Error(
