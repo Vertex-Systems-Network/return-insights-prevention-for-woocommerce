@@ -56,7 +56,7 @@ final class Privacy {
 		if ( ! $erasure_enabled ) {
 			return false;
 		}
-		if ( ! $order instanceof \\WC_Order ) {
+		if ( ! $order instanceof \WC_Order ) {
 			return true;
 		}
 
