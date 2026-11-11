@@ -11,40 +11,15 @@ defined( 'ABSPATH' ) || exit;
 /** Exports and anonymizes WordPress user references while retaining store metrics. */
 final class Privacy {
 	private const PAGE_SIZE = 100;
+	private const ORDER_PAGE_SIZE = 10;
+	private const ORDER_EVENT_LIMIT = 500;
 
 	public static function register(): void {
 		add_filter( 'wp_privacy_personal_data_exporters', array( self::class, 'exporter' ) );
 		add_filter( 'wp_privacy_personal_data_erasers', array( self::class, 'eraser' ) );
-		add_filter( 'woocommerce_privacy_export_order_personal_data', array( self::class, 'export_order_data' ), 10, 2 );
 		add_filter( 'woocommerce_privacy_erase_order_personal_data', array( self::class, 'erase_order_data' ), 10, 2 );
 	}
 
-	/** Append return-insight records to WooCommerce's order export. */
-	public static function export_order_data( array $personal_data, $order ): array {
-		if ( ! $order instanceof \WC_Order ) {
-			return $personal_data;
-		}
-		global $wpdb;
-		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT event_id, reason_id, quantity, occurred_at_gmt FROM ' . Installer::events_table() . ' WHERE order_id = %d AND deleted_at_gmt IS NULL ORDER BY event_id ASC', $order->get_id() ), ARRAY_A );
-		if ( ! empty( $wpdb->last_error ) ) {
-			self::log_privacy_failure( 'export' );
-			return $personal_data;
-		}
-		foreach ( $rows ?: array() as $row ) {
-			$reason = ReasonCatalog::find( (string) $row['reason_id'], true );
-			$personal_data[] = array(
-				'name' => __( 'Return insight record', WPE_RI_TEXT_DOMAIN ),
-				'value' => sprintf(
-					/* translators: 1: reason label, 2: returned quantity, 3: event date. */
-					__( 'Reason: %1$s; quantity: %2$s; date (UTC): %3$s', WPE_RI_TEXT_DOMAIN ),
-					$reason ? Multilingual::reason_label( $reason ) : (string) $row['reason_id'],
-					(string) $row['quantity'],
-					(string) $row['occurred_at_gmt']
-				),
-			);
-		}
-		return $personal_data;
-	}
 
 	/**
 	 * Erase plugin order linkage before WooCommerce anonymizes the order.
@@ -134,42 +109,113 @@ final class Privacy {
 		return $erasers;
 	}
 
-	/** Export user-attributed plugin records in bounded pages.
+	/** Export user activity and WooCommerce order-linked insights in bounded pages.
 	 *
-	 * @return array|\WP_Error
+	 * @return array|\\WP_Error
 	 */
 	public static function export_user_data( string $email, int $page = 1 ) {
-		$user = get_user_by( 'email', sanitize_email( $email ) );
-		if ( ! $user ) {
-			return array( 'data' => array(), 'done' => true );
-		}
+		$email   = sanitize_email( $email );
+		$page    = max( 1, $page );
+		$user    = get_user_by( 'email', $email );
+		$user_id = $user ? absint( $user->ID ) : 0;
 
 		global $wpdb;
-		$user_id = absint( $user->ID );
-		$events = Installer::events_table();
+		$events  = Installer::events_table();
 		$actions = ActionService::table();
 		$history = ActionService::history_table();
 		$evidence = ActionService::evidence_table();
-		$parts = array(
-			"SELECT CONCAT('event-created-',event_id) AS item_id, 'Insight event created' AS label, created_at_gmt AS occurred_at, CONCAT_WS(' | ',event_id,reason_id,deletion_note) AS record_value FROM {$events} WHERE created_by = %d",
-			"SELECT CONCAT('event-updated-',event_id) AS item_id, 'Insight event updated' AS label, updated_at_gmt AS occurred_at, CONCAT_WS(' | ',event_id,reason_id,deletion_note) AS record_value FROM {$events} WHERE updated_by = %d",
-			"SELECT CONCAT('action-created-',action_id) AS item_id, 'Corrective action created' AS label, created_at_gmt AS occurred_at, CONCAT_WS(' | ',title,hypothesis,issue_url) AS record_value FROM {$actions} WHERE created_by = %d",
-			"SELECT CONCAT('action-updated-',action_id) AS item_id, 'Corrective action updated' AS label, updated_at_gmt AS occurred_at, CONCAT_WS(' | ',title,hypothesis,issue_url) AS record_value FROM {$actions} WHERE updated_by = %d",
-			"SELECT CONCAT('action-owner-',action_id) AS item_id, 'Corrective action assignment' AS label, updated_at_gmt AS occurred_at, CONCAT_WS(' | ',title,hypothesis,issue_url) AS record_value FROM {$actions} WHERE owner_id = %d",
-			"SELECT CONCAT('action-history-',history_id) AS item_id, 'Corrective action status history' AS label, changed_at_gmt AS occurred_at, note AS record_value FROM {$history} WHERE actor_id = %d",
-			"SELECT CONCAT('action-evidence-',evidence_id) AS item_id, 'Corrective action evidence capture' AS label, captured_at_gmt AS occurred_at, phase AS record_value FROM {$evidence} WHERE captured_by = %d",
-		);
-		$sql = implode( ' UNION ALL ', $parts ) . ' ORDER BY occurred_at ASC, item_id ASC LIMIT %d OFFSET %d';
-		$params = array_fill( 0, count( $parts ), $user_id );
-		$params[] = self::PAGE_SIZE;
-		$params[] = ( max( 1, $page ) - 1 ) * self::PAGE_SIZE;
-		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $params ), ARRAY_A );
-		if ( ! empty( $wpdb->last_error ) ) {
-			self::log_privacy_failure( 'user export query' );
-			return new \WP_Error(
-				'return_insight_export_failed',
-				__( 'Return insight activity could not be exported because its database query failed. Please retry the export.', WPE_RI_TEXT_DOMAIN )
+		$parts   = array();
+		$params  = array();
+
+		if ( $user_id > 0 ) {
+			$parts = array(
+				"SELECT CONCAT('event-created-',event_id) AS item_id, 'Insight event created' AS label, created_at_gmt AS occurred_at, CONCAT_WS(' | ',event_id,reason_id,deletion_note) AS record_value FROM {$events} WHERE created_by = %d AND (order_id = 0 OR order_id IS NULL)",
+				"SELECT CONCAT('event-updated-',event_id) AS item_id, 'Insight event updated' AS label, updated_at_gmt AS occurred_at, CONCAT_WS(' | ',event_id,reason_id,deletion_note) AS record_value FROM {$events} WHERE updated_by = %d AND (order_id = 0 OR order_id IS NULL)",
+				"SELECT CONCAT('action-created-',action_id) AS item_id, 'Corrective action created' AS label, created_at_gmt AS occurred_at, CONCAT_WS(' | ',title,hypothesis,issue_url) AS record_value FROM {$actions} WHERE created_by = %d",
+				"SELECT CONCAT('action-updated-',action_id) AS item_id, 'Corrective action updated' AS label, updated_at_gmt AS occurred_at, CONCAT_WS(' | ',title,hypothesis,issue_url) AS record_value FROM {$actions} WHERE updated_by = %d",
+				"SELECT CONCAT('action-owner-',action_id) AS item_id, 'Corrective action assignment' AS label, updated_at_gmt AS occurred_at, CONCAT_WS(' | ',title,hypothesis,issue_url) AS record_value FROM {$actions} WHERE owner_id = %d",
+				"SELECT CONCAT('action-history-',history_id) AS item_id, 'Corrective action status history' AS label, changed_at_gmt AS occurred_at, note AS record_value FROM {$history} WHERE actor_id = %d",
+				"SELECT CONCAT('action-evidence-',evidence_id) AS item_id, 'Corrective action evidence capture' AS label, captured_at_gmt AS occurred_at, phase AS record_value FROM {$evidence} WHERE captured_by = %d",
 			);
+			$params = array_fill( 0, count( $parts ), $user_id );
+		}
+
+		$rows = array();
+		if ( $parts ) {
+			$sql    = implode( ' UNION ALL ', $parts ) . ' ORDER BY occurred_at ASC, item_id ASC LIMIT %d OFFSET %d';
+			$params[] = self::PAGE_SIZE;
+			$params[] = ( $page - 1 ) * self::PAGE_SIZE;
+			$rows     = $wpdb->get_results( $wpdb->prepare( $sql, $params ), ARRAY_A );
+			if ( ! empty( $wpdb->last_error ) ) {
+				self::log_privacy_failure( 'user export query' );
+				return new \\WP_Error(
+					'return_insight_export_failed',
+					__( 'Return insight activity could not be exported because its database query failed. Please retry the export.', WPE_RI_TEXT_DOMAIN )
+				);
+			}
+		}
+
+		$order_query = array(
+			'limit'    => self::ORDER_PAGE_SIZE,
+			'page'     => $page,
+			'paginate' => true,
+			'customer' => array_filter( array( $email, $user_id ) ),
+			'orderby'  => 'ID',
+			'order'    => 'ASC',
+		);
+		try {
+			$order_result = wc_get_orders( $order_query );
+		} catch ( \\Throwable $error ) {
+			self::log_privacy_failure( 'customer order lookup' );
+			return new \\WP_Error(
+				'return_insight_order_lookup_failed',
+				__( 'Order-linked return insights could not be exported because the WooCommerce order lookup failed. Please retry the export.', WPE_RI_TEXT_DOMAIN )
+			);
+		}
+		if ( is_wp_error( $order_result ) || ! is_object( $order_result ) || ! isset( $order_result->orders, $order_result->max_num_pages ) || ! is_array( $order_result->orders ) ) {
+			self::log_privacy_failure( 'customer order lookup' );
+			return new \\WP_Error(
+				'return_insight_order_lookup_failed',
+				__( 'Order-linked return insights could not be exported because the WooCommerce order lookup did not return a valid page. Please retry the export.', WPE_RI_TEXT_DOMAIN )
+			);
+		}
+
+		$order_ids = array();
+		foreach ( $order_result->orders as $order ) {
+			if ( ! $order instanceof \\WC_Order ) {
+				self::log_privacy_failure( 'customer order lookup result' );
+				return new \\WP_Error(
+					'return_insight_order_lookup_failed',
+					__( 'Order-linked return insights could not be exported because WooCommerce returned an invalid order record. Please retry the export.', WPE_RI_TEXT_DOMAIN )
+				);
+			}
+			$order_id = absint( $order->get_id() );
+			if ( $order_id > 0 ) {
+				$order_ids[ $order_id ] = $order_id;
+			}
+		}
+
+		$order_rows = array();
+		if ( $order_ids ) {
+			$placeholders = implode( ', ', array_fill( 0, count( $order_ids ), '%d' ) );
+			$order_sql    = "SELECT event_id, reason_id, quantity, occurred_at_gmt, deletion_note FROM {$events} WHERE order_id IN ({$placeholders}) ORDER BY event_id ASC LIMIT %d";
+			$order_params = array_values( $order_ids );
+			$order_params[] = self::ORDER_EVENT_LIMIT + 1;
+			$order_rows = $wpdb->get_results( $wpdb->prepare( $order_sql, $order_params ), ARRAY_A );
+			if ( ! empty( $wpdb->last_error ) ) {
+				self::log_privacy_failure( 'order-linked export query' );
+				return new \\WP_Error(
+					'return_insight_export_failed',
+					__( 'Order-linked return insights could not be exported because its database query failed. Please retry the export.', WPE_RI_TEXT_DOMAIN )
+				);
+			}
+			if ( count( $order_rows ?: array() ) > self::ORDER_EVENT_LIMIT ) {
+				self::log_privacy_failure( 'order-linked export page limit' );
+				return new \\WP_Error(
+					'return_insight_export_page_limit',
+					__( 'Order-linked return insight data exceeds the safe export page limit. The export stopped rather than omit records; contact the site administrator for assistance.', WPE_RI_TEXT_DOMAIN )
+				);
+			}
 		}
 
 		$data = array();
@@ -186,7 +232,27 @@ final class Privacy {
 			);
 		}
 
-		return array( 'data' => $data, 'done' => count( $rows ?: array() ) < self::PAGE_SIZE );
+		foreach ( $order_rows ?: array() as $row ) {
+			$reason = ReasonCatalog::find( (string) $row['reason_id'], true );
+			$data[] = array(
+				'group_id' => 'return-insight-order-event-' . absint( $row['event_id'] ),
+				'group_label' => __( 'Return insight activity', WPE_RI_TEXT_DOMAIN ),
+				'item_id' => 'order-insight-' . absint( $row['event_id'] ),
+				'data' => array(
+					array( 'name' => __( 'Activity', WPE_RI_TEXT_DOMAIN ), 'value' => __( 'Order-linked return insight', WPE_RI_TEXT_DOMAIN ) ),
+					array( 'name' => __( 'Reason', WPE_RI_TEXT_DOMAIN ), 'value' => sanitize_text_field( $reason ? Multilingual::reason_label( $reason ) : (string) $row['reason_id'] ) ),
+					array( 'name' => __( 'Quantity', WPE_RI_TEXT_DOMAIN ), 'value' => absint( $row['quantity'] ) ),
+					array( 'name' => __( 'Date (UTC)', WPE_RI_TEXT_DOMAIN ), 'value' => sanitize_text_field( $row['occurred_at_gmt'] ) ),
+					array( 'name' => __( 'Deletion note', WPE_RI_TEXT_DOMAIN ), 'value' => sanitize_text_field( $row['deletion_note'] ) ),
+				),
+			);
+		}
+
+		$order_lookup_done = (int) $order_result->max_num_pages < $page;
+		return array(
+			'data' => $data,
+			'done' => count( $rows ?: array() ) < self::PAGE_SIZE && $order_lookup_done,
+		);
 	}
 
 	/** Remove user references and free-form text attributed to the requester. */
