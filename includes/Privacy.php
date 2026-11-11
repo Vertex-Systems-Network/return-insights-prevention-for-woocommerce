@@ -111,7 +111,7 @@ final class Privacy {
 
 	/** Export user activity and WooCommerce order-linked insights in bounded pages.
 	 *
-	 * @return array|\\WP_Error
+	 * @return array|\WP_Error
 	 */
 	public static function export_user_data( string $email, int $page = 1 ) {
 		$email   = sanitize_email( $email );
@@ -148,7 +148,7 @@ final class Privacy {
 			$rows     = $wpdb->get_results( $wpdb->prepare( $sql, $params ), ARRAY_A );
 			if ( ! empty( $wpdb->last_error ) ) {
 				self::log_privacy_failure( 'user export query' );
-				return new \\WP_Error(
+				return new \WP_Error(
 					'return_insight_export_failed',
 					__( 'Return insight activity could not be exported because its database query failed. Please retry the export.', WPE_RI_TEXT_DOMAIN )
 				);
@@ -165,16 +165,16 @@ final class Privacy {
 		);
 		try {
 			$order_result = wc_get_orders( $order_query );
-		} catch ( \\Throwable $error ) {
+		} catch ( \Throwable $error ) {
 			self::log_privacy_failure( 'customer order lookup' );
-			return new \\WP_Error(
+			return new \WP_Error(
 				'return_insight_order_lookup_failed',
 				__( 'Order-linked return insights could not be exported because the WooCommerce order lookup failed. Please retry the export.', WPE_RI_TEXT_DOMAIN )
 			);
 		}
 		if ( is_wp_error( $order_result ) || ! is_object( $order_result ) || ! isset( $order_result->orders, $order_result->max_num_pages ) || ! is_array( $order_result->orders ) ) {
 			self::log_privacy_failure( 'customer order lookup' );
-			return new \\WP_Error(
+			return new \WP_Error(
 				'return_insight_order_lookup_failed',
 				__( 'Order-linked return insights could not be exported because the WooCommerce order lookup did not return a valid page. Please retry the export.', WPE_RI_TEXT_DOMAIN )
 			);
@@ -182,9 +182,9 @@ final class Privacy {
 
 		$order_ids = array();
 		foreach ( $order_result->orders as $order ) {
-			if ( ! $order instanceof \\WC_Order ) {
+			if ( ! $order instanceof \WC_Order ) {
 				self::log_privacy_failure( 'customer order lookup result' );
-				return new \\WP_Error(
+				return new \WP_Error(
 					'return_insight_order_lookup_failed',
 					__( 'Order-linked return insights could not be exported because WooCommerce returned an invalid order record. Please retry the export.', WPE_RI_TEXT_DOMAIN )
 				);
@@ -204,14 +204,14 @@ final class Privacy {
 			$order_rows = $wpdb->get_results( $wpdb->prepare( $order_sql, $order_params ), ARRAY_A );
 			if ( ! empty( $wpdb->last_error ) ) {
 				self::log_privacy_failure( 'order-linked export query' );
-				return new \\WP_Error(
+				return new \WP_Error(
 					'return_insight_export_failed',
 					__( 'Order-linked return insights could not be exported because its database query failed. Please retry the export.', WPE_RI_TEXT_DOMAIN )
 				);
 			}
 			if ( count( $order_rows ?: array() ) > self::ORDER_EVENT_LIMIT ) {
 				self::log_privacy_failure( 'order-linked export page limit' );
-				return new \\WP_Error(
+				return new \WP_Error(
 					'return_insight_export_page_limit',
 					__( 'Order-linked return insight data exceeds the safe export page limit. The export stopped rather than omit records; contact the site administrator for assistance.', WPE_RI_TEXT_DOMAIN )
 				);
