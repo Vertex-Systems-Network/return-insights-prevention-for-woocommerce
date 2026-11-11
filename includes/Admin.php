@@ -154,7 +154,7 @@ final class Admin {
 			'patternsTitle' => __( 'Product and variation insights', WPE_RI_TEXT_DOMAIN ),
 			'patternsIntro' => __( 'Compare confirmed item returns with eligible sold quantities in mature purchase cohorts.', WPE_RI_TEXT_DOMAIN ),
 			'proLockedTitle' => __( 'Available with the Pro add-on', WPE_RI_TEXT_DOMAIN ),
-			'proLockedIntro' => __( 'The Free edition records evidence and provides reason counts. Pro adds mature product/variation cohort comparisons.', WPE_RI_TEXT_DOMAIN ),
+			'proLockedIntro' => __( 'Pro adds product and variation trends, reason clusters, weekly alerts, and corrective-action tracking.', WPE_RI_TEXT_DOMAIN ),
 			'maturityDays' => __( 'Maturity window', WPE_RI_TEXT_DOMAIN ),
 			'cohortDays' => __( 'Cohort length', WPE_RI_TEXT_DOMAIN ),
 			'dayCount' => __( '%d days', WPE_RI_TEXT_DOMAIN ),
