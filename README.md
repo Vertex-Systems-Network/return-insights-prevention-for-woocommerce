@@ -202,3 +202,8 @@ P3 architecture specifies indexed custom event storage, source-level idempotency
 ### Ahead Earth follow-up UI verification (2026-11-11)
 
 On the authorized Ahead Earth site, the installed Return Insights page loaded at the WooCommerce submenu route. Read-only checks confirmed the empty Overview and History states, the reason catalog, and consistent Pro gates across Trends, Alerts, and Corrective Actions. No plugin-specific console errors appeared. No store or plugin records were changed. This is limited UI smoke evidence; I-11 remains open for behavioral, security, privacy, compatibility, accessibility, and release verification.
+
+
+### WooCommerce privacy contract review (2026-11-11)
+
+Source review confirmed WooCommerce's order-export filter must return an array, while WordPress's registered privacy exporter can return `WP_Error`. WooCommerce's order-erasure extension point is a void action and does not surface plugin failures to its eraser response. SA-02/SA-03 remain open; the ledger records the required bounded, WooCommerce CRUD-based privacy callback redesign. No source code or runtime behavior was changed by this review.
