@@ -197,3 +197,8 @@ P3 architecture specifies indexed custom event storage, source-level idempotency
 - 2026-11-10: Serialized corrective-action evidence phase checks under an action-row lock. Capture re-reads action configuration and existing snapshots before insert, rejecting stale settings or duplicate baseline requests; CI run `42705553668` passed PHP 8.3 lint, Composer packaging, ZIP build and artifact upload (artifact `13712978338`, digest `sha256:996132f3f9cb98e57d1132a5f4577adeccf70fc12a30f309739c564a1fc3f2ea`, expires 2026-11-23). Live concurrency verification remains open. A detail-query audit also fixed a fail-open read: targets, history and evidence lookups now each check database errors immediately. CI run `42707097395` passed; failure-injection verification remains pending.
 
 - 2026-11-10: Fixed `ActionService::hydrate_many()` to check targets, history and evidence query errors individually before the next query can reset `wpdb` error state. CI run `42707097395` passed PHP 8.3 lint, Composer packaging, ZIP validation and artifact upload (artifact `13713609300`, expires 2026-11-23). Database failure-injection remains open.
+
+
+### Ahead Earth follow-up UI verification (2026-11-11)
+
+On the authorized Ahead Earth site, the installed Return Insights page loaded at the WooCommerce submenu route. Read-only checks confirmed the empty Overview and History states, the reason catalog, and consistent Pro gates across Trends, Alerts, and Corrective Actions. No plugin-specific console errors appeared. No store or plugin records were changed. This is limited UI smoke evidence; I-11 remains open for behavioral, security, privacy, compatibility, accessibility, and release verification.
