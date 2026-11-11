@@ -115,6 +115,9 @@ final class Privacy {
 	 */
 	public static function export_user_data( string $email, int $page = 1 ) {
 		$email   = sanitize_email( $email );
+		if ( ! is_email( $email ) ) {
+			return array( 'data' => array(), 'done' => true );
+		}
 		$page    = max( 1, $page );
 		$user    = get_user_by( 'email', $email );
 		$user_id = $user ? absint( $user->ID ) : 0;
@@ -248,7 +251,7 @@ final class Privacy {
 			);
 		}
 
-		$order_lookup_done = (int) $order_result->max_num_pages < $page;
+		$order_lookup_done = $page >= (int) $order_result->max_num_pages;
 		return array(
 			'data' => $data,
 			'done' => count( $rows ?: array() ) < self::PAGE_SIZE && $order_lookup_done,
